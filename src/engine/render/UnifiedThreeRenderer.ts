@@ -256,6 +256,7 @@ export class UnifiedThreeRenderer {
       if (!pool || pool.capacity<batch.models.length) {
         if (pool) {
           this.scene.remove(pool.mesh);
+          pool.mesh.dispose();
           pool.material.dispose();
         }
         const material = new MeshStandardMaterial({
@@ -303,7 +304,10 @@ export class UnifiedThreeRenderer {
     if (this.destroyed) return;
     this.destroyed=true;
     for(const g of this.variants.values())g.dispose();
-    for(const p of this.pools.values())p.material.dispose();
+    for(const p of this.pools.values()) {
+      p.mesh.dispose();
+      p.material.dispose();
+    }
     this.imported.traverse(node=>{
       if (!(node instanceof Mesh)) return;
       node.geometry.dispose();
