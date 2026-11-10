@@ -1,7 +1,7 @@
 # Bastionfall — original browser tower-defense game
 
 **Private repository:** `lordfireballzmc/BrowserGame`  
-**Status:** F0/F1 foundations and F2.01–F2.03 terrain, road and ten authored build pads are implemented. The browser contains the original archetype gallery and a separate WebGL2 terrain/road/pad inspection preview with projected prices and click selection, **not playable gameplay**. No public deployment or live game URL.  
+**Status:** F0/F1 foundations and F2.01–F2.04 island, road, ten authored build pads and northern river are implemented. The browser contains an original archetype gallery plus a separate WebGL2 world inspection preview with projected pad prices and click selection, **not playable gameplay**. No public deployment or live game URL.  
 **Goal:** an honest, satisfying playable interpretation of the *advertised* real-time defense/collect/build fantasy in Kingshot-style mobile promotions, built with original IP, procedural geometry and a custom WebGL2 engine.
 
 ## Where to start
@@ -22,6 +22,7 @@
 | [docs/10_F2_01_TERRAIN_REVIEW.md](docs/10_F2_01_TERRAIN_REVIEW.md) | Real Chrome screenshot and 72×48m island seam/rock evidence |
 | [docs/11_F2_02_ROAD_REVIEW.md](docs/11_F2_02_ROAD_REVIEW.md) | Reviewed road-and-island screenshot, collision lane tests and remaining limitations |
 | [docs/12_F2_03_PADS_REVIEW.md](docs/12_F2_03_PADS_REVIEW.md) | Real browser screenshot, ten build-pad coordinates, prices and selection evidence |
+| [docs/13_F2_04_RIVER_REVIEW.md](docs/13_F2_04_RIVER_REVIEW.md) | Northern river/bridge screenshot, slope safety and real WebGL2 evidence |
 
 ## Run locally (requires Node.js 22+ and npm)
 
@@ -33,7 +34,7 @@ npm run build
 npm run dev
 ```
 
-Open the URL printed by Vite. The main app displays a startup screen and a **four-archetype WebGL2 gallery** through its diagnostic button; it is not a playable game. While the dev server is running, visit `/tests/terrain-preview.html` to view the separately rendered **72×48m island, 4.5m road and ten stone build pads**. Clicking a wave-1 pad selects it in this engineering preview; **tower purchases and gameplay do not exist yet**. The lockfile is committed; GitHub Actions runs `npm ci`, typechecking, the unit test suite, a production build, and headless-Chrome graphics, responsive layout, terrain and fallback checks. Development server `--host 0.0.0.0` exposes its port to the local network by default; use appropriate firewall controls.
+Open the URL printed by Vite. The main app displays a startup screen and a **four-archetype WebGL2 gallery** through its diagnostic button; it is not a playable game. While the dev server is running, visit `/tests/terrain-preview.html` to view the separately rendered **72×48m island, 4.5m road, ten stone pads, a northern river and two decorative timber crossings**. Clicking a wave-1 pad selects it in this engineering preview; **tower purchases and gameplay do not exist yet**. The lockfile is committed; GitHub Actions runs `npm ci`, typechecking, the unit test suite, a production build, and headless-Chrome graphics, responsive layout, terrain and fallback checks. Development server `--host 0.0.0.0` exposes its port to the local network by default; use appropriate firewall controls.
 
 ## Creative and legal boundary
 No Kingshot assets, logos or characters included; this is original art and code, using the genre's broad concepts. Direct third-party package versions, tagged upstream license references and runtime notices are maintained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Full transitive licensing and release artifacts must be audited before shipping (F8.03). This is a working game title, not a finalized trademark.
