@@ -116,7 +116,6 @@ export class HeroBoltCombat {
     tick:0,targetId:null,aimYaw:null,shotsFired:0,hits:0,damageDealt:0,
     lastHitId:null,bolts:[],impacts:[],
   });
-  private previous: HeroCombatSnapshot = this.current;
   private nextFireTick = 1;
   private nextBoltId = 1;
 
@@ -199,7 +198,6 @@ export class HeroBoltCombat {
         }
       }
     }
-    this.previous=this.current;
     this.current=freezeSnapshot({
       tick,targetId:target?.id??null,aimYaw,
       shotsFired,hits,damageDealt,lastHitId,bolts:nextBolts,impacts,
