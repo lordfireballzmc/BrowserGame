@@ -366,6 +366,20 @@
     body.dataset.shadows = renderer.sunShadowsEnabled ? "on" : "off";
     body.dataset.composition = movement ? (portrait ? "movement-9:16" : "movement-16:9")
       : cinematic ? (portrait ? "9:16" : "16:9") : "full-island";
+    if (movement) {
+      // A UI gate, not a visual similarity score: ensure the movement scene
+      // occupies the maximum correctly proportioned viewport and the old
+      // engineering status output does not squeeze it to one side.
+      const bounds=document.querySelector(".stage").getBoundingClientRect();
+      const expectedWidth=Math.min(window.innerWidth,
+        window.innerHeight * canvas.width / canvas.height);
+      if (Math.abs(bounds.width-expectedWidth)>3 ||
+          document.querySelector("#pad-selection").getClientRects().length!==0) {
+        throw new Error("Movement viewport layout regression: "+
+          JSON.stringify({width:bounds.width,expectedWidth}));
+      }
+      body.dataset.immersive="pass";
+    }
     body.dataset.tiles = String(terrain.tiles.length);
     body.dataset.road = "pass";
     body.dataset.padCount = String(PAD_SITES.length);
