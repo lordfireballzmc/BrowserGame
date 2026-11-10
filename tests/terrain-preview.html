@@ -116,7 +116,7 @@
     <div class="movement-hud" id="movement-hud" hidden aria-hidden="true">
       <div class="hud-top">
         <div class="hud-chip">BASTIONFALL <strong>/ FENWALL CROSSING</strong></div>
-        <div class="hud-chip">WARDEN <strong>· MOVEMENT ONLY</strong></div>
+        <div class="hud-chip">WARDEN <strong>· AUTO-FIRE TEST</strong></div>
       </div>
       <a class="movement-exit" href="/" aria-label="Return to Bastionfall menu">MENU</a>
       <div class="hud-bottom"><span>WASD / ARROWS TO MOVE · AUTO-FIRE IN 7M · ESC PAUSE</span>
@@ -417,7 +417,7 @@
           labels:labelLayer.childElementCount, padCount:PAD_SITES.length}));
     }
     const trace = {
-      mode: movement ? "F3.02 MOVING ROAD RAIDERS (no combat yet)"
+      mode: movement ? "F3.03 LIVE HERO BOLTS (no enemy attacks or rewards)"
         : cinematic ? "CINEMATIC ART STUDY (not gameplay)" : "ENGINEERING WORLD PREVIEW (not a game)",
       sunShadows:renderer.sunShadowsEnabled,
       targetResolution:[canvas.width,canvas.height],
