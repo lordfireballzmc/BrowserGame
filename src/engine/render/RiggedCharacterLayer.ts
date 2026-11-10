@@ -42,58 +42,108 @@ const OLD_MESH_TO_ROLE: Readonly<Record<string,Role>>={
   "route-runner":"runner",
 };
 const MOTIONS:readonly Motion[]=["Idle","Walk","Run","Attack","Death"];
-/** Persistent faction read at 30px on 9:16 gameplay; not HDR advertising chrome. */
-export const ACTOR_TINTS:Readonly<Record<Role,number>>={
-  warden:0x4b90de, scrapper:0xe54949, runner:0xd32d50,
-} as const;
 /**
- * KayKit's painterly atlas contains very little red in some leather/green
- * texels. MeshStandardMaterial.color alone MULTIPLIES that atlas; a red tint
- * cannot turn a dark-green cloth into red because the source red channel is
- * almost zero. The user-visible screenshot proved that multiplicative tint
- * failed. Repaint diffuse hue from original per-fragment luminance instead.
+ * ART.03b art direction: independently illustrated cloth, armor, skin,
+ * helmets, capes, weapons, legs and shields on the SAME authored KayKit rig.
  *
- * This keeps all authored UV geometry, texture value gradients, bone weights,
- * shadow reception and PBR roughness. It does not clone huge PNG textures or
- * add render passes and works identically for 20 independently moving rigs.
+ * All source meshes have meaningful node names, a single artist atlas, and
+ * actual 41-bone skeletons. Recoloring at node/material scope is superior to
+ * an indiscriminate full-character hue: see original model node table in
+ * docs/28_ART03B_CHARACTER_IDENTITY_REVIEW.md.
  */
-export function factionFragment(fragment:string, role:Role):string {
+export type ActorPart =
+  | "body" | "arm" | "leg" | "face"
+  | "headgear" | "cape" | "weapon" | "shield";
+type ColorTriplet = readonly [number,number,number];
+type ActorColors = Readonly<Record<ActorPart,ColorTriplet>>;
+/** Deliberate THREE linear-fragment palette; original texture supplies tone. */
+export const ACTOR_PALETTES:Readonly<Record<Role,ActorColors>>={
+  warden:{
+    body:[0.08,0.36,0.88],arm:[0.56,0.32,0.07],
+    leg:[0.045,0.19,0.48],face:[0.87,0.55,0.32],
+    headgear:[0.10,0.37,0.77],cape:[0.035,0.19,0.62],
+    weapon:[0.64,0.76,0.83],shield:[0.90,0.50,0.09],
+  },
+  scrapper:{
+    body:[1.00,0.035,0.045],arm:[0.91,0.055,0.06],
+    leg:[0.49,0.025,0.055],face:[0.89,0.47,0.27],
+    headgear:[0.94,0.035,0.07],cape:[0.62,0.020,0.065],
+    weapon:[0.72,0.44,0.20],shield:[0.59,0.20,0.12],
+  },
+  runner:{
+    body:[0.98,0.045,0.13],arm:[0.81,0.075,0.12],
+    leg:[0.42,0.025,0.085],face:[0.84,0.48,0.27],
+    headgear:[0.84,0.025,0.125],cape:[0.55,0.025,0.10],
+    weapon:[0.77,0.55,0.29],shield:[0.50,0.12,0.18],
+  },
+} as const;
+const PIGMENT_WEIGHT:Readonly<Record<ActorPart,number>>={
+  body:0.92,arm:0.82,leg:0.93,face:0.52,
+  headgear:0.88,cape:0.96,weapon:0.61,shield:0.86,
+};
+const EQUIPMENT:Readonly<Record<Role,ReadonlySet<string>>>={
+  warden:new Set(["1H_Sword","Badge_Shield"]),
+  scrapper:new Set(["1H_Axe","Barbarian_Round_Shield"]),
+  runner:new Set(["1H_Crossbow","Knife_Offhand"]),
+};
+/** All supplied optional equipment names are in the reviewed source GLBs. */
+const OPTIONAL_EQUIPMENT=new Set([
+  "1H_Sword_Offhand","Badge_Shield","Rectangle_Shield","Round_Shield",
+  "Spike_Shield","1H_Sword","2H_Sword",
+  "1H_Axe_Offhand","Barbarian_Round_Shield","1H_Axe","2H_Axe","Mug",
+  "Knife_Offhand","1H_Crossbow","2H_Crossbow","Knife","Throwable",
+]);
+export function isSelectedEquipment(name:string,role:Role):boolean {
+  return !OPTIONAL_EQUIPMENT.has(name)||EQUIPMENT[role].has(name);
+}
+export function classifyActorPart(name:string,role:Role):ActorPart {
+  const label=name.toLowerCase();
+  if(label.includes("cape"))return "cape";
+  if(label.includes("shield"))return "shield";
+  if(/sword|axe|knife|crossbow|throwable|mug/.test(label))return "weapon";
+  if(/helmet|_hat/.test(label))return "headgear";
+  if(label.includes("head"))return role==="runner"?"headgear":"face";
+  if(label.includes("arm"))return "arm";
+  if(label.includes("leg"))return "leg";
+  return "body";
+}
+function vector(color:ColorTriplet):string {
+  return `vec3(${color.map(n=>n.toFixed(4)).join(",")})`;
+}
+/**
+ * Uses original atlas luminance AFTER texture mapping to retain authored
+ * fold/value variation without inheriting the old brown/green faction hue.
+ * Distinct submesh palettes recover gold helmet, dark navy cape, warm skin,
+ * red jacket, wine hood and metal weapons in the actual articulated models.
+ */
+export function factionFragment(
+  fragment:string,role:Role,part:ActorPart="body",
+):string {
   const marker="#include <map_fragment>";
-  if(!fragment.includes(marker))throw new Error("Three MeshStandard map shader changed");
-  const base=role==="warden"
-    ? "vec3(0.13,0.43,0.88)"
-    : role==="scrapper" ? "vec3(0.91,0.13,0.20)"
-      : "vec3(0.86,0.07,0.23)";
-  const gold=role==="warden"
-    ? `
-      // Use the bright metal parts of the original source atlas as a
-      // contrasting warm accent; keep most Warden silhouette distinctly blue.
-      float goldAccent=smoothstep(0.74,0.98,sourceLuma)*0.55;
-      factionPaint=mix(factionPaint,vec3(1.0,0.71,0.20)*paintLight,goldAccent);
-    ` : "";
+  if(!fragment.includes(marker))
+    throw new Error("Three MeshStandard map shader changed");
+  const color=vector(ACTOR_PALETTES[role][part]);
+  const strength=PIGMENT_WEIGHT[part].toFixed(3);
   return fragment.replace(marker,`${marker}
     float sourceLuma=clamp(dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722)),0.0,1.0);
-    float paintLight=clamp(0.52+sourceLuma*1.28,0.25,1.28);
-    vec3 factionPaint=${base}*paintLight;
-    ${gold}
-    // 91% faction hue: neutral/brown/green characters are never mistaken
-    // for allies while the source atlas still supplies visible fold/edge detail.
-    diffuseColor.rgb=mix(diffuseColor.rgb,factionPaint,0.91);
+    float paintLight=clamp(0.39+sourceLuma*1.48,0.28,1.36);
+    vec3 factionPaint=${color}*paintLight;
+    diffuseColor.rgb=mix(diffuseColor.rgb,factionPaint,${strength});
   `);
 }
-export function stylizeActorMaterial(material:MeshStandardMaterial,role:Role):MeshStandardMaterial {
-  // All clones share ONE source texture; preserve original UVs and artists'
-  // painting values, but restore the required blue-versus-crimson gameplay read.
+export function stylizeActorMaterial(
+  material:MeshStandardMaterial,role:Role,part:ActorPart="body",
+):MeshStandardMaterial {
   const styled=material.clone();
+  // UV texture remains intact, original atlas light/value variation retained.
   styled.color.set(0xffffff);
-  styled.roughness=0.89;
-  styled.metalness=Math.min(0.14,styled.metalness);
+  styled.roughness=part==="weapon"?0.58:part==="headgear"?0.75:0.88;
+  styled.metalness=part==="weapon"?0.22:part==="headgear"?0.12:0.04;
   styled.onBeforeCompile=shader=>{
-    shader.fragmentShader=factionFragment(shader.fragmentShader,role);
+    shader.fragmentShader=factionFragment(shader.fragmentShader,role,part);
   };
-  // Three caches shader programs by this key; separate faction hues must not
-  // accidentally reuse one another's compiled fragment program.
-  styled.customProgramCacheKey=()=>`bastionfall-faction-paint-v2-${role}`;
+  // Explicit program key: the shader differs by both role and material part.
+  styled.customProgramCacheKey=()=>`bastionfall-faction-paint-v3-${role}-${part}`;
   styled.needsUpdate=true;
   return styled;
 }
@@ -113,9 +163,19 @@ interface Actor {
   readonly skinnedMeshes: number;
   readonly bones: number;
   motion:Motion;
+  previousMotion:Motion|null;
+  transitionStartedSeconds:number;
 }
 function validTime(value:number):void {
   if(!Number.isFinite(value)||value<0)throw new RangeError("Animation time must be nonnegative and finite");
+}
+/** Native procedural-to-animated pose handoff; 140ms is visibly short at 30 FPS. */
+export const ANIMATION_BLEND_SECONDS=0.14;
+/** Pure smoothstep: predictable at fixed simulation clock, never Date.now(). */
+export function animationBlend(elapsedSeconds:number):number {
+  if(!Number.isFinite(elapsedSeconds))throw new RangeError("Invalid animation transition age");
+  const t=Math.max(0,Math.min(1,elapsedSeconds/ANIMATION_BLEND_SECONDS));
+  return t*t*(3-2*t);
 }
 
 /** The single existing Three scene owns and renders every cloned skeleton. */
@@ -181,21 +241,33 @@ export class RiggedCharacterLayer {
       // requires blue Warden and unmistakably crimson hostile silhouettes.
       // Clone source materials by reference before tinting; don't recolor the
       // shared texture files or mutate animation/skeleton content.
-      const byMaterial=new Map<MeshStandardMaterial,MeshStandardMaterial>();
+      const byMaterial=new Map<string,MeshStandardMaterial>();
+      const offeredEquipment=new Set<string>();
+      const visibleEquipment=new Set<string>();
       gltf.scene.traverse(node=>{
         if(!(node instanceof Mesh))return;
+        if(OPTIONAL_EQUIPMENT.has(node.name)){
+          offeredEquipment.add(node.name);
+          node.visible=isSelectedEquipment(node.name,spec.role);
+          if(node.visible)visibleEquipment.add(node.name);
+        }
+        const part=classifyActorPart(node.name,spec.role);
         const recolor=(m:import("three").Material)=>{
           if(!(m instanceof MeshStandardMaterial))return m;
-          let adjusted=byMaterial.get(m);
-          if(!adjusted) {
-            adjusted=stylizeActorMaterial(m,spec.role);
-            byMaterial.set(m,adjusted);
+          const key=m.uuid+"|"+spec.role+"|"+part;
+          let adjusted=byMaterial.get(key);
+          if(!adjusted){
+            adjusted=stylizeActorMaterial(m,spec.role,part);
+            byMaterial.set(key,adjusted);
           }
           return adjusted;
         };
         node.material=Array.isArray(node.material)
           ?node.material.map(recolor):recolor(node.material);
       });
+      if(visibleEquipment.size!==EQUIPMENT[spec.role].size ||
+         [...EQUIPMENT[spec.role]].some(name=>!offeredEquipment.has(name)))
+        throw new Error(spec.role+" source glTF attachment nodes changed; refusing invisible/incorrect weapons");
       let skinned=0,bones=0,mapped=0;
       gltf.scene.traverse(node=>{
         if(node instanceof SkinnedMesh) {
@@ -266,6 +338,7 @@ export class RiggedCharacterLayer {
     return {
       role,group:root,mixer,actions,
       skinnedMeshes:renderedMeshes,bones,motion:"Idle",
+      previousMotion:null,transitionStartedSeconds:0,
     };
   }
 
@@ -301,14 +374,34 @@ export class RiggedCharacterLayer {
       const animation=this.motions.get(matrix);
       const motion=animation?.motion??"Idle";
       const time=animation?.timeSeconds??this.globalTime;
-      if(motion!==actor.motion || !actor.actions.get(motion)!.isRunning()){
-        actor.actions.get(actor.motion)?.stop();
+      const currentAction=actor.actions.get(motion)!;
+      if(motion!==actor.motion){
+        // Short crossfade between authored bone poses instead of abruptly
+        // snapping 41 joints from run to idle/attack/death.
+        if(actor.previousMotion!==null)
+          actor.actions.get(actor.previousMotion)?.stop();
+        actor.previousMotion=actor.motion;
+        actor.transitionStartedSeconds=this.globalTime;
         actor.motion=motion;
         actor.actions.get(motion)!.reset().play();
+      } else if(!currentAction.isRunning() && motion!=="Death"){
+        currentAction.reset().play();
       }
+      if(actor.previousMotion!==null){
+        const oldAction=actor.actions.get(actor.previousMotion)!;
+        if(!oldAction.isRunning())oldAction.reset().play();
+        const t=animationBlend(this.globalTime-actor.transitionStartedSeconds);
+        currentAction.setEffectiveWeight(t);
+        oldAction.setEffectiveWeight(1-t);
+        if(t>=1){
+          oldAction.stop();
+          currentAction.setEffectiveWeight(1);
+          actor.previousMotion=null;
+        }
+      }else currentAction.setEffectiveWeight(1);
       // Exact sampled game world progress, not accumulating Date.now()/rAF:
       // a pause or render refresh never changes authoritative simulation.
-      const duration=actor.actions.get(motion)!.getClip().duration;
+      const duration=currentAction.getClip().duration;
       const authoredTime=motion==="Death"
         ? Math.min(time,duration-1e-4)
         : time + (i%7)*0.135;
