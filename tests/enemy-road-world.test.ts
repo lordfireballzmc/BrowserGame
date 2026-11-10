@@ -117,6 +117,16 @@ describe("F3.02 deterministic real-path raiders", () => {
     expect(runner.z).toBeCloseTo(atGate.z,8);
     expect(runner.hp).toBe(runner.maxHp);
     expect(world.snapshot.arrived).toBeGreaterThanOrEqual(1);
+    // By 25 seconds the first two runners have reached their own stops.
+    // Distinct slots matter visually: overlapping agents at the keep would
+    // look like a single flickering model instead of a marching column.
+    const holdingRunners=world.snapshot.enemies.filter(e=>
+      e.kind==="runner"&&e.phase==="holding-at-gate");
+    expect(holdingRunners.length).toBeGreaterThanOrEqual(2);
+    for (let i=1;i<holdingRunners.length;i++) {
+      const front=holdingRunners[i-1]!, rear=holdingRunners[i]!;
+      expect(Math.hypot(front.x-rear.x,front.z-rear.z)).toBeGreaterThan(1.05);
+    }
   });
 
   it("builds a reusable original, genuinely 3D runner silhouette and palette slots", () => {
