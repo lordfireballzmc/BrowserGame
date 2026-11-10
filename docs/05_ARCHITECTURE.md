@@ -65,7 +65,7 @@ The manifest's caret version ranges resolve through committed npm lockfile v3; p
 
 | Boundary | Locked library and version | License | Integration status |
 | --- | --- | --- | --- |
-| Linear algebra | gl-matrix **3.4.4** | MIT | Installed, **not yet imported**. Camera in F1.02 will adopt documented `mat4` / `vec3` interfaces after an integration test. |
+| Linear algebra | gl-matrix **3.4.4** | MIT | **Integrated in F1.02:** `src/engine/Camera.ts` uses the pinned `mat4.lookAt`, `mat4.ortho` (alias of `orthoNO`), `mat4.multiply`, `mat4.invert`, and `vec3.transformMat4` interfaces; round-trip and aspect tests in `tests/camera.test.ts`. |
 | WebGL helpers | twgl.js **7.0.0** | MIT | Installed, **not yet imported**. F1.01/F1.04 will use limited buffer/program helpers; the game still owns WebGL resources, lifecycle, and draw policy. |
 | Compiler | TypeScript **5.9.3** | Apache-2.0 | Used by strict `tsc --noEmit` scripts, verified on CI. |
 | Bundler | Vite **7.3.8** | MIT | Used to build the application and run the dev server, verified on CI. |
@@ -76,3 +76,11 @@ The manifest's caret version ranges resolve through committed npm lockfile v3; p
 **Dependency change protocol:** check exact upstream version/tag and license, update manifest and lockfile together, `npm ci`/typecheck/test/build, re-check runtime imports and transitive licenses, update `THIRD_PARTY_NOTICES.md`, and record browser/test evidence separately. Do not infer library API usage, security audit, screenshots or deployed gameplay from package installation alone.
 
 **Attribution source:** [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) records the five direct locked packages, exact tagged license links, full notices for both currently declared runtime libraries, and the limits of transitive license metadata. A release-ready SBOM, full transitive verification and distribution notices remain explicitly assigned to F8.03.
+
+## F1.02 camera coordinates and matrix contract
+- Source is [gl-matrix v3.4.4](https://github.com/toji/gl-matrix/tree/v3.4.4); `mat4.ortho` uses OpenGL/WebGL normalized Z in [-1, 1] and `mat4.multiply(projection, view)` composition. This API was checked against its tagged source before integration.
+- `src/engine/Camera.ts` is headless and does not depend on DOM/WebGL. World is X east, Y up, Z north. The camera is fixed at azimuth 45° and 53° above the horizon, looking toward its focus from positive X/Z; there is no camera rotation or arbitrary orbit.
+- At zoom 1, camera-plane vertical span is **31 meters** at both 16:9 and 9:16; horizontal span is 31 × viewport aspect. Zoom is limited to 0.88–1.12 and reduces visible world area as zoom increases.
+- `project` maps any 3D world point to top-left-origin **canvas-local CSS pixels**, returns clip depth and visibility. `screenToGround` inverse-projects screen coordinates as an orthographic ray and intersects a constant-Y ground plane; it returns `null` if the plane intersection falls outside clip planes. Pixel coordinates are *not* window/page coordinates; subtract canvas bounding-rectangle left/top in pointer handlers.
+- `follow(hero, dt, leadXZ)` damps in X/Z only with 0.17s time constant; optional lead shifts focus ahead of hero movement without coupling camera to gameplay physics. Follow is render-only and is not part of deterministic game state.
+- Tests cover desktop and portrait viewport corners, X/Z ground picking round-trips, resize, zoom bounds, matrix-copy isolation, and frame-partition-independent exponential smoothing. A visual screenshot review and integration with gameplay/canvas remain pending F1.05/F3.01.
