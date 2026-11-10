@@ -130,6 +130,7 @@ const calibrationModel = new Float32Array([
 let frameHandle: number | null = null;
 let priorFrameMs = 0;
 let lastDisplayMs = 0;
+let pageSuspended = false;
 
 function stopFrames(): void {
   if (frameHandle !== null) cancelAnimationFrame(frameHandle);
@@ -336,11 +337,16 @@ const resizeObserver = new ResizeObserver(() => paintIfVisible());
 resizeObserver.observe(canvas);
 window.addEventListener("resize", () => paintIfVisible());
 window.addEventListener("pagehide", () => {
+  pageSuspended = true;
   releaseGpu();
   graphics = null;
 });
 window.addEventListener("pageshow", () => {
-  if (!graphics) probeGraphics();
+  // Initial pageshow is NOT a recovery event. A first-frame renderer failure
+  // must leave its error overlay visible until the user explicitly retries.
+  if (!pageSuspended) return;
+  pageSuspended = false;
+  probeGraphics();
 });
 probeGraphics();
 
