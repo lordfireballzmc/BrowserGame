@@ -279,6 +279,7 @@ function probeGraphics(): void {
 
   try {
     renderer = new InstancedRenderer(result.gl);
+    renderer.enableSunShadows();
     gallery = createArtGallery(renderer);
   } catch (error) {
     renderer?.dispose();
