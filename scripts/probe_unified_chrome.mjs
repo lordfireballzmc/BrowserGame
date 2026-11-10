@@ -6,21 +6,24 @@
  * script waits for ACTUAL in-page readiness using Node 22's native WebSocket.
  * It verifies real gameplay and captures actual single-scene browser pixels.
  *
- * Usage: node scripts/probe_unified_chrome.mjs <chrome> <url> <width,height> <orientation> [movement|map|cinematic]
+ * Usage: node scripts/probe_unified_chrome.mjs <chrome> <url> <width,height> <orientation> [movement|map|cinematic] [DPR]
+ * Optional DPR enables exact live CSS/backbuffer/quality/resize verification.
  */
 import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const [browser, url, dimensions, orientation, requestedMode="movement"] = process.argv.slice(2);
+const [browser, url, dimensions, orientation, requestedMode="movement", dprArg] = process.argv.slice(2);
 const scene = new URL(url);
 const mode = requestedMode;
+const requestedDpr=dprArg === undefined ? null : Number(dprArg);
 if (!browser || !url?.startsWith("http://127.0.0.1:") ||
     !/^\d+,\d+$/.test(dimensions??"") ||
     !["landscape","portrait"].includes(orientation) ||
-    !["movement","map","cinematic"].includes(mode)) {
-  throw new Error("Usage: node scripts/probe_unified_chrome.mjs <browser> <loopback-url> <width,height> <landscape|portrait> [movement|map|cinematic]");
+    !["movement","map","cinematic"].includes(mode) ||
+    (requestedDpr!==null && ![1,2,3].includes(requestedDpr))) {
+  throw new Error("Usage: node scripts/probe_unified_chrome.mjs <browser> <loopback-url> <width,height> <landscape|portrait> [movement|map|cinematic] [1|2|3 DPR]");
 }
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const profile = mkdtempSync(join(tmpdir(), "bastionfall-cdp-"));
@@ -112,6 +115,16 @@ async function openChromePage() {
 
 try {
   await openChromePage();
+  // CDP sets the emulated CSS viewport and device scale BEFORE screenshot
+  // acceptance; the page then reloads under the actual emulated DPR.
+  if(requestedDpr!==null) {
+    const [width,height]=dimensions.split(",").map(Number);
+    await send("Emulation.setDeviceMetricsOverride",{
+      width,height,deviceScaleFactor:requestedDpr,mobile:false,
+    });
+    await send("Page.reload",{ignoreCache:true});
+    await pause(550);
+  }
   const deadline=Date.now()+65000;
   let ready=false;
   while(Date.now()<deadline) {
@@ -131,6 +144,14 @@ try {
         selectedPad:d.selectedPad, padCount:d.padCount,
         sceneryCount:d.sceneryCount, composition:d.composition,
         shadows:d.shadows,
+        graphicsTier:d.graphicsTier,graphicsDpr:d.graphicsDpr,
+        graphicsBuffer:d.graphicsBuffer,graphicsCss:d.graphicsCss,
+        graphicsLimited:d.graphicsLimited,graphicsPixels:d.graphicsPixels,
+        deviceDpr:window.devicePixelRatio,
+        canvasWidth:document.querySelector("#terrain")?.width,
+        canvasHeight:document.querySelector("#terrain")?.height,
+        canvasCssWidth:document.querySelector("#terrain")?.getBoundingClientRect()?.width,
+        canvasCssHeight:document.querySelector("#terrain")?.getBoundingClientRect()?.height,
         trace:document.querySelector("#trace")?.textContent?.slice(0,2500)
       };
     })()`);
@@ -155,7 +176,14 @@ try {
         lastState.combatProbe==="pass" &&
         lastState.heroVisible==="true" &&
         Number(lastState.hitTargets)>0 &&
-        Number(lastState.enemyCount)===19;
+        Number(lastState.enemyCount)===19 &&
+        lastState.graphicsTier===(scene.searchParams.get("quality")??"balanced") &&
+        lastState.graphicsBuffer===lastState.canvasWidth+"x"+lastState.canvasHeight &&
+        Number(lastState.graphicsPixels)===lastState.canvasWidth*lastState.canvasHeight &&
+        Number(lastState.graphicsPixels)>0 &&
+        Number(lastState.graphicsPixels)<=4_194_304 &&
+        (requestedDpr===null || Math.abs(lastState.deviceDpr-requestedDpr)<0.01) &&
+        (requestedDpr===null || lastState.canvasWidth>lastState.canvasCssWidth);
     } else if (mode==="map") {
       const target=scene.searchParams.get("probePadClick");
       ready=common &&
@@ -187,11 +215,83 @@ try {
   if(!ready) {
     throw new Error("Game did not become READY within 65s: "+JSON.stringify(lastState));
   }
+  if(mode==="movement" && requestedDpr!==null) {
+    // Exercise actual select event and live viewport resize, not just the
+    // CanvasRuntime unit math. All operations use the same running Three scene.
+    const beforePixels=lastState.canvasWidth*lastState.canvasHeight;
+    const smaller=await evaluate(`(() => {
+      const s=document.querySelector("#graphics-quality");
+      s.value="economy";
+      s.dispatchEvent(new Event("change",{bubbles:true}));
+      const c=document.querySelector("#terrain");
+      return {tier:document.body.dataset.graphicsTier,pixels:c.width*c.height,
+        buffer:document.body.dataset.graphicsBuffer};
+    })()`);
+    if(smaller.tier!=="economy" || !(smaller.pixels<beforePixels)) {
+      throw new Error("VQ.01 live economy selector failed: "+JSON.stringify({beforePixels,smaller}));
+    }
+    const restored=await evaluate(`(() => {
+      const s=document.querySelector("#graphics-quality");
+      s.value="sharp";
+      s.dispatchEvent(new Event("change",{bubbles:true}));
+      const c=document.querySelector("#terrain");
+      return {tier:document.body.dataset.graphicsTier,pixels:c.width*c.height};
+    })()`);
+    if(restored.tier!=="sharp" || restored.pixels<=smaller.pixels) {
+      throw new Error("VQ.01 live sharp selector failed: "+JSON.stringify({smaller,restored}));
+    }
+    const [originalWidth,originalHeight]=dimensions.split(",").map(Number);
+    const newWidth=Math.round(originalWidth*0.77);
+    const newHeight=Math.round(originalHeight*0.82);
+    await send("Emulation.setDeviceMetricsOverride",{
+      width:newWidth,height:newHeight,deviceScaleFactor:requestedDpr,mobile:false,
+    });
+    let resized=null;
+    for(let i=0;i<24;i++) {
+      resized=await evaluate(`(() => {
+        const c=document.querySelector("#terrain");
+        return {width:c.width,height:c.height,cssWidth:c.getBoundingClientRect().width,
+          cssHeight:c.getBoundingClientRect().height,buffer:document.body.dataset.graphicsBuffer,
+          tier:document.body.dataset.graphicsTier,result:document.body.dataset.result};
+      })()`);
+      if(resized.buffer!==lastState.graphicsBuffer && resized.result==="pass")break;
+      await pause(150);
+    }
+    if(resized.result!=="pass" || resized.buffer===lastState.graphicsBuffer ||
+       resized.width*resized.height>4_194_304) {
+      throw new Error("VQ.01 same-WebGL-scene responsive resize failed: "+
+        JSON.stringify({initial:lastState.graphicsBuffer,resized}));
+    }
+    await send("Emulation.setDeviceMetricsOverride",{
+      width:originalWidth,height:originalHeight,
+      deviceScaleFactor:requestedDpr,mobile:false,
+    });
+    await pause(350);
+    const final=await evaluate(`(() => {
+      const c=document.querySelector("#terrain");
+      return {width:c.width,height:c.height,
+        tier:document.body.dataset.graphicsTier,result:document.body.dataset.result,
+        buffer:document.body.dataset.graphicsBuffer,
+        hero:document.body.dataset.heroVisible,
+        combat:document.body.dataset.combatProbe};
+    })()`);
+    if(final.result!=="pass" || final.tier!=="sharp" ||
+       final.width!==restored.pixels/final.height || final.hero!=="true" ||
+       final.combat!=="pass") {
+      throw new Error("VQ.01 restore/playability gate failed: "+JSON.stringify(final));
+    }
+    lastState.qualityRoundTrip="pass";
+    lastState.resizeRoundTrip="pass";
+    lastState.graphicsTier=final.tier;
+    lastState.graphicsBuffer=final.buffer;
+    lastState.canvasWidth=final.width;
+    lastState.canvasHeight=final.height;
+  }
   const image=await send("Page.captureScreenshot",{
     format:"png",captureBeyondViewport:false,fromSurface:true,
   },30000);
   if(!image.data || image.data.length<10000)throw new Error("Missing real Chrome screenshot");
-  const suffix=mode==="movement" ? orientation
+  const suffix=mode==="movement" ? orientation+(requestedDpr===null?"":"-dpr"+requestedDpr)
     : mode==="map" ? "map-"+(scene.searchParams.get("probePadClick")??"unknown")
     : "cinematic-"+orientation;
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
