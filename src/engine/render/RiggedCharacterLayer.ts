@@ -163,9 +163,19 @@ interface Actor {
   readonly skinnedMeshes: number;
   readonly bones: number;
   motion:Motion;
+  previousMotion:Motion|null;
+  transitionStartedSeconds:number;
 }
 function validTime(value:number):void {
   if(!Number.isFinite(value)||value<0)throw new RangeError("Animation time must be nonnegative and finite");
+}
+/** Native procedural-to-animated pose handoff; 140ms is visibly short at 30 FPS. */
+export const ANIMATION_BLEND_SECONDS=0.14;
+/** Pure smoothstep: predictable at fixed simulation clock, never Date.now(). */
+export function animationBlend(elapsedSeconds:number):number {
+  if(!Number.isFinite(elapsedSeconds))throw new RangeError("Invalid animation transition age");
+  const t=Math.max(0,Math.min(1,elapsedSeconds/ANIMATION_BLEND_SECONDS));
+  return t*t*(3-2*t);
 }
 
 /** The single existing Three scene owns and renders every cloned skeleton. */
@@ -328,6 +338,7 @@ export class RiggedCharacterLayer {
     return {
       role,group:root,mixer,actions,
       skinnedMeshes:renderedMeshes,bones,motion:"Idle",
+      previousMotion:null,transitionStartedSeconds:0,
     };
   }
 
@@ -363,14 +374,34 @@ export class RiggedCharacterLayer {
       const animation=this.motions.get(matrix);
       const motion=animation?.motion??"Idle";
       const time=animation?.timeSeconds??this.globalTime;
-      if(motion!==actor.motion || !actor.actions.get(motion)!.isRunning()){
-        actor.actions.get(actor.motion)?.stop();
+      const currentAction=actor.actions.get(motion)!;
+      if(motion!==actor.motion){
+        // Short crossfade between authored bone poses instead of abruptly
+        // snapping 41 joints from run to idle/attack/death.
+        if(actor.previousMotion!==null)
+          actor.actions.get(actor.previousMotion)?.stop();
+        actor.previousMotion=actor.motion;
+        actor.transitionStartedSeconds=this.globalTime;
         actor.motion=motion;
         actor.actions.get(motion)!.reset().play();
+      } else if(!currentAction.isRunning() && motion!=="Death"){
+        currentAction.reset().play();
       }
+      if(actor.previousMotion!==null){
+        const oldAction=actor.actions.get(actor.previousMotion)!;
+        if(!oldAction.isRunning())oldAction.reset().play();
+        const t=animationBlend(this.globalTime-actor.transitionStartedSeconds);
+        currentAction.setEffectiveWeight(t);
+        oldAction.setEffectiveWeight(1-t);
+        if(t>=1){
+          oldAction.stop();
+          currentAction.setEffectiveWeight(1);
+          actor.previousMotion=null;
+        }
+      }else currentAction.setEffectiveWeight(1);
       // Exact sampled game world progress, not accumulating Date.now()/rAF:
       // a pause or render refresh never changes authoritative simulation.
-      const duration=actor.actions.get(motion)!.getClip().duration;
+      const duration=currentAction.getClip().duration;
       const authoredTime=motion==="Death"
         ? Math.min(time,duration-1e-4)
         : time + (i%7)*0.135;
