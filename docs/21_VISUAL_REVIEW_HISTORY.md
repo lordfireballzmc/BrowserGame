@@ -47,6 +47,16 @@ This document records the user's **actual taste judgments and acceptance criteri
 
 **Next design priority:** ART.03a coherent original high-quality sculpted 3D silhouettes, textured keep/foliage/tower components and skeletal animation. Do not substitute glossy Rise-of-Kingdoms realism or promotional reference screenshots for actual game art. Full acceptance detail: `docs/26_ART02B_MAP_CINEMATIC_REVIEW.md`.
 
+## 2026-11-10 — ART.03a actual licensed 3D rigs: better motion, worse faction colors until corrected
+
+**Screenshot source:** ART.03a genuine Chrome/SwiftShader [#42838208953](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42838208953), 1500×950 landscape and 900×1200 portrait rigged Warden movement/19 raiders/physical 4-bolt-hit scene; artifact **13773974295** downloaded and independently inspected. Also map P01/P09 and both static cinematic compositions; **187 Vitest** and TypeScript/build green.
+
+**What improved:** real skinned 3D artist-sculpted head/helmet, torso, limbs, weapons and hooded characters; five authentic authored movement/death/attack clips per role, local custom instantiation with world-sampled animation time. The interaction still follows the actual road; magic projectiles remain real moving bodies. This is materially different from the previous single rigid whole-body mesh bob.
+
+**What regressed:** the original CC0 pack rendered its mostly neutral/silver Knight and brown/green Raider/Rogue atlas colors. At actual gameplay scale the enemy corps read brown/green rather than **crimson hostile**, and the Warden read gray/silver instead of **blue/gold defender**. This contradicted the user's explicit visual hierarchy. The branch therefore gained separate source-material stylization (blue Warden / crimson Scrapper / ruby Runner) and a regression test. **Require fresh actual 16:9 + 9:16 browser screenshots of this color-corrected version before merging.** Do not claim a first rendered screenshot reflects later code.
+
+**Still weak regardless of palette:** Warden and enemies are small in wide battlefield composition, the battle UI is diagnostic, tree/rock art is repetitive, 10 tower pads are empty industrial disks, and the foreground keep is still a flat blue-roof block. This CC0 silhouette family is a professional rig foundation, **not** a unique finished Bastionfall faction kit. Next: custom blue/gold armor, red exaggerated Raiders, readable hero projectile/weapon attachment, real foot plants/recoil and mobile profiling.
+
 ## Repeatable future review entries
 Append one entry per visually meaningful change:
 - **Milestone / commit / CI run and screenshot artifact:** exact links; flag unavailable material.
