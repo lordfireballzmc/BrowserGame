@@ -217,7 +217,9 @@ export class RiggedCharacterLayer {
         n.castShadow=true;
         n.receiveShadow=true;
         renderedMeshes++;
-        bones+=n.skeleton.bones.length;
+        // Multiple clothing pieces bind to the same skeleton; do NOT
+        // misreport all repeated joint bindings as unique bones.
+        bones=Math.max(bones,n.skeleton.bones.length);
       }
     });
     return {
