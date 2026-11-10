@@ -96,7 +96,7 @@ jobs:
               >"/tmp/bastionfall-$orientation.html" 2>"/tmp/bastionfall-$orientation.log"
             if ! grep -q 'data-render-state="active"' "/tmp/bastionfall-$orientation.html" \
               || ! grep -q "data-orientation=\"$orientation\"" "/tmp/bastionfall-$orientation.html" \
-              || ! grep -q 'Draws 1' "/tmp/bastionfall-$orientation.html" \
+              || ! grep -q 'Draws 6' "/tmp/bastionfall-$orientation.html" \
               || ! grep -q 'GPU [0-9]' "/tmp/bastionfall-$orientation.html"; then
               echo "F1.05 main-app $orientation canvas diagnostic failed"
               tail -c 4500 "/tmp/bastionfall-$orientation.html"
@@ -119,3 +119,36 @@ jobs:
             exit 1
           fi
           echo "PASS: renderer exception shows the retryable error overlay"
+          # Art-authorship gate: the actual application must load each of the
+          # four authored meshes and draw the gallery on real software WebGL2.
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+            --window-size=1200,900 --virtual-time-budget=5500 \
+            --dump-dom 'http://127.0.0.1:4173/?diagnostic=1' \
+            >/tmp/bastionfall-art-gallery.html 2>/tmp/bastionfall-art-gallery.log
+          if ! grep -q 'data-render-state="active"' /tmp/bastionfall-art-gallery.html \
+            || ! grep -q 'Draws 6' /tmp/bastionfall-art-gallery.html \
+            || ! grep -q 'WARDEN' /tmp/bastionfall-art-gallery.html \
+            || ! grep -q 'SHIELDBEARER' /tmp/bastionfall-art-gallery.html \
+            || ! grep -q 'FRONTIER KEEP' /tmp/bastionfall-art-gallery.html; then
+            echo "F1.06 authored mesh rendering failed"
+            tail -c 6500 /tmp/bastionfall-art-gallery.html
+            tail -c 2500 /tmp/bastionfall-art-gallery.log
+            exit 1
+          fi
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+            --window-size=1200,900 --virtual-time-budget=5500 \
+            --screenshot=/tmp/bastionfall-gallery-landscape.png \
+            'http://127.0.0.1:4173/?diagnostic=1' \
+            >/tmp/bastionfall-gallery-capture.log 2>&1
+          test -s /tmp/bastionfall-gallery-landscape.png
+          echo "PASS: F1.06 authored geometry rendered; real Chrome screenshot captured"
+      - name: Upload F1.06 gallery screenshot for human art review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f1-06-art-gallery-screenshot
+          path: /tmp/bastionfall-gallery-landscape.png
+          if-no-files-found: warn
+          retention-days: 14
