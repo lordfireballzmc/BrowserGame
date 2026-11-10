@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bastionfall F2.03 — authored defense pads, road and terrain preview (not gameplay)</title>
+  <title>Bastionfall F2.04 — northern river and carved banks engineering preview (not gameplay)</title>
   <style>
     * { box-sizing: border-box }
     body { margin: 0; background: #e9ebe3; color: #243338; font: 14px system-ui; }
@@ -25,9 +25,9 @@
 </head>
 <body data-result="pending">
 <main>
-  <h1>Fenwall Crossing · F2.03 ten carved-stone build sites</h1>
+  <h1>Fenwall Crossing · F2.04 northern river and two timber crossings</h1>
   <p>Seeded 72 × 48m island and a handcrafted 4.5-meter ochre spline road from the western enemy entrance to the keep.
-     This WebGL2 inspection shows ten 3D defense pads with wave locks and projected costs. Click an unlocked pad to select it. No purchases, towers, enemies, or combat yet.</p>
+     This WebGL2 inspection shows a carved northern river with two timber crossings, plus the existing ten defense pads and projected costs. Click an unlocked pad to inspect it. No extra combat paths, purchases or combat.</p>
   <div class="stage"><canvas id="terrain" width="1200" height="760" aria-label="Terrain, winding road and ten carved stone tower pads"></canvas>
     <div class="pad-labels" id="pad-labels" aria-hidden="true"></div></div>
   <output id="pad-selection" aria-live="polite">Wave 1: two available pads. Click a pad to inspect its build region.</output>
@@ -38,6 +38,7 @@
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
   import { generateTerrain } from "/src/art/terrain/Island.ts";
   import { createAuthoredRoad } from "/src/art/terrain/Road.ts";
+  import { generateNorthernRiver } from "/src/art/terrain/River.ts";
   import { PAD_SITES, createPadFoundation, createPadTargetRing, pickPadAtGround, projectPadPrice, padGroundHeight, validatePadSites } from "/src/art/terrain/Pads.ts";
   const body = document.body;
   let renderer;
@@ -66,6 +67,16 @@
     const road = createAuthoredRoad();
     renderer.uploadMesh("authored-road", road.surface);
     instances.push({meshId: "authored-road", material: "road.primary", model});
+    const northRiver = generateNorthernRiver(seed);
+    renderer.uploadMesh("north-river-water", northRiver.water);
+    renderer.uploadMesh("north-river-banks", northRiver.banks);
+    renderer.uploadMesh("river-timber-bridge", northRiver.bridge);
+    instances.push({meshId:"north-river-water", material:"water", model});
+    instances.push({meshId:"north-river-banks", material:"earth.cut", model});
+    for (const [x,y,z] of northRiver.bridgePositions) {
+      instances.push({meshId:"river-timber-bridge",material:"timber.base",
+        model:mat4.fromTranslation(mat4.create(),[x,y,z])});
+    }
     renderer.uploadMesh("carved-pad", createPadFoundation());
     renderer.uploadMesh("pad-target-ring", createPadTargetRing());
     for (const site of PAD_SITES) {
@@ -134,11 +145,12 @@
     }
     // Instanced geometry shares one mesh: all TEN pads must draw in ONE call.
     const expectedDraws = terrain.tiles.length +
-      terrain.tiles.filter(tile => tile.cliff !== null).length + 2; // road + shared pad
+      terrain.tiles.filter(tile => tile.cliff !== null).length + 5; // road + pad + water + banks + two instanced bridges
     if (terrain.tiles.length !== 54 || terrain.coastSegments < 50
       || stats.instances !== instances.length || stats.drawCalls !== expectedDraws
       || changedSamples < 500 || road.rutCount < 10 || road.sampleStepMaxMeters > 0.55 + 1e-6
-      || PAD_SITES.length !== 10 || labelLayer.childElementCount !== PAD_SITES.length) {
+      || PAD_SITES.length !== 10 || labelLayer.childElementCount !== PAD_SITES.length
+      || northRiver.segments !== 66 || northRiver.bridgePositions.length !== 2) {
       throw new Error("Terrain/pad preview acceptance failed: " +
         JSON.stringify({instances:stats.instances, expectedInstances:instances.length,
           draws:stats.drawCalls, expectedDraws, changedSamples,
@@ -150,6 +162,8 @@
       roadWidthMeters: 4.5, roadLengthMeters: Number(road.lengthMeters.toFixed(2)),
       roadSampleStepMaxMeters: Number(road.sampleStepMaxMeters.toFixed(3)),
       rutCount: road.rutCount, padCount: PAD_SITES.length, padPriceCrowns: 20,
+      riverSegments: northRiver.segments, bridgeCount: northRiver.bridgePositions.length,
+      riverWaterY: -0.20,
       cliffSections: terrain.coastSegments,
       meshes: renderer.meshCount, instances: stats.instances,
       draws: stats.drawCalls, triangles: stats.triangles,
@@ -161,6 +175,8 @@
     body.dataset.tiles = String(terrain.tiles.length);
     body.dataset.road = "pass";
     body.dataset.padCount = String(PAD_SITES.length);
+    body.dataset.river = "pass";
+    body.dataset.bridges = String(northRiver.bridgePositions.length);
     body.dataset.padPrice = "20 crowns";
     body.dataset.coast = String(terrain.coastSegments);
     body.dataset.changed = String(changedSamples);

@@ -157,7 +157,10 @@ jobs:
             || ! grep -q '"roadWidthMeters":4.5' /tmp/bastionfall-island.html \
             || ! grep -q 'data-pad-count="10"' /tmp/bastionfall-island.html \
             || ! grep -q 'data-pad-price="20 crowns"' /tmp/bastionfall-island.html \
-            || ! grep -q 'data-pad-id="P01"' /tmp/bastionfall-island.html; then
+            || ! grep -q 'data-pad-id="P01"' /tmp/bastionfall-island.html \
+            || ! grep -q 'data-river="pass"' /tmp/bastionfall-island.html \
+            || ! grep -q 'data-bridges="2"' /tmp/bastionfall-island.html \
+            || ! grep -q '"riverSegments":66' /tmp/bastionfall-island.html; then
             echo "F2.01 real WebGL2 terrain preview failed"
             tail -c 5500 /tmp/bastionfall-island.html
             tail -c 1800 /tmp/bastionfall-island.log
@@ -171,7 +174,7 @@ jobs:
             'http://127.0.0.1:4173/tests/terrain-preview.html' \
             >/tmp/bastionfall-terrain-capture.log 2>&1
           test -s /tmp/bastionfall-terrain-preview.png
-          echo "PASS: F2.03 10 carved pads and camera-projected costs with road and terrain in WebGL2"
+          echo "PASS: F2.04 curved water, stratified riverbanks and 2 timber bridges rendered with road/pads in WebGL2"
           # Dispatch a real pixel-space click in the running browser fixture:
           # an unlocked P01 must select; locked P09 must refuse selection.
           for probe in P01 P09; do
@@ -198,11 +201,11 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload F2.03 terrain, road and pad screenshot for art inspection
+      - name: Upload F2.04 river, bridges and pad screenshot for art inspection
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: f2-03-build-pads-screenshot
+          name: f2-04-northern-river-screenshot
           path: /tmp/bastionfall-terrain-preview.png
           if-no-files-found: warn
           retention-days: 14
