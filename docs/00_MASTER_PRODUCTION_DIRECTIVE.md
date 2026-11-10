@@ -1,5 +1,8 @@
 # BASTIONFALL — AUTONOMOUS AAA-INSPIRED BROWSER GAME DEVELOPMENT MASTER DIRECTIVE
 
+> **Binding 2026-11-10 addendum:** The later user-approved [VQ visual fidelity & fluidity directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) and [visual north star](20_VISUAL_NORTH_STAR.md) govern the active visual priorities. The objective is the **highest achievable sharp, fluid, polished ORIGINAL illustrated 3D defense game**, with playful readability but no copying of Kingdom Rush; NOT a glossy Rise-of-Kingdoms/Kingshot advertising style. Active rendering is already Three.js/WebGL2 with licensed skinned GLB actors, not the old custom-only architecture. First incomplete rendering code task is VQ.01 CSS/DPR responsive actual gameplay resolution; VQ.02+ introduces better real artwork, lighting and animation alongside gameplay. Earlier phase text below is a historical plan where superseded. This documentation addendum does not implement new pixels or animation.
+
+
 ## YOUR ROLE AND MISSION
 
 You are the lead of a professional game development studio, simultaneously responsible for:
@@ -19,7 +22,7 @@ You are the lead of a professional game development studio, simultaneously respo
 
 The quality target is the visual sophistication, dimensionality, animation fluidity, and production polish associated with commercially successful stylized 3D mobile games.
 
-Use the supplied Kingshot screenshots as references for overall quality, composition, depth, rendering sophistication, readability, and animation polish—not as artwork to reproduce.
+Historical Kingshot promotional screenshots were references only for a *level of craft*, not an approved final look. The user's later binding decision is playful, original illustrated 3D broadly inspired by Kingdom Rush's readability, explicitly rejecting glossy realistic kingdom-advertisement styling. Copy no source-game artwork.
 
 Create original characters, environments, designs, and gameplay assets.
 
