@@ -130,7 +130,7 @@ export function sceneryClearance(
   return true;
 }
 function scaleRange(kind:PropKind,rng:SeededRandom):number{
-  const lo=kind==="pine"||kind==="broadleaf"?.89:kind==="rock"?.78:.85;
+  const lo=(kind==="pine"||kind==="broadleaf")?0.89:kind==="rock"?0.78:0.85;
   const hi=kind==="pine"||kind==="broadleaf"?1.03:kind==="rock"?1.16:1.20;
   return lo+(hi-lo)*rng.nextFloat();
 }
