@@ -167,7 +167,7 @@ export class EnemyRoadWorld {
 
   constructor(
     readonly wave: EarlyWave = 1,
-    private readonly seed: string | number = "fenwall-crossing-v1",
+    readonly seed: string | number = "fenwall-crossing-v1",
   ) {
     this.queue = buildEarlySpawnQueue(wave);
     this.current = frozenSnapshot(0, [], this.queue.length);
