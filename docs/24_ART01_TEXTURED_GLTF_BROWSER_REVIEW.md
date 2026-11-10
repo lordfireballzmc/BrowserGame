@@ -1,0 +1,24 @@
+# ART.01 — Licensed textured glTF in the live Bastionfall world
+
+**Status:** technically integrated and checked in real Chromium/SwiftShader WebGL2; final repository-wide PR CI/merge still required. **Not production-grade art parity.**
+
+## Exact source and provenance
+- Original: [Khronos glTF Sample Assets — Lantern](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern), historical old wooden streetlight originally by Microsoft/sbtron. Model media is **CC0-1.0** as confirmed by upstream `Models/Lantern/LICENSE.md`; the metadata license is distinct and not copied. This is a source-verified external asset, **not ChatGPT-programmed primitive geometry**.
+- Pinned upstream commit: `0b4f3a5862f3037c7092206e75c6f2a31a504ca5`; exact original Git blob: `0c97893aee066b6fa36f7725443b7536c3510d09`.
+- Initial GLB **9,564,264 bytes** -> locally bundled `public/assets/lantern-cc0.glb` **701,672 bytes**, retaining the **three actual authored meshes, four embedded texture images**, UVs, normals and material definitions. The exact bundled SHA256 is `f960d54914c4aea71dcb6afb19486f5129cc8aaac0d9c7908e98e7b880ed7a2a`. All claims are supported by [Actions 42821402170](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42821402170) CI logs and the committed GLB digest test.
+- Pipeline: `scripts/ingest_lantern.py` with pinned source, Git blob equality, 512px maximum embedded images, deterministic JPEG/alpha-safe PNG, glTF v2 JSON/BIN validation, checksum and 2 MiB packaging ceiling. It never runs the upstream's executable scripts or links a runtime third-party CDN.
+- Three.js release: exact `0.184.0` + `@types/three 0.184.0`; `@types/node 22.15.30`, all in committed `package-lock.json`. Uses `GLTFLoader`, actual mesh/texture materials, neutral tone map, local light, and a responsive WebGL2 overlay registered to the existing `OrthoCamera` matrices. Other gameplay source/balance is unchanged.
+
+## Browser-visible proof
+- **[GitHub Actions bootstrap run 42821402170](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42821402170)** passed **178 Vitest tests / 21 files**, strict TS and Vite production build.
+- Real Chrome/SwiftShader `tests/terrain-preview.html?view=movement&assetPilot=1` with **both 1500×950 landscape and 900×1200 portrait**: `data-asset-pilot=pass`, a nonzero authored-texture count, Warden alive/visible, existing raider route/camera and real combat active. The browser did not request an external asset CDN.
+- Actual screenshots stored as run artifact **13767766225**, downloaded and **visually inspected**. The original road, 19 red raiders, blue-gold Warden, keep, pads, river and UI remain framed. A small imported rustic lantern appears beside the protagonist by the road in both views. This is not a separate Three.js demo page: the model is rendered over **the actual running 3D Bastionfall world, with the same game camera**.
+- **Critical art review:** the lantern is presently much smaller in screen-space than an artistically meaningful premium prop; the large surrounding game remains the simple, flat geometry judged inferior earlier. The lantern does not receive native terrain depth occlusion or cast onto the legacy scene's shadow atlas. The two independent WebGL2 contexts share camera pose but **not a depth buffer**. This temporary bridge costs extra memory/contexts and is **unsuitable as a permanent production or mobile solution**. Gameplay character art, real skeletal animation and postproduction tone remain behind the 3D Kingdom Rush-inspired target.
+
+## What's genuinely advanced
+We have proven a licensed **externally authored, textured, real 3D GLB asset** can be acquired reproducibly, verified legally and cryptographically, reduced from ~9.6MB to ~0.7MB, bundled with Vite, loaded by Three and placed in the existing live game under synchronized camera and original gameplay. The previous primitive-only asset ceiling is no longer **a compulsory pipeline architecture**.
+
+## Next required work (ART.02 / F3.04)
+Integrate the actual world surface, keep, vegetation and actors in **one** Three.js scene so imported material/mesh occlusion, ambient fill, ground contact shadows, and native postprocessing share the same physical camera and depth. Preserve collision, fixed-tick simulation, pad interactions, enemy march and bolts. Delete the dual-canvas pilot after **real parity**. Then iterate on coherent stylized assets, skeletal motion and mobile metrics instead of judging the project by a single import test.
+
+**User art direction remains binding:** original playful, expressive, illustrated **3D** fantasy inspired by the *readability and personality* of Kingdom Rush, **not** Rise of Kingdoms realism or copying game IP. [Master mission](00_MASTER_PRODUCTION_DIRECTIVE.md) | [North star](20_VISUAL_NORTH_STAR.md) | [Migration ADR](23_ASSET_FIRST_THREE_MIGRATION_ADR.md).
