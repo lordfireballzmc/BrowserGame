@@ -7,7 +7,7 @@
  * This module never changes positions, HP, collision or projectile timing.
  */
 import {
-  AnimationAction, AnimationClip, AnimationMixer, Box3, Color, Group,
+  AnimationAction, AnimationClip, AnimationMixer, Box3, Group,
   LoopOnce, Matrix4, Mesh, MeshStandardMaterial, Quaternion,
   Scene, SkinnedMesh, Texture, Vector3,
 } from "three";
@@ -46,13 +46,54 @@ const MOTIONS:readonly Motion[]=["Idle","Walk","Run","Attack","Death"];
 export const ACTOR_TINTS:Readonly<Record<Role,number>>={
   warden:0x4b90de, scrapper:0xe54949, runner:0xd32d50,
 } as const;
-export function stylizeActorMaterial(material:MeshStandardMaterial, role:Role):MeshStandardMaterial {
-  // Clone once per SOURCE material so multiple SkinnedMesh clones share GPU
-  // material resources. Tint the existing KayKit atlas, never flatten UVs.
+/**
+ * KayKit's painterly atlas contains very little red in some leather/green
+ * texels. MeshStandardMaterial.color alone MULTIPLIES that atlas; a red tint
+ * cannot turn a dark-green cloth into red because the source red channel is
+ * almost zero. The user-visible screenshot proved that multiplicative tint
+ * failed. Repaint diffuse hue from original per-fragment luminance instead.
+ *
+ * This keeps all authored UV geometry, texture value gradients, bone weights,
+ * shadow reception and PBR roughness. It does not clone huge PNG textures or
+ * add render passes and works identically for 20 independently moving rigs.
+ */
+export function factionFragment(fragment:string, role:Role):string {
+  const marker="#include <map_fragment>";
+  if(!fragment.includes(marker))throw new Error("Three MeshStandard map shader changed");
+  const base=role==="warden"
+    ? "vec3(0.13,0.43,0.88)"
+    : role==="scrapper" ? "vec3(0.91,0.13,0.20)"
+      : "vec3(0.86,0.07,0.23)";
+  const gold=role==="warden"
+    ? `
+      // Use the bright metal parts of the original source atlas as a
+      // contrasting warm accent; keep most Warden silhouette distinctly blue.
+      float goldAccent=smoothstep(0.74,0.98,sourceLuma)*0.55;
+      factionPaint=mix(factionPaint,vec3(1.0,0.71,0.20)*paintLight,goldAccent);
+    ` : "";
+  return fragment.replace(marker,`${marker}
+    float sourceLuma=clamp(dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722)),0.0,1.0);
+    float paintLight=clamp(0.52+sourceLuma*1.28,0.25,1.28);
+    vec3 factionPaint=${base}*paintLight;
+    ${gold}
+    // 91% faction hue: neutral/brown/green characters are never mistaken
+    // for allies while the source atlas still supplies visible fold/edge detail.
+    diffuseColor.rgb=mix(diffuseColor.rgb,factionPaint,0.91);
+  `);
+}
+export function stylizeActorMaterial(material:MeshStandardMaterial,role:Role):MeshStandardMaterial {
+  // All clones share ONE source texture; preserve original UVs and artists'
+  // painting values, but restore the required blue-versus-crimson gameplay read.
   const styled=material.clone();
-  styled.color.lerp(new Color(ACTOR_TINTS[role]),0.65);
+  styled.color.set(0xffffff);
   styled.roughness=0.89;
   styled.metalness=Math.min(0.14,styled.metalness);
+  styled.onBeforeCompile=shader=>{
+    shader.fragmentShader=factionFragment(shader.fragmentShader,role);
+  };
+  // Three caches shader programs by this key; separate faction hues must not
+  // accidentally reuse one another's compiled fragment program.
+  styled.customProgramCacheKey=()=>`bastionfall-faction-paint-v2-${role}`;
   styled.needsUpdate=true;
   return styled;
 }
