@@ -97,7 +97,7 @@
 </head>
 <body data-result="pending">
 <main>
-  <h1>Fenwall Crossing · F2.06 miniature world art direction</h1>
+  <h1>Fenwall Crossing · original 3D frontier</h1>
   <p>Original 3D assets with warm directional light, cool ambient fill, soft WebGL2 sun shadows and intentional camera framing.
      The wide view retains the seeded 72 × 48m island, 4.5m road, river, trees and ten inspectable pads.
      The cinematic views pose the keep, warden, raiders and stone bolt spires as <strong>visual studies only</strong>;
@@ -463,7 +463,10 @@
           labels:labelLayer.childElementCount, padCount:PAD_SITES.length}));
     }
     const trace = {
-      mode: unifiedThree ? "ART.02 ONE SCENE: TERRAIN + TEXTURED GLB + ACTUAL BATTLE"
+      mode: unifiedThree
+        ? movement ? "ART.02 LIVE WARDEN + REAL BOLTS · ONE THREE WORLD"
+          : cinematic ? "ART.02 CINEMATIC POSED STUDY · ONE THREE WORLD"
+            : "ART.02 FULL-ISLAND PAD INSPECTION · ONE THREE WORLD"
         : movement ? "F3.03 LIVE HERO BOLTS (no enemy attacks or rewards)"
         : cinematic ? "CINEMATIC ART STUDY (not gameplay)" : "ENGINEERING WORLD PREVIEW (not a game)",
       sunShadows:renderer.sunShadowsEnabled,
