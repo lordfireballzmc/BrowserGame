@@ -58,6 +58,16 @@ for(const [file,size] of [
   assert.ok(existsSync(full)&&statSync(full).size===size,
     "Missing bundled source-verified organic rock GLB "+file);
 }
+// VQ.02d real three-dimensional source-pinned flowers shipped in the
+// compiled playable bundle. Grass/bush meshes already live in forest atlas.
+for(const [file,bytes] of [
+  ["kenney-wildflower-gold.glb",7120],
+  ["kenney-wildflower-lilac.glb",7112],
+]){
+  const full=join(dist,"assets/scenery",file);
+  assert.ok(existsSync(full)&&statSync(full).size===bytes,
+    "Compiled game lost exact CC0 3D undergrowth wildflower "+file);
+}
 const bundles = readdirSync(join(dist,"assets")).filter(f=>f.endsWith(".js"));
 assert.ok(bundles.length>0, "Missing production JS bundles");
 const scripts = bundles.map(f=>readFileSync(join(dist,"assets",f),"utf8")).join("\n");
@@ -75,4 +85,4 @@ assert.ok(scripts.includes(expectedBase+"assets/scenery/"),
 // so it does not appear in the static index.html entry itself.
 assert.ok(scripts.includes("tests/terrain-preview.html"),
   "The compiled landing page has lost its game launch route");
-console.log("PASS: deploy output serves the actual playable page, all 11 GLBs (4 character/lantern + 6 castle + 1 KayKit forest atlas), built JS, correct "+expectedBase+" prefix");
+console.log("PASS: deploy output serves the actual playable page, all 15 GLBs (4 character/lantern + 6 castle + 1 KayKit forest + 2 organic rocks + 2 flowers), built JS, correct "+expectedBase+" prefix");

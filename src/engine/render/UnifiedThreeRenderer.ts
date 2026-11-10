@@ -25,6 +25,7 @@ import {
   type EnvironmentPlacement, type EnvironmentPadPlacement,
 } from "./EnvironmentArtLayer";
 import { SceneryArtLayer, type SceneryArtStats } from "./SceneryArtLayer";
+import type { GroundcoverArtStats } from "./GroundcoverArtLayer";
 import { groundPigmentAt } from "../../art/terrain/GroundPigment";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
@@ -163,9 +164,15 @@ export class UnifiedThreeRenderer {
   get environmentStatus(): EnvironmentArtStatus | null { return this.environment.status; }
   get sceneryArtStatus(): SceneryArtStats | null { return this.sceneryArt.stats; }
   get sceneryArtReady(): boolean { return this.sceneryArt.ready; }
-  async loadSceneryArt(placements:readonly SceneryPlacement[]):Promise<SceneryArtStats> {
+  get groundcoverReady():boolean{return this.sceneryArt.groundcoverReady;}
+  get groundcoverStatus():GroundcoverArtStats|null{
+    return this.sceneryArt.groundcoverStats;
+  }
+  async loadSceneryArt(placements:readonly SceneryPlacement[],
+    seed:string|number="fenwall-crossing-v1",
+    includeGroundcover=true):Promise<SceneryArtStats> {
     this.assertActive();
-    return this.sceneryArt.load(placements);
+    return this.sceneryArt.load(placements,seed,includeGroundcover);
   }
   get environmentReady(): boolean { return this.environment.ready; }
   /** Load optional art atomically; preserved procedural actors and pads remain
@@ -318,6 +325,14 @@ export class UnifiedThreeRenderer {
       if (opacity===0) continue;
       if (riggedActors.has(index)) {
         visible++; // actual same-scene SkinnedMesh replaces the instanced actor
+        continue;
+      }
+      if (this.sceneryArt.ready && this.sceneryArt.groundcoverReady &&
+          (source.meshId==="scenery-grass" ||
+           source.meshId==="scenery-flower")) {
+        // Authored 3D grasses/flowers have been fully loaded into the SAME
+        // depth/color scene. The source low-poly cards remain fallback only.
+        culled++;
         continue;
       }
       if (this.sceneryArt.ready &&

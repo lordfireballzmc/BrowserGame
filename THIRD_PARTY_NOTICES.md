@@ -1,5 +1,18 @@
 # Third-party dependency provenance and notices
 
+## VQ.02d — modeled groundcover reused from the original KayKit atlas + two Kenney CC0 wildflowers (2026-11-11)
+
+**Shared 3D grass and bushes:** [Kay Lousberg's free CC0 KayKit Forest Nature Pack](https://kaylousberg.itch.io/kaykit-forest). **NO new downloaded nature mesh**: the existing byte-pinned `public/assets/scenery/kaykit-forest-cc0.glb` originally imported in VQ.02b already contains the 3 true UV-atlas painted mesh nodes `Grass_2_D_Color1`, `Bush_3_B_Color1`, `Bush_1_E_Color1`. VQ.02d reuses the already decoded *single* KayKit forest atlas and the same texture object in Three.js for 736 grasses and 48 bush clusters (no duplicated model pack or runtime CDN). Exact original forest source/blob hashes remain documented under VQ.02b below; asset is **licensed non-exclusive third-party geometry**.
+
+**Authored flowers:** original artist [Kenney](https://kenney.nl), original [Nature Kit](https://kenney.nl/assets/nature-kit), **CC0 1.0**. These 3D flower meshes contain multiple original solid-PBR material-color primitives/petals and **no embedded texture atlas**; never describe the flower sources as painted GLB textures. Both binary blobs are byte-for-byte identical to `Hidencod/tge-assets@3ddcc695adbba9fb918cf31b7c139b3f95b76910`. Tests recompute their actual Git object SHA-1 with a NUL header and inspect real glTF 2.0 mesh/material primitives:
+
+| Local file under `public/assets/scenery/` | Exact upstream source | Exact Git blob SHA-1 | Bytes |
+|---|---|---|---:|
+| `kenney-wildflower-gold.glb` | `packs/nature-kit/flower-yellowa.glb` | `26adf12842ac3cabfc8475e135ae00fbbde49f78` | 7,120 |
+| `kenney-wildflower-lilac.glb` | `packs/nature-kit/flower-purplea.glb` | `9a102fdd587ba2c4c345e20ae1721e4753b556eb` | 7,112 |
+
+The VQ.02d implementation creates original deterministic **visual-only placement coordinates**, not gameplay objects or new obstacles. It adds 904 instances in at most 12 GPU-instanced group batches with no particle/billboard trick, reuses the original 258 authoritative scenery locations and validates new sites against source coast/road/river/pad/keep exclusions. The copies are sourced and licensed, not bespoke Bastionfall sculpting. The overall user-mandated professional illustrated 3D art quality remains an independent artistic standard not automatically satisfied by license or geometry provenance.
+
 ## VQ.02c — rounded organic Castle Kit boulder clusters (2026-11-11)
 
 **Original artist:** [Kenney](https://kenney.nl); licensed **CC0 1.0**, [Castle Kit](https://kenney.nl/assets/castle-kit). Original legally redistributable GLB sources at [Hidencod/tge-assets](https://github.com/Hidencod/tge-assets) exact commit `3ddcc695adbba9fb918cf31b7c139b3f95b76910` (same pinned repository already used for VQ.02a). The runtime packages two art-authored, textured **organic rock clusters** locally, **without a CDN**, instead of the mechanical-looking KayKit source rock geometries. Exact upstream blob and binary SHA-1 match tested using `tests/scenery-art.test.ts`:

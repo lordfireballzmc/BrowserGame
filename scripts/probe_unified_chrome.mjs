@@ -72,14 +72,29 @@ async function evaluate(expression) {
 }
 async function openChromePage() {
   const file=join(profile,"DevToolsActivePort");
-  const deadline=Date.now()+14000;
-  while(!existsSync(file)) {
-    if (child.exitCode!==null)throw new Error("Chrome exited before DevTools startup");
-    if (Date.now()>deadline)throw new Error("Timed out starting Chrome DevTools");
+  const deadline=Date.now()+20000;
+  let port=0;
+  // Chrome creates DevToolsActivePort before both text lines are guaranteed
+  // to be flushed. Merely checking file existence races with the first write
+  // and occasionally parses an empty string as port 0. Never classify that
+  // runner startup race as a failed gameplay frame.
+  while(Date.now()<deadline) {
+    if (child.exitCode!==null)throw new Error(
+      "Chrome exited before DevTools startup: "+browserLog.join("").slice(-900));
+    if(existsSync(file)){
+      const raw=readFileSync(file,"utf8").split("\n")[0]?.trim()??"";
+      const candidate=Number(raw);
+      if(/^\d+$/.test(raw)&&Number.isInteger(candidate)&&
+         candidate>0&&candidate<=65535){
+        port=candidate;
+        break;
+      }
+    }
     await pause(120);
   }
-  const port=Number(readFileSync(file,"utf8").split("\n")[0]);
-  if(!Number.isInteger(port) || port<=0)throw new Error("Invalid Chrome DevTools port");
+  if(!port)throw new Error(
+    "Timed out waiting for valid Chrome DevTools port: "+
+      browserLog.join("").slice(-900));
   let page;
   for(let i=0;i<30;i++) {
     try {
@@ -149,6 +164,14 @@ try {
         sceneryArtBatches:d.sceneryArtBatches,
         sceneryArtInstances:d.sceneryArtInstances,
         sceneryArtError:d.sceneryArtError,
+        groundcoverArt:d.groundcoverArt,
+        groundcoverSources:d.groundcoverSources,
+        groundcoverGrass:d.groundcoverGrass,
+        groundcoverShrubs:d.groundcoverShrubs,
+        groundcoverFlowers:d.groundcoverFlowers,
+        groundcoverInstances:d.groundcoverInstances,
+        groundcoverBatches:d.groundcoverBatches,
+        groundcoverTriangles:d.groundcoverTriangles,
         groundArt:d.groundArt,groundPalette:d.groundPalette,
         shadows:d.shadows,
         environmentArt:d.environmentArt,
@@ -172,7 +195,8 @@ try {
     })()`);
     if(lastState.result==="fail" || lastState.assetPilot==="error" ||
        lastState.environmentArt==="error" ||
-       lastState.sceneryArt==="error") {
+       lastState.sceneryArt==="error" ||
+       lastState.groundcoverArt==="error") {
       throw new Error("Game reported an actual failure: "+JSON.stringify(lastState));
     }
     const common = lastState.result==="pass" &&
@@ -184,6 +208,18 @@ try {
       lastState.unifiedCanvases==="1" &&
       lastState.shadows==="on" &&
       Number(lastState.padCount)===10 &&
+      (scene.searchParams.get("understory")==="legacy" ||
+       scene.searchParams.get("scenery")==="legacy"
+        ? lastState.groundcoverArt==="disabled"
+        : lastState.groundcoverArt==="pass" &&
+          Number(lastState.groundcoverSources)===5 &&
+          Number(lastState.groundcoverGrass)===736 &&
+          Number(lastState.groundcoverShrubs)===48 &&
+          Number(lastState.groundcoverFlowers)===120 &&
+          Number(lastState.groundcoverInstances)===904 &&
+          Number(lastState.groundcoverBatches)>=5 &&
+          Number(lastState.groundcoverBatches)<=12 &&
+          Number(lastState.groundcoverTriangles)<=650000) &&
       (scene.searchParams.get("ground")==="legacy"
         ? lastState.groundArt==="disabled"
         : lastState.groundArt==="pass" &&
@@ -346,7 +382,8 @@ try {
   const suffix=suffixBase+
     (scene.searchParams.get("environment")==="legacy" ? "-env-legacy" : "")+
     (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "")+
-    (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "");
+    (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "")+
+    (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
