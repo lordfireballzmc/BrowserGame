@@ -8,7 +8,7 @@ Read in this order at start of **every** conversation turn:
 5. `docs/visual-references/README.md` (original in-repo SVG and visual evidence)
 6. `docs/03_ART_AND_ANIMATION_BIBLE.md`
 7. `docs/05_ARCHITECTURE.md`
-8. `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md`, `docs/25_ART02_SINGLE_SCENE_REVIEW.md` and `docs/26_ART02B_MAP_CINEMATIC_REVIEW.md` for rendering/asset tasks
+8. `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md`, `docs/25_ART02_SINGLE_SCENE_REVIEW.md`, `docs/26_ART02B_MAP_CINEMATIC_REVIEW.md` and `docs/27_ART03A_RIGGED_CHARACTERS_REVIEW.md` for rendering/asset tasks
 9. `docs/06_EXECUTION_BACKLOG.md`
 10. `docs/04_OPEN_SOURCE_COMPONENTS.md` when adding dependencies
 11. `docs/21_VISUAL_REVIEW_HISTORY.md` for any visible task
