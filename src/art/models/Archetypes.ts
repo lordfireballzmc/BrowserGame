@@ -187,6 +187,54 @@ function makeCoreParts(): RigidPart[] {
     part("pennant-pole", "roof-eave", facetedCylinder(0.045, 0.79, 6), "timber.base", [0, 6.31, 0.03]),
     part("pennant", "pennant-pole", wedge(0.73, 0.38, 0.07), "defender.gold", [0.38, 6.52, 0.03]),
   ];
+  // The original keep needs a legible inhabited facade at gameplay zoom:
+  // deep window reveals, structural half-timbering, a sheltered entry porch,
+  // physical steps, roof ridge and rear chimney. Each piece is authored in 3D.
+  for (const side of [-1, 1]) {
+    const tag = side < 0 ? "left" : "right";
+    const windowX = side * 1.71;
+    parts.push(part("window-reveal-" + tag, "wall",
+      bevelBox(0.91, 1.13, 0.13, 0.045), "ink", [windowX, 2.45, 2.77]));
+    parts.push(part("window-glow-" + tag, "window-reveal-" + tag,
+      bevelBox(0.61, 0.82, 0.08, 0.018), "ivory", [windowX, 2.45, 2.855]));
+    parts.push(part("window-mullion-" + tag, "window-reveal-" + tag,
+      bevelBox(0.11, 0.98, 0.12, 0.02), "timber.base", [windowX, 2.45, 2.92]));
+    parts.push(part("window-sill-" + tag, "window-reveal-" + tag,
+      bevelBox(1.13, 0.16, 0.26, 0.05), "timber.light", [windowX, 1.84, 2.98]));
+    parts.push(part("timber-post-" + tag, "wall",
+      bevelBox(0.29, 3.35, 0.26, 0.05), "timber.base", [side * 2.41, 2.26, 2.86]));
+    parts.push(part("upper-brace-" + tag, "timber-post-" + tag,
+      bevelBox(1.15, 0.20, 0.20, 0.04), "timber.light", [side * 1.77, 3.56, 2.94]));
+  }
+  parts.push(part("front-wall-timber", "wall",
+    bevelBox(5.05, 0.28, 0.24, 0.055), "timber.base", [0, 3.97, 2.84]));
+  parts.push(part("lower-front-timber", "wall",
+    bevelBox(5.05, 0.22, 0.23, 0.04), "timber.light", [0, 1.13, 2.84]));
+  parts.push(part("entry-deck", "foundation",
+    bevelBox(3.73, 0.27, 1.49, 0.07), "timber.base", [0, 0.23, 3.77]));
+  for (const [index, z, height] of [[0,4.70,0.14],[1,4.43,0.23],[2,4.17,0.32]] as const) {
+    parts.push(part("entry-step-" + index, "entry-deck",
+      bevelBox(3.25, 0.18, 0.38, 0.035), "timber.light", [0, height, z]));
+  }
+  for (const side of [-1,1]) {
+    const tag = side < 0 ? "left" : "right";
+    parts.push(part("porch-column-" + tag, "entry-deck",
+      bevelBox(0.25, 2.51, 0.26, 0.05), "timber.base", [side*1.75, 1.72, 4.19]));
+    parts.push(part("porch-bracket-" + tag, "porch-column-" + tag,
+      bevelBox(0.69, 0.23, 0.30, 0.04), "timber.light", [side*1.75, 3.02, 4.19]));
+  }
+  parts.push(part("porch-eave", "roof-eave",
+    bevelBox(4.57, 0.20, 2.21, 0.08), "defender.blue", [0, 3.32, 3.76]));
+  parts.push(part("porch-eave-edge", "porch-eave",
+    bevelBox(4.70, 0.17, 0.18, 0.055), "timber.light", [0, 3.26, 4.82]));
+  parts.push(part("roof-ridge", "roof-eave",
+    bevelBox(0.25, 0.19, 6.30, 0.06), "timber.light", [0, 6.19, 0]));
+  parts.push(part("ridge-finial", "roof-ridge",
+    facetedEllipsoid(0.24, 0.22, 0.24, 8, 3), "copper", [0, 6.35, 2.65]));
+  parts.push(part("chimney-stack", "roof-eave",
+    bevelBox(0.63, 1.31, 0.63, 0.09), "stone.shadow", [2.10, 5.51, -1.78]));
+  parts.push(part("chimney-cap", "chimney-stack",
+    bevelBox(0.85, 0.20, 0.83, 0.065), "stone.highlight", [2.10, 6.19, -1.78]));
   for (const x of [-2.84, 2.84]) for (const z of [-2.79, 2.79]) {
     const suffix = (x < 0 ? "w" : "e") + (z < 0 ? "n" : "s");
     parts.push(part("buttress-" + suffix, "foundation",
