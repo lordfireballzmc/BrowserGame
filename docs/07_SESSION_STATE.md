@@ -26,7 +26,7 @@ Canonical repository: lordfireballzmc/BrowserGame
 - Next work: **F3.01** keyboard movement, collision, state snapshot and camera-follow integration, while preserving the existing graphical foundation. Major Kingshot-inspired art-quality gap remains for later dedicated art milestones.
 - Latest implemented product: engineering splash and 3D archetype gallery, linked separate world preview with seeded scenery, water, road, ten selectable pads, posed characters, the keep, two display spires, warm/cool lighting and real sun shadows; **not a playable game**.
 - Host / deployment: NONE configured. Development-only scenery/terrain/road/pad/river preview route `/tests/terrain-preview.html`; visual QA: real CI headless Chrome gallery and full-map screenshot captured and inspected. No public deployment or physical mobile-device test.
-- F0.01–F0.06, F1.01–F1.06, F2.01–F2.06 completed at the narrowly defined milestone gates. F2.07–F8 not yet implemented; high-end commercial art parity is **not achieved**.
+- F0.01–F0.06, F1.01–F1.06, F2.01–F2.07 completed at narrowly defined milestone gates. F3.01–F8 not yet implemented; high-end commercial art parity is **not achieved**.
 
 ## Verifiable build evidence
 - [PR #1](https://github.com/lordfireballzmc/BrowserGame/pull/1): `bootstrap/f0-01-verified-lockfile`.
@@ -43,6 +43,7 @@ Canonical repository: lordfireballzmc/BrowserGame
 - GitHub is long-term memory. Read `AGENTS.md` at each iteration.
 
 ## Journal
+- 2026-11-10: F2.07 procedural world rendering: combined tile surfaces/cliffs into two immutable batches, independent camera/sun AABB culling, explicit shadow counts and approximate GPU buffer/texture budget. PR #18 code-head CI 42781681067 passed 154 tests, TypeScript, build and Chrome SwiftShader real pixels, 16 color draws, 16 shadow draws, P01/P09 pad click checks, portrait/landscape screenshot capture. Screenshot artifacts retrieved and visually inspected, no terrain or road regressions; commercial art quality still unresolved. Next F3.01.
 - 2026-11-10: F2.06 WebGL2 directional sun shadows, graded miniature rendering, richer keep, pose-only cinematic 16:9/9:16 scenes added in PR #17. Run 42778571669 passed final side-facade code and browser scenes; screenshots inspected. The current renderer still looks much simpler than the Kingshot art reference and gameplay does not exist; see docs/15_F2_06_LIGHTING_REVIEW.md. After documentation CI, merge PR #17 when safe.
 - 2026-11-10: design docs and execution backlog prepared.
 - 2026-11-10: basic Vite/TS WebGL2 diagnostic scaffold committed but initially unverified.
@@ -52,7 +53,7 @@ Canonical repository: lordfireballzmc/BrowserGame
 ## Next-session protocol
 1. Fetch `AGENTS.md`, this file and `docs/06_EXECUTION_BACKLOG.md`; inspect latest main head and PR #1 merge state.
 2. If PR remains open, verify green CI on latest head and complete merge when safe. If already merged, inspect main CI.
-3. Verify PR #17 merge/CI status for F2.06; next implement F2.07 renderer culling and depth-pass performance profiling. A later dedicated art-quality sprint must still close the major gap to the supplied reference.
+3. Verify PR #18 merge/CI status for F2.07; next implement F3.01 headless-tested keyboard movement/world state and camera follow. Dedicated visual-art improvements remain outstanding.
 4. Preserve strict truthfulness: do not claim deployment, playable graphics, or end-to-end browser interaction yet.
 
 - 2026-11-10 (continuation): F0.02 accepted based on successful normal cached npm CI in PR #1, merged unmodified into main. Added F0.03 on branch `feat/f0-03-deterministic-balance`: `src/game/Random.ts` (versioned xorshift32 PRNG with FNV-1a string seeds, snapshot, unbiased inclusive integer rolls), `src/game/Balance.ts` (canonical typed hero/core/enemy/tower/economy values), and `tests/foundation.test.ts` (golden vectors, replay, bounds, balance). Tests newly authored but no verified CI yet. No playable change; pending PR CI.
