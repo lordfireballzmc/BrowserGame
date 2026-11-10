@@ -43,21 +43,11 @@ for(const [file,minBytes] of [
   assert.ok(existsSync(absolute)&&statSync(absolute).size>=minBytes,
     "Published Warden scene lost VQ.02 authored CC0 GLB "+relative);
 }
-// VQ.02b: compiled private-site game must actually ship the seven locally
-// bundled source-pinned 3D nature assets (not just mention filenames).
-for(const [file,bytes] of [
-  ["kenney-pine-layered.glb",28804],
-  ["kenney-pine-rounded.glb",14488],
-  ["kenney-canopy-oak.glb",14644],
-  ["kenney-canopy-plateau.glb",16304],
-  ["kenney-canopy-detailed.glb",31412],
-  ["kenney-rocks-mossy.glb",23764],
-  ["kenney-rocks-lichen.glb",7552],
-]){
-  const path=join(dist,"assets/scenery",file);
-  assert.ok(existsSync(path)&&statSync(path).size===bytes,
-    "Published game missing unchanged authored Kenney nature GLB "+file);
-}
+// The selected KayKit models are seven nodes of ONE shared gradient-atlas
+// GLB. Assert the exact compiled-site source binary, not a dead URL or 7 files.
+const nature=join(dist,"assets/scenery/kaykit-forest-cc0.glb");
+assert.ok(existsSync(nature)&&statSync(nature).size===396480,
+  "Published game missing exact KayKit Forest Nature CC0 artist atlas");
 const bundles = readdirSync(join(dist,"assets")).filter(f=>f.endsWith(".js"));
 assert.ok(bundles.length>0, "Missing production JS bundles");
 const scripts = bundles.map(f=>readFileSync(join(dist,"assets",f),"utf8")).join("\n");
