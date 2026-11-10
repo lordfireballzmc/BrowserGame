@@ -187,7 +187,7 @@ try {
         ? lastState.sceneryArt==="disabled"
         : lastState.sceneryArt==="pass" &&
           Number(lastState.sceneryArtSources)===7 &&
-          Number(lastState.sceneryArtAtlases)===2 &&
+          Number(lastState.sceneryArtAtlases)===7 &&
           Number(lastState.sceneryArtTrees)===40 &&
           Number(lastState.sceneryArtRocks)===42 &&
           Number(lastState.sceneryArtInstances)===82 &&
