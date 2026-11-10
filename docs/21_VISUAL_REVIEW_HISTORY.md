@@ -57,6 +57,16 @@ This document records the user's **actual taste judgments and acceptance criteri
 
 **Still weak regardless of palette:** Warden and enemies are small in wide battlefield composition, the battle UI is diagnostic, tree/rock art is repetitive, 10 tower pads are empty industrial disks, and the foreground keep is still a flat blue-roof block. This CC0 silhouette family is a professional rig foundation, **not** a unique finished Bastionfall faction kit. Next: custom blue/gold armor, red exaggerated Raiders, readable hero projectile/weapon attachment, real foot plants/recoil and mobile profiling.
 
+## 2026-11-10 — ART.03b eight-part costumes and original equipped weapons (first in-game art review)
+
+**Sources:** Source-pinned original KayKit GLB node-name inspection, [CI #42850500809](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42850500809), screenshot artifact 13780501277, actual landscape gameplay, portrait gameplay and landscape/portrait static cinematic frames, downloaded and inspected. First script passed 192 tests / 23 test files, strict TS/build, one Three.js world with 19 marching raiders, 20 skinned actors and physical copper hits. This is real engine output, **not** an AI art mockup.
+
+**Positive:** compared with ART.03a's homogeneous color fill, separate authored mesh parts now have armor, capes, helmets/hoods, skin and metallic hand-socket weapons with their own painterly 3D shading. Only one sword + badge shield for Warden, one axe + round shield for Scrapper and one small crossbow + knife for Runner remain visible; overlapping unused source alternatives no longer spoil silhouettes. Smooth 140ms authored bone-pose transitions use fixed simulation seconds.
+
+**Critical first screenshot finding:** at tiny action-camera size, Warden mostly reads **gold** because all helmet metal was gilded, rather than **blue with gold accents**; several raiders read **brown** because dark hat + tan face dominate more than crimson jackets. An immediate palette revision makes the helmet BLUE and raises red saturation across hats, cape and body. **That revision needs separate actual Chrome screenshots and user has not approved it.** Character size and silhouettes remain closer to generic CC0 miniatures than bespoke exaggerated Bastionfall figures; environment/pads/UI still flat and unfinished.
+
+**Next:** visual gate on corrected screenshot, then ART.03c original stylized keep, sculpted tower pads, foliage, richer road edges and native mobile performance. See `docs/28_ART03B_CHARACTER_IDENTITY_REVIEW.md`.
+
 ## Repeatable future review entries
 Append one entry per visually meaningful change:
 - **Milestone / commit / CI run and screenshot artifact:** exact links; flag unavailable material.
