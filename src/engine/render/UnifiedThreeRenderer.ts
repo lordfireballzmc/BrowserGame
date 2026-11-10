@@ -12,7 +12,7 @@ import {
   DirectionalLight, DynamicDrawUsage, Float32BufferAttribute, Group,
   HemisphereLight, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial,
   NeutralToneMapping, PCFSoftShadowMap, PointLight, Scene, SRGBColorSpace,
-  Vector3, WebGLRenderer,
+  Vector2, Vector3, WebGLRenderer,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { validateGeometry, type Geometry } from "../../art/mesh/Primitives";
@@ -92,8 +92,10 @@ export class UnifiedThreeRenderer {
       canvas, context, antialias: true, preserveDrawingBuffer: true,
       powerPreference: "high-performance",
     });
-    this.gpu.setSize(canvas.width, canvas.height, false);
+    // Canvas width/height are PHYSICAL backbuffer pixels. Never multiply DPR
+    // again: the page resolves CSS pixels × safe DPR before WebGL creation.
     this.gpu.setPixelRatio(1);
+    this.gpu.setSize(canvas.width, canvas.height, false);
     this.gpu.setClearColor(0xd4ded4, 1);
     this.gpu.outputColorSpace = SRGBColorSpace;
     this.gpu.toneMapping = NeutralToneMapping;
@@ -157,6 +159,34 @@ export class UnifiedThreeRenderer {
   get canvas(): HTMLCanvasElement { return this.gpu.domElement; }
   get unifiedContext(): WebGL2RenderingContext {
     return this.gpu.getContext() as WebGL2RenderingContext;
+  }
+  /** Actual GPU drawing-buffer dimensions, not the browser's CSS canvas box. */
+  get backbufferSize(): Readonly<{width:number;height:number}> {
+    this.assertActive();
+    const size=this.gpu.getDrawingBufferSize(new Vector2());
+    return {width:size.x,height:size.y};
+  }
+  /**
+   * Resize an existing Three context through WebGLRenderer rather than assigning
+   * canvas.width/height directly (which would reset WebGL state behind Three).
+   * The caller supplies already-DPR-adjusted physical pixels, so pixelRatio=1.
+   */
+  resizeBackbuffer(width:number,height:number):boolean {
+    this.assertActive();
+    if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||
+       width<1||height<1||width>16384||height>16384) {
+      throw new RangeError("Invalid physical WebGL backbuffer dimensions");
+    }
+    if(this.canvas.width===width&&this.canvas.height===height)return false;
+    this.gpu.setSize(width,height,false);
+    const actual=this.backbufferSize;
+    if(actual.width!==width||actual.height!==height||
+       this.unifiedContext.drawingBufferWidth!==width||
+       this.unifiedContext.drawingBufferHeight!==height) {
+      throw new Error("Three/WebGL physical drawing buffer mismatch: "+
+        JSON.stringify({requested:[width,height],actual}));
+    }
+    return true;
   }
 
   uploadMesh(id: string, geometry: Geometry): void {

@@ -60,6 +60,15 @@
       background:#1c3930da; padding:8px 12px; font-weight:800; font-size:12px;
       letter-spacing:0.09em; box-shadow:0 3px 10px #071e173b; }
     .movement-hud .hud-chip strong { color:#f3d582; }
+    .quality-control { pointer-events:auto; display:flex; flex-wrap:wrap; gap:7px;
+      align-items:center; max-width:min(360px,78vw); background:#183a35e8;
+      border:1px solid #d6c28e78; border-radius:8px; padding:6px 9px;
+      color:#ffe4aa; font:700 11px/1.35 system-ui; letter-spacing:.035em; }
+    .quality-control[hidden] { display:none; }
+    .quality-control select { min-height:29px; border-radius:5px;
+      background:#f6e9cd; color:#193831; border:1px solid #baa572; font:700 12px system-ui; }
+    .quality-control output { width:100%; font:500 10px/1.35 system-ui;
+      color:#f4ebd8; letter-spacing:0; font-variant-numeric:tabular-nums; }
     .movement-hud .hud-bottom { display:flex; justify-content:space-between; gap:12px;
       flex-wrap:wrap; font-size:12px; letter-spacing:0.035em; }
     .movement-hud .hud-bottom span { background:#20392bc9; border-radius:7px;
@@ -119,6 +128,16 @@
       <div class="hud-top">
         <div class="hud-chip">BASTIONFALL <strong>/ FENWALL CROSSING</strong></div>
         <div class="hud-chip">WARDEN <strong>· AUTO-FIRE TEST</strong></div>
+        <label class="quality-control" id="graphics-control" hidden>
+          GRAPHICS
+          <select id="graphics-quality" aria-label="Render resolution quality">
+            <option value="economy">Economy</option>
+            <option value="balanced" selected>Balanced</option>
+            <option value="sharp">Sharp</option>
+          </select>
+          <output id="resolution-readout" aria-live="off">Checking display resolution...</output>
+          <output id="graphics-perf" aria-live="off">Frame interval: collecting · CPU submit: collecting</output>
+        </label>
       </div>
       <a class="movement-exit" href="/" aria-label="Return to Bastionfall menu">MENU</a>
       <div class="hud-bottom"><span>WASD / ARROWS TO MOVE · AUTO-FIRE IN 7M · ESC PAUSE</span>
@@ -138,6 +157,7 @@
   import { createHeroBoltMesh, createBoltImpactMesh } from "/src/art/models/HeroBoltVisuals.ts";
   import { createRunnerStudy } from "/src/art/models/RunnerStudy.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
+  import { computeCanvasResolution, resizeCanvas, RenderMetricWindow } from "/src/engine/render/CanvasRuntime.ts";
   import { mergeStaticGeometries } from "/src/art/mesh/StaticBatch.ts";
   import { generateTerrain, terrainHeight } from "/src/art/terrain/Island.ts";
   import { getArchetype } from "/src/art/models/Archetypes.ts";
@@ -159,6 +179,58 @@
   let renderer;
   try {
     const canvas = document.querySelector("#terrain");
+    const qualityControl = document.querySelector("#graphics-quality");
+    const requestedQuality = parameters.get("quality");
+    qualityControl.value = ["economy","balanced","sharp"].includes(requestedQuality)
+      ? requestedQuality : "balanced";
+    document.querySelector("#graphics-control").hidden = !movement || !unifiedThree;
+    let movingCamera = null;
+    let currentResolution = null;
+    // Safeguard high-density mobile devices: a sharp picture cannot justify
+    // an unbounded framebuffer, memory allocation or missed input frames.
+    const graphicsLimits = {
+      maxDimension:4096,
+      maxPixels:window.matchMedia("(pointer:coarse)").matches ? 2_073_600 : 4_194_304,
+    };
+    const updateGameplayResolution = () => {
+      if (!movement || !unifiedThree) return false;
+      const rect = canvas.getBoundingClientRect();
+      const resolution = computeCanvasResolution(rect.width,rect.height,
+        window.devicePixelRatio,qualityControl.value,graphicsLimits);
+      if (!resolution) return false; // e.g. hidden tab/layout in transition
+      // Setting HTMLCanvasElement.width AFTER Three has an active context would
+      // reset WebGL state behind the renderer. Only use resizeCanvas pre-context.
+      const changed = renderer
+        ? renderer.resizeBackbuffer(resolution.width,resolution.height)
+        : resizeCanvas(canvas,resolution);
+      if (movingCamera && (changed ||
+          movingCamera.viewport.width !== resolution.width ||
+          movingCamera.viewport.height !== resolution.height)) {
+        movingCamera.resize(resolution.width,resolution.height);
+      }
+      if (renderer) {
+        const actual=renderer.backbufferSize;
+        if(actual.width!==resolution.width||actual.height!==resolution.height||
+           renderer.unifiedContext.drawingBufferWidth!==resolution.width||
+           renderer.unifiedContext.drawingBufferHeight!==resolution.height) {
+          throw new Error("VQ.01 physical Three/WebGL backbuffer mismatch");
+        }
+      }
+      currentResolution=resolution;
+      body.dataset.graphicsTier=qualityControl.value;
+      body.dataset.graphicsDpr=String(window.devicePixelRatio);
+      body.dataset.graphicsCss=resolution.cssWidth.toFixed(2)+"x"+
+        resolution.cssHeight.toFixed(2);
+      body.dataset.graphicsBuffer=resolution.width+"x"+resolution.height;
+      body.dataset.graphicsLimited=String(resolution.limited);
+      body.dataset.graphicsPixels=String(resolution.width*resolution.height);
+      document.querySelector("#resolution-readout").textContent=
+        resolution.width+" × "+resolution.height+" render · "+
+        Math.round(resolution.cssWidth)+" × "+Math.round(resolution.cssHeight)+
+        " display · DPR "+window.devicePixelRatio+
+        (resolution.limited?" · budget-limited":"");
+      return changed;
+    };
     if (cinematic || movement) {
       canvas.width = cinematic ? (portrait ? 1080 : 1920) : (portrait ? 720 : 1280);
       canvas.height = cinematic ? (portrait ? 1920 : 1080) : (portrait ? 1280 : 720);
@@ -171,6 +243,9 @@
         canvas.setAttribute("aria-label","Interactive Warden movement through the original 3D Fenwall Crossing scene");
       }
     }
+    // Initial physical pixel sizing MUST precede WebGL context creation.
+    // The Three renderer then owns every subsequent GPU resize.
+    updateGameplayResolution();
     const gl = canvas.getContext("webgl2", {
       alpha: false, antialias: true, preserveDrawingBuffer: true,
     });
@@ -351,7 +426,7 @@
     const projection = mat4.ortho(mat4.create(),
       -halfWidth,halfWidth,-halfHeight,halfHeight,0.1,300);
     const viewProjectionStatic = mat4.multiply(mat4.create(), projection, view);
-    const movingCamera = movement ? new OrthoCamera(canvas.width,canvas.height,[
+    movingCamera = movement ? new OrthoCamera(canvas.width,canvas.height,[
       playerWorld.snapshot.x,0,playerWorld.snapshot.z,
     ]) : null;
     if (movingCamera) movingCamera.setZoom(1.06);
@@ -504,6 +579,11 @@
       sunShadows:renderer.sunShadowsEnabled,
       unifiedRenderer:unifiedThree, unifiedCanvasCount:document.querySelectorAll(".stage canvas").length,
       targetResolution:[canvas.width,canvas.height],
+      graphicsTier:movement && unifiedThree ? qualityControl.value : "legacy-fixed",
+      graphicsDpr:movement && unifiedThree ? window.devicePixelRatio : null,
+      graphicsCss:currentResolution
+        ? [currentResolution.cssWidth,currentResolution.cssHeight] : null,
+      graphicsBudgetPixels:movement && unifiedThree ? graphicsLimits.maxPixels : null,
       stagedActors:movement?1:15, movingWarden:movement?1:0,
       simulatedRaiders:movement?raiderWorld.snapshot.enemies.length:0,
       demoHeadstartTicks, stagedBoltSpires:cinematic?2:0,
@@ -571,6 +651,8 @@
         "arrowleft","arrowright"]);
       let gameLoop = null;
       let stopped = false, priorDrawTime = performance.now();
+      const frameMetrics=new RenderMetricWindow(120);
+      let measuredFrames=0;
       let combatFacing = playerWorld.snapshot.yaw;
       const onKeyDown = event => {
         const key=keyName(event.key);
@@ -613,7 +695,8 @@
         try {
           const hero=playerWorld.sample(alpha);
           const now=performance.now();
-          const frameDelta=Math.max(0,Math.min(0.05,(now-priorDrawTime)/1000));
+          const frameIntervalMs=Math.max(0,now-priorDrawTime);
+          const frameDelta=Math.min(0.05,frameIntervalMs/1000);
           priorDrawTime=now;
           // The camera remains grounded: no head-bob enters the camera target.
           movingCamera.follow([hero.x,0,hero.z],frameDelta,
@@ -642,7 +725,19 @@
           }
           const enemyFrame=syncRaiderModels(alpha);
           syncCombatVisuals(alpha);
-          renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
+          const frameStats=renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
+          frameMetrics.push(frameIntervalMs,frameStats);
+          if(++measuredFrames%30===0 && unifiedThree) {
+            const sample=frameMetrics.snapshot();
+            // rAF wall interval and CPU JS submission are NOT GPU frame time.
+            body.dataset.frameIntervalP95Ms=sample.frameP95Ms.toFixed(2);
+            body.dataset.cpuSubmitP95Ms=sample.cpuSubmitP95Ms.toFixed(2);
+            body.dataset.frameMetricSamples=String(sample.samples);
+            document.querySelector("#graphics-perf").textContent=
+              "Frame interval p95 "+sample.frameP95Ms.toFixed(1)+"ms"+
+              " · CPU submit p95 "+sample.cpuSubmitP95Ms.toFixed(1)+"ms"+
+              " (not GPU time)";
+          }
           if (unifiedThree) {
             body.dataset.unifiedFrame = String(playerWorld.snapshot.tick);
             body.dataset.riggedActors=String(renderer.riggedStatus?.animatedActors??0);
@@ -774,6 +869,46 @@
         });
       }
       if (!stopped) {
+        // Sync the real Three drawing buffer and camera on all layout, device
+        // rotation and DPR transitions. Quality changes take effect immediately.
+        // Preserve deterministic physics, pointer space and existing GL assets.
+        let resizeObserver=null, dprQuery=null;
+        const onViewportChange = () => {
+          if (stopped) return;
+          try {
+            const changed=updateGameplayResolution();
+            if(changed && gameLoop?.isPaused) {
+              renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
+            }
+          } catch(error) {
+            stopped=true;
+            gameLoop?.stop();
+            body.dataset.result="fail";
+            document.querySelector("#trace").textContent=String(error.stack??error);
+          }
+        };
+        const onDprChange=()=>{ watchDpr();onViewportChange(); };
+        const watchDpr=()=>{
+          dprQuery?.removeEventListener("change",onDprChange);
+          dprQuery=window.matchMedia("(resolution: "+window.devicePixelRatio+"dppx)");
+          dprQuery.addEventListener("change",onDprChange);
+        };
+        if(unifiedThree) {
+          qualityControl.addEventListener("change",onViewportChange);
+          window.addEventListener("resize",onViewportChange);
+          window.addEventListener("orientationchange",onViewportChange);
+          resizeObserver=new ResizeObserver(onViewportChange);
+          resizeObserver.observe(canvas);
+          watchDpr();
+          onViewportChange();
+        }
+        const disposeResolution=()=>{
+          resizeObserver?.disconnect();
+          dprQuery?.removeEventListener("change",onDprChange);
+          window.removeEventListener("resize",onViewportChange);
+          window.removeEventListener("orientationchange",onViewportChange);
+          qualityControl.removeEventListener("change",onViewportChange);
+        };
         gameLoop.start();
         body.dataset.paused="false";
         window.addEventListener("pagehide",()=>{
@@ -782,10 +917,12 @@
           window.removeEventListener("keyup",onKeyUp);
           window.removeEventListener("blur",onBlur);
           document.removeEventListener("visibilitychange",clearKeys);
+          disposeResolution();
         },{once:true});
         canvas.addEventListener("webglcontextlost",event=>{
           event.preventDefault();
-          stopped=true;gameLoop.stop();renderer?.abandonOnContextLoss();
+          stopped=true;gameLoop.stop();disposeResolution();
+          renderer?.abandonOnContextLoss();
           body.dataset.result="fail";
           document.querySelector("#trace").textContent="WebGL2 context lost; reload to rebuild the scene.";
         });
