@@ -65,7 +65,6 @@ const COAST_EPS = 1e-9;
 const SLOT = (name: MaterialToken): number => MATERIAL_TOKENS.indexOf(name) + 1;
 const SLOTS = {
   grass: SLOT("grass.primary"),
-  shade: SLOT("grass.shadow"),
   earth: SLOT("earth.cut"),
   stone: SLOT("stone.shadow"),
 };
@@ -279,13 +278,11 @@ function buildTile(seed: number, column: number, row: number): TerrainTile {
         if (polygon.length < 3) continue;
         for (let p = 1; p < polygon.length - 1; p++) {
           const aa = polygon[0]!, bb = polygon[p]!, cc = polygon[p + 1]!;
-          const steepness = Math.max(
-            Math.abs(aa.y - bb.y), Math.abs(bb.y - cc.y), Math.abs(cc.y - aa.y),
-          );
-          // Avoid triangle-by-triangle coastline tinting: it produces a
-          // high-frequency sawtooth band in the actual orthographic screenshot.
-          // Authored road/shoulder coloration is reserved for F2.02.
-          const slot = steepness > 0.16 ? SLOTS.shade : SLOTS.grass;
+          // Per-triangle slope-threshold tinting caused two isolated dark-green
+          // zigzag artifacts beside the new road in the F2.02 Chrome screenshot.
+          // Smooth grass shading comes from the GPU's directional normals;
+          // authored ground-color transitions belong to later prop/art passes.
+          const slot = SLOTS.grass;
           ground.add(
             [aa.x, aa.y, aa.z], [bb.x, bb.y, bb.z], [cc.x, cc.y, cc.z],
             [0, 1, 0], slot,
