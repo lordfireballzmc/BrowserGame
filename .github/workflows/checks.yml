@@ -70,3 +70,18 @@ jobs:
             exit 1
           fi
           echo "PASS: real software WebGL2 shader link, buffer upload and VAO cleanup"
+          # Real instancing acceptance gate (engineering-only page, not gameplay).
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+            --virtual-time-budget=7000 --dump-dom http://127.0.0.1:4173/tests/renderer-benchmark.html \
+            >/tmp/bastionfall-instancing.html 2>/tmp/bastionfall-instancing.log
+          if ! grep -q 'data-result="pass"' /tmp/bastionfall-instancing.html \
+            || ! grep -q 'data-draws="1"' /tmp/bastionfall-instancing.html \
+            || ! grep -q 'data-instances="500"' /tmp/bastionfall-instancing.html; then
+            echo "F1.04 500-instance WebGL2 smoke failed"
+            tail -c 5000 /tmp/bastionfall-instancing.html
+            tail -c 1500 /tmp/bastionfall-instancing.log
+            exit 1
+          fi
+          grep -o '<pre id="trace">[^<]*' /tmp/bastionfall-instancing.html | head -1
+          echo "PASS: WebGL2 rendered 500 instances with one draw call and nonempty framebuffer"
