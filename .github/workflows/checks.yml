@@ -237,11 +237,11 @@ jobs:
           # deterministic 90-step displacement, shadowed terrain and camera.
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward&probeEnemies=advance'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
               dimensions='900,1200'
               composition='movement-9:16'
             else
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward&probeEnemies=advance'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
               dimensions='1500,950'
               composition='movement-16:9'
             fi
@@ -255,6 +255,8 @@ jobs:
               || ! grep -q 'data-movement-probe="pass"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-hero-visible="true"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-enemy-probe="pass"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -q 'data-combat-probe="pass"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -Eq 'data-hit-targets="[1-9][0-9]*"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-enemy-count="19"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-immersive="pass"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-shadows="on"' "/tmp/bastionfall-movement-$orientation.html" \
@@ -270,7 +272,7 @@ jobs:
               --screenshot="/tmp/bastionfall-movement-$orientation.png" "$url" \
               >"/tmp/bastionfall-movement-$orientation-capture.log" 2>&1
             test -s "/tmp/bastionfall-movement-$orientation.png"
-            echo "PASS: keyboard + 19 deterministic road raiders rendered with following camera ($orientation)"
+            echo "PASS: keyboard + 19 road raiders + swept 3D bolt hits and in-flight projectile ($orientation)"
           done
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
