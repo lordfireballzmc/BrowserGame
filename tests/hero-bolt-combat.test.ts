@@ -48,7 +48,7 @@ describe("F3.03 truthful 60Hz Warden auto-fire and projectiles", () => {
     const end:[number,number,number]=[1,0,0];
     expect(boltSegmentHitsMovingEnemy(start,end,[0,-1,0],[0,1,0],0.12)).toBe(true);
     expect(boltSegmentHitsMovingEnemy(start,end,[0,-1,1],[0,1,1],0.12)).toBe(false);
-    expect(boltSegmentHitsMovingEnemy(start,end,[0,-1,0],[0,1,0],0)).toThrow;
+    expect(()=>boltSegmentHitsMovingEnemy(start,end,[0,-1,0],[0,1,0],0)).toThrow(RangeError);
   });
 
   it("fires only after an in-range target, with a 33-tick cooldown and 15m/s bolt", () => {
