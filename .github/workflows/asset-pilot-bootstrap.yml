@@ -41,7 +41,7 @@ jobs:
           set -euo pipefail
           /tmp/bastionfall-asset-tools/bin/python scripts/ingest_lantern.py
           file public/assets/lantern-cc0.glb
-          sha256sum -c public/assets/lantern-cc0.sha256
+          (cd public/assets && sha256sum -c lantern-cc0.sha256)
       - name: Strict TS, Vitest including real bundled GLB integrity, production Vite
         shell: bash
         run: |
