@@ -67,6 +67,13 @@ This document records the user's **actual taste judgments and acceptance criteri
 
 **Next:** visual gate on corrected screenshot, then ART.03c original stylized keep, sculpted tower pads, foliage, richer road edges and native mobile performance. See `docs/28_ART03B_CHARACTER_IDENTITY_REVIEW.md`.
 
+## 2026-11-10 — explicit high-resolution, professional polish and fluid-motion mandate
+
+**New user requirement:** implement the real technical and artistic improvements needed so that Bastionfall is sharp rather than blurry, deliberately sculpted rather than primitive, and alive with professional animation rather than stiff movement. Highest-quality achievable original illustrated 3D remains the style, with no glossy strategy-realism. [New binding directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) centralizes future execution/acceptance and updates agent prompt, backlog, architecture, source-policy and README.
+
+**Known rendering limitation:** active movement preview still sets 1280×720 backing pixels in landscape (720×1280 portrait). Existing CSS/DPR graphics utility is not connected to that gameplay path. High-DPI rendering is therefore **pending VQ.01 code**, not proven by documentation. Next VQ.02+ original keep/pads/environment, material finish, true motion and actual screenshot/sequence comparisons; continue F3.04 economics. Preserve this historical record of user objections. **No new screenshot, runtime improvement or mobile FPS verification was produced by this documentation-only policy update.**
+
+
 ## Repeatable future review entries
 Append one entry per visually meaningful change:
 - **Milestone / commit / CI run and screenshot artifact:** exact links; flag unavailable material.

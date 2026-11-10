@@ -4,6 +4,15 @@ Project: Bastionfall
 Canonical repository: lordfireballzmc/BrowserGame
 
 
+## 2026-11-10 — newest mandatory graphics quality and cross-chat continuity
+
+- **User direction, latest:** maximize visually impressive, sharp, professionally polished and *fluid* **actual original 3D Bastionfall gameplay**. The new [visual fidelity & fluidity directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) and amended `AGENTS.md`, master directive, art bible, architecture, dependency matrix, backdrop and prompt explicitly supersede any older no-Three.js, primitive-only, bland/low-res or realistic-strategy-advertising assumptions. Continue the existing **Kingdom Rush-inspired personality and legibility in original 3D**, never copyrighted copies.
+- **Actual code reality:** main game terrain/movement/map/cinematic scenes already use a unified **Three.js/WebGL2** renderer and source-verified animated/skinned GLBs; deterministic gameplay must remain intact. Legacy renderer is retained only for remaining diagnostic/compatibility checks until parity.
+- **Immediate unimplemented code bottleneck: VQ.01.** `tests/terrain-preview.html?view=movement` currently fixes movement to 1280×720 physical pixels in landscape / 720×1280 in portrait, independently of CSS width/DPR. `CanvasRuntime.ts` already offers `computeCanvasResolution` and presets, but this preview does not use it. The Three renderer's `setPixelRatio(1)` is correct *only if* physical backbuffer is explicitly sized once; do not apply DPR twice. Integrate resize, true physical-dimension probes, camera/pad click coordinates and all gameplay controls. Screenshot real 16:9 and 9:16 at standard/HiDPI; measure actual performance or leave caveats.
+- **After VQ.01:** VQ.02 original authored keep/pads/trees/environment; VQ.03 lighting/shadows/materials/aliasing; VQ.04 skeletal motion, contact and attack game feel; VQ.05 illustrated touch-first HUD; VQ.06 reproducible in-engine before/after visual review. Continue F3.04 rewards/economy so this becomes a real game.
+- **Honesty:** this documentation alignment alone changes **no actual graphics code, framebuffer resolution, animation clips, screenshots or device frame rate**. Do not label VQ.01–VQ.06 completed until the appropriate runtime implementation and evidence exist. Read current commits / CI; visual concepts are targets only.
+
+
 ## Binding new visual decision — 2026-11-10
 - The user corrected the previous AI promo/mockups as **too Rise-of-Kingdoms-like** and explicitly prefers **Kingdom Rush's playful, illustrated tower-defense visual readability, translated into original true 3D**. This supersedes older glossy, realistic kingdom-advertising visual assumptions.
 - The style must use *original Bastionfall IP*, not copied Kingdom Rush/Kingshot art, characters, icons, layouts or promotional stills. Target chunky expressive silhouettes, cartoon material ramps, colorful scene depth, tight action clarity and genuinely articulated animations. Do not confuse AI aspirational concepts with implemented graphics.

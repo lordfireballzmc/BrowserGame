@@ -1,23 +1,15 @@
-# Browser ChatGPT development prompts and loop protocol
+# Bastionfall ChatGPT continuation prompts (updated 2026-11-10)
 
-## Initialization prompt (paste as one user message in **this specific connected GitHub chat**)
-You are now the implementation engineer for **Bastionfall** in my private connected GitHub repository **lordfireballzmc/BrowserGame**. First fetch AGENTS.md, docs/01_REFERENCE_ANALYSIS.md through docs/07_SESSION_STATE.md and obey their explicit design, art, engineering, provenance and verification policies. GitHub is canonical, not the chat transcript.
+**This replaces the obsolete historical initialization prompt that told new sessions to start F0.01 and create a custom WebGL2-only scaffold.** F0 and ART.01–ART.03b already happened. New sessions must follow [AGENTS.md](../AGENTS.md), [VQ visual-fidelity/animation directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [original illustrated 3D art north star](20_VISUAL_NORTH_STAR.md), [current backlog](06_EXECUTION_BACKLOG.md) and [session handoff](07_SESSION_STATE.md).
 
-For this turn implement the first actionable development task, **F0.01**, without inventing installed packages or passing tests. Create or repair a minimal Vite + strict TypeScript + WebGL2 app scaffold, set build/typecheck/test scripts, add a deterministic foundation if needed, and commit the work to GitHub. Use precise current upstream component APIs and preserve licensing. Run tests/build only if an actual execution tool is available; otherwise state verification pending and let CI perform it when configured. Update docs/07_SESSION_STATE.md and docs/06_EXECUTION_BACKLOG.md truthfully. Return the exact task ID, commit SHA, files changed, verification evidence, next action and any blocker. Never skip ahead to decorative fake game graphics or claim deployment that did not occur.
+## Start a fresh connected GitHub chat
 
-## Repeat prompt (for **each authorized subsequent turn**, not unlimited unconditional automation)
-Continue Bastionfall in lordfireballzmc/BrowserGame. Fetch AGENTS.md and docs/07_SESSION_STATE.md plus the relevant design/bible/backlog. First examine previous commit and any CI check evidence. Verify incomplete prior work if possible; otherwise implement exactly the next eligible task from docs/06_EXECUTION_BACKLOG.md, in a small integrated and tested GitHub commit. Obey strict art/animation bible and dependency provenance. Update session state, mark only actually verified tasks complete, and report TASK / COMMIT / IMPLEMENTED / VERIFICATION / NEXT / STOP. If unable to make meaningful verified progress or approval/limit/error is encountered, STOP instead of repeating the same response.
+> Resume the real Bastionfall browser game from latest `lordfireballzmc/BrowserGame` repository state. Read `AGENTS.md`, `docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md`, `docs/20_VISUAL_NORTH_STAR.md`, `docs/00_MASTER_PRODUCTION_DIRECTIVE.md`, `docs/06_EXECUTION_BACKLOG.md`, `docs/07_SESSION_STATE.md`, and relevant source/design/art files. The user requires the **highest achievable sharp, richly authored, professionally polished and fluid original illustrated 3D** tower-defense experience, with playful readability rather than glossy Rise-of-Kingdoms realism or simplistic low-poly engineering art. Three.js/WebGL2 and real skinned GLBs already work. Do not restart the engine or F0.01. The top open graphics code task is **VQ.01**: actual movement scene high-DPI responsive sizing using existing CanvasRuntime, preserve picking/camera and gameplay, add browser DPR/landscape/portrait screenshot verification. Then original asset/animation/motion quality VQ.02–VQ.06 while advancing F3.04. Make bounded actual code changes with tests and source-licensed assets; critically assess **real game output**, not concept images; verify exact commit/CI, update backlog and session state, and report remaining art deficiencies.
 
-## Controller behavior expectation
-The browser-side controller may be user-operated to prepare or submit these prompts if permitted by the platform. It must be bound to the exact ChatGPT conversation URL and user-selected tab; never cross other conversations. No output scraping is necessary for project state because state is in GitHub. Prefer a configurable turn cap (e.g. 10), minimum delay after response completion, explicit Stop and limit/error detection. Never try to bypass usage controls, tool approval dialogs or authentication. This protocol does not promise perpetual execution.
+## Continue an authorized subsequent turn
 
-## Per-turn machine-style footer
-TASK: F*.**
-COMMIT: <real SHA or NONE>
-IMPLEMENTED: <files and actual behavior>
-VERIFICATION: <PASS / FAIL / PENDING with test evidence>
-NEXT: <F*.** and short description>
-STOP: <NO | YES: reason>
+> Continue Bastionfall from the **current GitHub repository**, not the prior chat. Check actual head commit and CI, follow `AGENTS.md` plus the VQ mandate and approved 3D art direction, implement the highest-value next incomplete VQ/F gameplay milestone, preserve simulation and copyright rules, and commit actual code improvements. Capture real runtime screenshots/motion when relevant. Update GitHub backlog/session handoff. Report TASK, COMMIT, IMPLEMENTED, VISUAL IMPROVEMENT (or NONE), VERIFICATION, REMAINING DEFICIENCIES, NEXT, STOP. Never call a green test a professional art approval.
 
-## User control
-To redirect priorities: edit backlog and session state, or send a new user chat message overriding roadmap. To request an art review: require actual screenshot evidence. To pause: stop the user-installed controller. To resume: send Repeat prompt manually or by authorized workflow.
+## Controller / user control
+
+The optional user-operated Chrome extension is separate from this repository. It must obey platform controls, approvals and user stop; it cannot guarantee perpetual unattended turn creation. Persistent GitHub files supply new-chat context. No public release, paid service, copied proprietary artwork, or bypass of platform restrictions without independent permission.

@@ -1,6 +1,9 @@
 # Visual references — original Bastionfall art direction
 
 **Authoritative decision:** `docs/20_VISUAL_NORTH_STAR.md`.  
+
+**Mandatory render-quality and animation companion:** [VQ visual fidelity & fluidity directive](../29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md). The version-controlled SVG below is aspirational only; it does not justify accepting an upscaled 720p game or low-quality primitive rendering. Latest intent: maximal original illustrated 3D clarity, sculpted detail, professional fluid movement and real engine capture verification.
+
 **User preference:** lively, hand-illustrated tower-defense personality comparable in *general qualities* to Kingdom Rush, **translated into original actual 3D meshes and animation**; explicitly **not** the glossy, monumental, small-figure look associated with Rise of Kingdoms. Neither game's proprietary pictures, characters, UI or branding are to be included in Bastionfall output.
 
 ## Version-controlled visual anchor
@@ -27,6 +30,8 @@ Compare each new real runtime screenshot against the SVG plus north-star rules a
 5. **Animation** — actual articulated leg/arm foot contact and recoil, not 2-frame bob/whole-mesh elastic scaling called a walk cycle.
 6. **Combat FX** — readable projectile, short visible hit and VFX decay, meaningful damage feedback without hiding the road.
 7. **UI** — economical illustrated controls, not giant gold-trimmed resource counters.
-8. **Truth** — cite a verified GitHub Actions screenshot artifact and state that a screenshot does not prove FPS or touch responsiveness.
+8. **Pixel fidelity** — record displayed CSS pixel dimensions, actual backing/WebGL buffer pixels, DPR and graphics tier; detect softness from upscaling and AA blur.
+9. **Animation** — inspect actual frame sequences of gait, attack release/impact, recoil/recovery and motion smoothing, not just still frames.
+10. **Truth** — cite a verified GitHub Actions screenshot artifact and state that a screenshot does not prove FPS or touch responsiveness.
 
 Keep failing qualities in `docs/21_VISUAL_REVIEW_HISTORY.md` and refine the actual runtime; creating a more beautiful new concept image alone is not progress toward a production screenshot.

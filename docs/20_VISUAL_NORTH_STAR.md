@@ -1,7 +1,10 @@
-# BASTIONFALL — VISUAL NORTH STAR · v1.0
+# BASTIONFALL — VISUAL NORTH STAR · v2.0 (high fidelity + fluidity)
 **Decision recorded:** 2026-11-10. **Status:** authoritative user art-direction decision.  
 **Audience:** every new ChatGPT development session, artists, technical artists, UI and animation engineers.  
 **This document describes a TARGET, not the appearance of today's runtime.**
+
+**Binding quality companion:** [VQ rendering, art and animation directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md). The newest user decision is not simply to match a cartoon style but to produce the **best achievable sharp, polished and fluid original 3D game** in that style. The current fixed-resolution movement buffer, generic environment and limited game-feel are *known defects*, not acceptable final aesthetics. The immediate VQ.01 task adds live native-density output; VQ.02+ supplies professionally authored coherent assets, rich materials and motion. Do not claim the directive itself changed the game.
+
 
 ## Executive art mandate
 Bastionfall should feel like **an original, handcrafted 3D interpretation of the readability, personality and playful illustrated fantasy of Kingdom Rush**, not like Rise of Kingdoms, a glossy kingdom-building advertisement, or a crude low-poly engineering prototype.
@@ -51,6 +54,15 @@ Don't fill the screen with the keep or overwhelm it with tall battlements. Camer
 | HUD | Small, chunky fantasy-illustrated UI with readable values, no luxury strategy UI chrome |
 | Quality | Must compare runtime frames against the *new original* visual studies and explain every visible deficit |
 
+## Additional clarity, authenticity and motion gates — new requirement
+
+- **Sharp real 3D pixels:** test actual WebGL drawing buffer in native CSS × device DPR × bounded quality tier; no CSS-upscaled blurry 720p gameplay. Keep anti-alias edges crisp without temporal smear, especially under motion.
+- **Art quality is independent of resolution:** authored, coherent sculptural geometry, painted material hierarchy, environmental depth, rich yet readable battle composition. A 4K polygon cone or an enormous generic gray build pad still fails.
+- **Fluidity is measured in sequences:** contact/foot plants, articulated attacks, readable anticipation/impact/recovery, smoothly eased camera, independent enemy motion and visual response tied to real simulation. Inspect dynamic frames, not only one attractive still.
+- **Real visual proof:** 16:9 and 9:16 actual gameplay before/after frames at controlled camera/seed/tick, including viewport, CSS/backbuffer pixels, DPR, graphics tier, commit and screenshot artifact. Actual phone FPS is distinct from desktop SwiftShader testing.
+- **No fake polish:** heavy bloom, DOF, blurry filters, glossy metallic fantasy ads or copied third-party visual assets do not satisfy this original playful 3D target.
+
+
 ## Quality gates on EVERY visible task
 1. **Reference**: consult this document, `docs/03_ART_AND_ANIMATION_BIBLE.md` and `docs/visual-references/README.md` **before designing**.
 2. **Evidence**: capture both a real 16:9 gameplay screenshot and a real portrait 9:16 screenshot at a consistent scene/time/state. Do not pass a concept rendering off as proof of actual engine quality.
@@ -63,7 +75,7 @@ Don't fill the screen with the keep or overwhelm it with tall battlements. Camer
 - **Immediately**: make F3.04 etc meet this style rather than accumulating temporary flat placeholders.
 - **Next art sprint**: sculpt higher-quality Warden + Scrapper/Runner proportions, actual 7–12-part articulated motion, exaggerated recoil and readable projectile staging.
 - **Environment polish**: replace schematic tree/grass/keep forms with shaped storybook clusters, rich but controlled material ramps, stone/timber trim and stronger contact with the land; maintain path/pad exclusions.
-- **Renderer polish**: consider outline/silhouette edge technique, toon-style 2–4-step lighting ramp and artist-controlled ambient occlusion/contact treatment with a mobile performance budget. Do not indiscriminately add bloom, depth-of-field or post effects.
+- **Renderer polish**: first do VQ.01 native-density canvas resizing. Then evaluate outline/silhouette edge technique, toon-style light ramps and artist-controlled ambient occlusion/contact with measured mobile costs (VQ.03). Do not indiscriminately add bloom, depth-of-field or blur.
 - **UI**: rebuild the sparse engineering HUD as a joyful illustrated fantasy presentation with scalable touch-first hierarchy while keeping exact balance data.
 
 ## Source/copyright boundary
