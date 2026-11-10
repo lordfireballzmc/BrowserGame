@@ -119,7 +119,7 @@
         <div class="hud-chip">WARDEN <strong>· MOVEMENT ONLY</strong></div>
       </div>
       <a class="movement-exit" href="/" aria-label="Return to Bastionfall menu">MENU</a>
-      <div class="hud-bottom"><span>WASD / ARROWS TO MOVE · ESC TO PAUSE</span>
+      <div class="hud-bottom"><span>WASD / ARROWS TO MOVE · AUTO-FIRE IN 7M · ESC PAUSE</span>
         <span id="raider-readout">RED COLUMN · APPROACHING</span>
         <span id="move-readout">READY · 0.0 m/s</span></div>
     </div></div>
@@ -132,6 +132,8 @@
   import { createBrowserLoop, FIXED_STEP_SECONDS } from "/src/engine/Loop.ts";
   import { HeroMovementWorld } from "/src/game/HeroMovement.ts";
   import { EnemyRoadWorld } from "/src/game/EnemyRoadWorld.ts";
+  import { HeroBoltCombat } from "/src/game/HeroBoltCombat.ts";
+  import { createHeroBoltMesh, createBoltImpactMesh } from "/src/art/models/HeroBoltVisuals.ts";
   import { createRunnerStudy } from "/src/art/models/RunnerStudy.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
   import { mergeStaticGeometries } from "/src/art/mesh/StaticBatch.ts";
@@ -174,6 +176,7 @@
     const seed = "fenwall-crossing-v1";
     const playerWorld = movement ? new HeroMovementWorld(seed) : null;
     const raiderWorld = movement ? new EnemyRoadWorld(2, seed) : null;
+    const combatWorld = movement ? new HeroBoltCombat() : null;
     // This is an explicitly mid-approach movement study, not a complete
     // playable wave. All 19 raiders have genuine deterministic spawn histories.
     const demoHeadstartTicks = movement ? 30 * 60 : 0;
@@ -267,12 +270,51 @@
           raider.y+stride*0.025*weight,raider.z]);
         mat4.rotateY(matrix,matrix,raider.yaw);
         const scale=raider.kind==="runner"?0.99:0.95;
-        mat4.scale(matrix,matrix,[scale*(1-0.015*stride*weight),
-          scale*(1+0.019*stride*weight),scale]);
+        const defeated=raider.hp===0;
+        const recoil=raider.hitTick!==null
+          ? Math.max(0,1-(frame.tick-raider.hitTick)/9) : 0;
+        mat4.scale(matrix,matrix,[
+          scale*(1-0.015*stride*weight+0.11*recoil),
+          scale*(defeated?0.30:1+0.019*stride*weight-0.09*recoil),
+          scale*(defeated?1.20:1),
+        ]);
       }
       return frame;
     };
     syncRaiderModels(1);
+    const boltModels=new Map(), impactModels=new Map();
+    const combatVisuals=[];
+    if (movement) {
+      renderer.uploadMesh("warden-physical-bolt",createHeroBoltMesh());
+      renderer.uploadMesh("warden-bolt-hit-glint",createBoltImpactMesh());
+    }
+    const syncCombatVisuals=alpha=>{
+      combatVisuals.length=0;
+      if (!combatWorld) return;
+      const frame=combatWorld.sample(alpha);
+      for (const bolt of frame.bolts) {
+        let m=boltModels.get(bolt.id);
+        if (!m) { m=mat4.create(); boltModels.set(bolt.id,m); }
+        mat4.fromTranslation(m,[bolt.x,bolt.y,bolt.z]);
+        mat4.rotateY(m,m,Math.atan2(-bolt.vx,-bolt.vz));
+        mat4.rotateX(m,m,Math.atan2(bolt.vy,Math.hypot(bolt.vx,bolt.vz)));
+        combatVisuals.push({
+          meshId:"warden-physical-bolt",material:"copper",model:m,opacity:0.999,
+        });
+      }
+      for (const hit of frame.impacts) {
+        let m=impactModels.get(hit.boltId);
+        if (!m) { m=mat4.create(); impactModels.set(hit.boltId,m); }
+        const age=frame.tick-hit.tick;
+        mat4.fromTranslation(m,[hit.x,hit.y,hit.z]);
+        const stretch=0.58+age*0.075;
+        mat4.scale(m,m,[stretch,stretch,stretch]);
+        combatVisuals.push({
+          meshId:"warden-bolt-hit-glint",material:"ivory",model:m,
+          opacity:Math.max(0.05,0.96-age*0.1),
+        });
+      }
+    };
     if (cinematic) {
       renderer.uploadMesh("staged-bolt-spire",createBoltSpireStudy());
       for (const id of ["P09","P10"]) {
@@ -442,6 +484,7 @@
         "arrowleft","arrowright"]);
       let gameLoop = null;
       let stopped = false, priorDrawTime = performance.now();
+      let combatFacing = playerWorld.snapshot.yaw;
       const onKeyDown = event => {
         const key=keyName(event.key);
         if (mapped.has(key)) { event.preventDefault(); pressed.add(key); }
@@ -492,15 +535,24 @@
           const gait=Math.sin(hero.distanceMeters*11.0);
           mat4.fromTranslation(wardenModel,[hero.x,
             hero.groundY+0.04+gait*0.025*intensity,hero.z]);
-          mat4.rotateY(wardenModel,wardenModel,hero.yaw);
+          const preferredYaw=combatWorld.snapshot.aimYaw??hero.yaw;
+          const turn=Math.atan2(Math.sin(preferredYaw-combatFacing),
+            Math.cos(preferredYaw-combatFacing));
+          combatFacing+=turn*(-Math.expm1(-frameDelta/0.10));
+          mat4.rotateY(wardenModel,wardenModel,combatFacing);
           // Subtle breathing/weight shift now; actual articulated steps F4.01.
           mat4.scale(wardenModel,wardenModel,
             [1-0.012*gait*intensity,1+0.018*gait*intensity,1-0.012*gait*intensity]);
           const enemyFrame=syncRaiderModels(alpha);
-          renderer.render(movingCamera.matrices,instances);
+          syncCombatVisuals(alpha);
+          renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
           const enemyText=document.querySelector("#raider-readout");
-          enemyText.textContent="RED COLUMN · "+enemyFrame.spawned+" ON ROUTE · "
-            +enemyFrame.arrived+" AT GATE (NO DAMAGE YET)";
+          enemyText.textContent="RED COLUMN · "+enemyFrame.spawned+" DEPLOYED · "
+            +enemyFrame.arrived+" AT GATE · "+combatWorld.snapshot.hits+" BOLT HITS";
+          body.dataset.shotsFired=String(combatWorld.snapshot.shotsFired);
+          body.dataset.boltHits=String(combatWorld.snapshot.hits);
+          body.dataset.damageDealt=String(combatWorld.snapshot.damageDealt);
+          body.dataset.boltsInFlight=String(combatWorld.snapshot.bolts.length);
           body.dataset.enemyCount=String(enemyFrame.spawned);
           body.dataset.enemiesAtGate=String(enemyFrame.arrived);
           body.dataset.enemyTick=String(enemyFrame.tick);
@@ -522,6 +574,7 @@
         fixedUpdate(dt){
           playerWorld.step(movementInput(),dt);
           raiderWorld.step(dt);
+          combatWorld.step(playerWorld.snapshot,raiderWorld,dt);
         },
         render(alpha){ renderMovement(alpha); },
       });
@@ -533,6 +586,8 @@
         window.dispatchEvent(new KeyboardEvent("keydown",{key:"w",bubbles:true}));
         for(let i=0;i<90;i++) {
           const current=playerWorld.step(movementInput(),FIXED_STEP_SECONDS);
+          raiderWorld.step(FIXED_STEP_SECONDS);
+          combatWorld.step(current,raiderWorld,FIXED_STEP_SECONDS);
           movingCamera.follow([current.x,0,current.z],FIXED_STEP_SECONDS,
             [current.vx*0.17,current.vz*0.17]);
         }
@@ -578,6 +633,42 @@
         }
         body.dataset.enemyProbe="pass";
         body.dataset.enemyProgress=leaderAfter.distanceMeters.toFixed(3);
+      }
+      // Browser integration: actual authoritative 60Hz travel and moving
+      // target collision, not just an instant HP edit. Stop while a copper
+      // bolt is genuinely in the air so the PNG contains a physical shot.
+      if (parameters.get("probeCombat")==="physical") {
+        let witnessedImpact=false, visibleBolt=false;
+        for (let i=0;i<480;i++) {
+          const heroTick=playerWorld.step({right:0,forward:0},FIXED_STEP_SECONDS);
+          raiderWorld.step(FIXED_STEP_SECONDS);
+          combatWorld.step(heroTick,raiderWorld,FIXED_STEP_SECONDS);
+          movingCamera.follow([heroTick.x,0,heroTick.z],FIXED_STEP_SECONDS,
+            [heroTick.vx*0.17,heroTick.vz*0.17]);
+          if(combatWorld.snapshot.hits>0) witnessedImpact=true;
+          if(witnessedImpact && combatWorld.snapshot.bolts.some(b=>
+              combatWorld.snapshot.tick-b.bornTick>=2)) {
+            visibleBolt=true;
+            break;
+          }
+        }
+        renderMovement(1);
+        const damaged=raiderWorld.snapshot.enemies.filter(e=>e.hp<e.maxHp).length;
+        if(!witnessedImpact || !visibleBolt || damaged<1 ||
+          combatWorld.snapshot.damageDealt<1 ||
+          combatWorld.snapshot.shotsFired<2) {
+          throw new Error("F3.03 physical WebGL2 projectile/hit gate: "+
+            JSON.stringify({combat:combatWorld.snapshot,damaged}));
+        }
+        body.dataset.combatProbe="pass";
+        body.dataset.hitTargets=String(damaged);
+        document.querySelector("#trace").textContent=JSON.stringify({
+          mode:"F3.03 VERIFIED IN-FLIGHT 3D BOLT AND REAL DAMAGE",
+          shots:combatWorld.snapshot.shotsFired,
+          hits:combatWorld.snapshot.hits,damage:combatWorld.snapshot.damageDealt,
+          damagedEnemies:damaged,boltsInFlight:combatWorld.snapshot.bolts.length,
+          note:"Actual 60Hz enemy movement, deterministic projectile travel and swept collision",
+        });
       }
       if (!stopped) {
         gameLoop.start();
