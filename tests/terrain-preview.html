@@ -108,6 +108,7 @@
     <a href="?view=cinematic&amp;aspect=portrait">Cinematic · 1080 × 1920</a>
     <a href="?view=movement">Move the Warden · keyboard</a>
     <a href="?view=movement&amp;aspect=portrait">Movement · portrait</a>
+    <a href="?view=movement&amp;renderer=three">Unified 3D world + textured GLB (single WebGL2 canvas)</a>
     <a href="?view=movement&amp;assetPilot=1">Textured GLB art-pipeline pilot</a>
   </nav>
   <div class="stage"><div class="scene-stamp">BASTIONFALL / FENWALL
@@ -150,6 +151,7 @@
   const cinematic = parameters.get("view") === "cinematic";
   const movement = parameters.get("view") === "movement";
   const portrait = (cinematic || movement) && parameters.get("aspect") === "portrait";
+  const unifiedThree = movement && parameters.get("renderer") === "three";
   body.dataset.view = movement ? "movement" : cinematic ? "cinematic" : "map";
   body.dataset.aspect = portrait ? "portrait" : "landscape";
   let renderer;
@@ -171,7 +173,10 @@
       alpha: false, antialias: true, preserveDrawingBuffer: true,
     });
     if (!gl) throw new Error("WebGL2 unavailable");
-    renderer = new InstancedRenderer(gl);
+    if (unifiedThree) {
+      const { UnifiedThreeRenderer } = await import("/src/engine/render/UnifiedThreeRenderer.ts");
+      renderer = new UnifiedThreeRenderer(canvas, gl);
+    } else renderer = new InstancedRenderer(gl);
     renderer.enableSunShadows();
     renderer.enableFrustumCulling();
     const seed = "fenwall-crossing-v1";
@@ -337,14 +342,28 @@
       playerWorld.snapshot.x,0,playerWorld.snapshot.z,
     ]) : null;
     if (movingCamera) movingCamera.setZoom(1.06);
-    const camera = movingCamera ? movingCamera.matrices : {view, viewProjection:viewProjectionStatic};
+    const camera = movingCamera ? movingCamera.matrices
+      : {view,projection,viewProjection:viewProjectionStatic};
     const viewProjection = camera.viewProjection;
+    if (unifiedThree) {
+      const { TERRAIN_ASSETS } = await import("/src/art/assets/AssetManifest.ts");
+      const imported = await renderer.loadPilotLantern(terrainHeight(seed,
+        TERRAIN_ASSETS.pilotLantern.position[0],TERRAIN_ASSETS.pilotLantern.position[2]));
+      if (imported.meshCount<1 || imported.texturedMaterials<1)
+        throw new Error("Unified Three scene lost its authored textured GLB");
+      body.dataset.unifiedRenderer = "three";
+      body.dataset.sharedDepth = "true";
+      body.dataset.assetSource = imported.sourceId;
+      body.dataset.assetTextured = String(imported.texturedMaterials);
+      body.dataset.assetPilot = "pass";
+      body.dataset.unifiedCanvases = String(document.querySelectorAll(".stage canvas").length);
+    }
     const stats = renderer.render(camera, instances);
     // Opt-in, bounded Three.js/GLB migration pilot within the SAME active
     // movement world and exact camera. The original renderer remains the
     // production fallback, never demolished to prove a texture demo.
     let importedArt = null;
-    if (movement && parameters.get("assetPilot") === "1") {
+    if (movement && !unifiedThree && parameters.get("assetPilot") === "1") {
       const { ImportedArtLayer } = await import("/src/engine/render/ImportedArtLayer.ts");
       importedArt = new ImportedArtLayer(document.querySelector(".stage"),
         canvas.width,canvas.height);
@@ -421,8 +440,10 @@
       + (cinematic ? 1 : 0); // two static world batches + river/road/pads + posed actors
     if (terrain.tiles.length !== 54 || terrain.coastSegments < 50
       || stats.instances + stats.culled !== instances.length
-      || stats.instances < 1 || stats.drawCalls < 1 || stats.drawCalls > maxColorDraws
-      || stats.shadowDrawCalls < 1 || stats.shadowDrawCalls > maxColorDraws
+      || stats.instances < 1 || stats.drawCalls < 1
+      || (!unifiedThree && stats.drawCalls > maxColorDraws)
+      || stats.shadowDrawCalls < 1
+      || (!unifiedThree && stats.shadowDrawCalls > maxColorDraws)
       || (cinematic && stats.culled < 1)
       || stats.estimatedGpuBytes > 64 * 1024 * 1024
       || changedSamples < 500 || road.rutCount < 10 || road.sampleStepMaxMeters > 0.55 + 1e-6
@@ -438,9 +459,11 @@
           labels:labelLayer.childElementCount, padCount:PAD_SITES.length}));
     }
     const trace = {
-      mode: movement ? "F3.03 LIVE HERO BOLTS (no enemy attacks or rewards)"
+      mode: unifiedThree ? "ART.02 ONE SCENE: TERRAIN + TEXTURED GLB + ACTUAL BATTLE"
+        : movement ? "F3.03 LIVE HERO BOLTS (no enemy attacks or rewards)"
         : cinematic ? "CINEMATIC ART STUDY (not gameplay)" : "ENGINEERING WORLD PREVIEW (not a game)",
       sunShadows:renderer.sunShadowsEnabled,
+      unifiedRenderer:unifiedThree, unifiedCanvasCount:document.querySelectorAll(".stage canvas").length,
       targetResolution:[canvas.width,canvas.height],
       stagedActors:movement?1:15, movingWarden:movement?1:0,
       simulatedRaiders:movement?raiderWorld.snapshot.enemies.length:0,
@@ -471,6 +494,10 @@
     body.dataset.shadows = renderer.sunShadowsEnabled ? "on" : "off";
     body.dataset.composition = movement ? (portrait ? "movement-9:16" : "movement-16:9")
       : cinematic ? (portrait ? "9:16" : "16:9") : "full-island";
+    if (unifiedThree && (document.querySelectorAll(".stage canvas").length!==1
+      || renderer.unifiedContext !== gl || renderer.importedStatus?.texturedMaterials<1)) {
+      throw new Error("Three.js must share the original one and only WebGL2 canvas/depth context");
+    }
     if (movement) {
       // A UI gate, not a visual similarity score: ensure the movement scene
       // occupies the maximum correctly proportioned viewport and the old
@@ -568,6 +595,7 @@
           syncCombatVisuals(alpha);
           renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
           importedArt?.render(movingCamera.matrices);
+          if (unifiedThree) body.dataset.unifiedFrame = String(playerWorld.snapshot.tick);
           const enemyText=document.querySelector("#raider-readout");
           enemyText.textContent="RED COLUMN · "+enemyFrame.spawned+" DEPLOYED · "
             +enemyFrame.arrived+" AT GATE · "+combatWorld.snapshot.hits+" BOLT HITS";
