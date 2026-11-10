@@ -20,7 +20,14 @@ import { TERRAIN_ASSETS } from "../../art/assets/AssetManifest";
 import { linearColor, vertexMaterialColor, type MaterialToken } from "./Palette";
 import { aabbIntersectsFrustum } from "./Frustum";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
-import type { ImportedAssetStatus } from "./ImportedArtLayer";
+/** Nonvisual provenance and validation returned by the locally loaded GLB. */
+export interface ImportedAssetStatus {
+  readonly meshCount: number;
+  readonly texturedMaterials: number;
+  readonly widthMeters: number;
+  readonly heightMeters: number;
+  readonly sourceId: string;
+}
 
 type Submitted = {
   readonly meshId: string;
