@@ -31,6 +31,14 @@ This document records the user's **actual taste judgments and acceptance criteri
 **Evidence:** [GitHub Actions F3.03 run 42798030716](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42798030716): 176 tests, TS, build and real Chrome 16:9/9:16 movement+projectile screenshots. See `docs/19_F3_03_PROJECTILES_REVIEW.md`.
 **Still unacceptable visually:** architecture lacks playful sculptural richness, surfaces are too sparse, enemy/warden silhouettes feel simplistic, character movement is mostly whole-body transforms, projectiles are not clearly dramatic at normal gameplay scale, UI retains engineering-test qualities, and the framing needs better attention to approach/keep. This remains **far below** the new illustrated 3D reference, even though the code works.
 
+## 2026-11-10 — first unified Three.js gameplay renderer, still far from art target
+
+**Reviewed actual Chrome screenshots:** [GitHub Actions ART.02 #42824821031](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42824821031), artifact 13769370731; 1500×950 landscape and 900×1200 portrait. All 182 unit tests and existing gameplay browser checks passed. The 3D terrain, 19 raiders, Warden, real bolts and source-verified GLB now occupy one Three.js canvas with shared depth/shadows. No composited GLB overlay.
+
+**Observation:** directional shadows on trees/raiders and scene lighting visibly strengthen spatial cues compared with the earlier flat prototype, while bright saturated grass and warm ochre road make game lanes easily visible. However, meshes remain blocky and simplistic, grey stone pads overly large and bare, facial/weapon silhouettes too weak at mobile scale, landscape/portrait keep partially cropped, and the UI remains diagnostic. Screenshots are captured at different simulation times from the earlier ART.01 reference and are not controlled image-pair quality scores. This is a necessary 3D rendering foundation, **not equivalent to premium cartoon art**.
+
+**Mandatory next art work:** coherent authored stylized hero/enemy/keep GLBs, real 3D skeletal animations, broader painted material variation and close-up frame review. Continue ART.02b map/cinematic parity before deleting the fallback renderer.
+
 ## Repeatable future review entries
 Append one entry per visually meaningful change:
 - **Milestone / commit / CI run and screenshot artifact:** exact links; flag unavailable material.
