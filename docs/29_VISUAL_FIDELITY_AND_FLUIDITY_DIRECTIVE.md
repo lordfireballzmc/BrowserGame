@@ -1,6 +1,6 @@
 # Bastionfall — Visual Fidelity, Fluidity & Production Quality Directive (VQ.2026-11-10)
 
-**Status:** binding user mandate for every new session. **VQ.01 is now implemented and verified; next VQ.02** original authored environment assets. [Actual screenshot/CI review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). This directive's quality gates remain mandatory.
+**Status:** user-mandated, still binding. **VQ.01 (native DPI) and VQ.02a (authored castle/pads) verified/merged; VQ.02b remains OPEN** for truly premium original 3D world art, plus F3.04 playable economy. See [actual VQ.02a critical art review](32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md). This directive’s graphics, motion, licensing and evidence gates remain in force.
 **Scope:** all shipped gameplay, art, tools, screenshots, performance work, and repository planning.  
 **Authority:** supplements the studio-wide [master production directive](00_MASTER_PRODUCTION_DIRECTIVE.md), sharpens the [illustrated 3D art north star](20_VISUAL_NORTH_STAR.md), and overrides older conflicting low-fidelity/procedural-only constraints. The game design bible governs gameplay rules; this document governs presentation quality, delivery evidence, and sequencing. Historical postmortems remain intact as evidence, not active instructions.
 
@@ -21,7 +21,7 @@ Do not let hand-coded primitive mesh limits dictate art quality. Use source-pinn
 - The Three renderer intentionally retains `setPixelRatio(1)` because its canvas backing dimensions are already **physical pixels**. VQ.01 now calculates CSS × DPR × quality budget separately and passes the physical output to Three without double application; this is verified, not an unresolved problem.
 - `CanvasRuntime.computeCanvasResolution` is now integrated in the actual Three gameplay Warden preview (VQ.01) with GPU-safe `resizeBackbuffer`, quality settings, and real Chrome physical-buffer verification. [Evidence](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md).
 - A 4K frame of rudimentary models is still rudimentary. Resolution, edge quality, art fidelity, motion, and composition have **distinct acceptance tests**.
-- Existing ART.03b licensed CC0 rigged characters and 140ms visual transitions are useful foundations, **not final exclusive Bastionfall art**. Environment/keep/pads/HUD remain far behind the goal. Do not claim new assets or effect passes are integrated until the running game proves them.
+- Existing ART.03b CC0 rigged characters, 140ms clip blends, and newly integrated VQ.02a **non-exclusive Kenney CC0 keep/pad art** are licensed technical foundations, **not finished exclusive Bastionfall sculpture or full illustrated quality**. Flat ground/trees, incomplete art direction, HUD and motion remain visibly deficient; [review](32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md).
 
 ## 2. Enforced parallel tracks, ordered by actual visual impact
 
@@ -100,6 +100,6 @@ A screenshot can pass technical correctness while failing appearance. In that ca
 
 ## 6. Immediate next handoff
 
-**VQ.01 native-DPI Three gameplay is VERIFIED** by [CI #42888985727](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727) and [actual screenshot review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). **NEXT VQ.02** original sculpted/textured keep and build-pad architectural kit with verified legal provenance, genuine in-game integration, 16:9/9:16 before-after screenshots and art critique; F3.04 playable economy continues. Do not repeat VQ.01 or accept primitive high-DPI graphics as finished.
+**Verified as of 2026-11-10:** VQ.01 native-density [Chrome CI #42888985727](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727), and **VQ.02a sourced and textured keep/ten-pad art** [PR #31](https://github.com/lordfireballzmc/BrowserGame/pull/31), [CI #42898990215](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42898990215), [real A/B screenshot critique](32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md). **NEXT:** VQ.02b distinctively sculpted and visually rich foliage/terrain/keep and better game-camera composition, with source provenance and actual 16:9+9:16 gameplay screenshots, plus F3.04 coin/economy gameplay. VQ.03 rendering/material and VQ.04 fluid character animation remain pending; a CC0 starter kit does not establish commercial art parity.
 
 **This directive changes requirements and plans, not the game binary itself.** Do not claim P0/P1/P2/P3 are implemented merely because this document is committed.

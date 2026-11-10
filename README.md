@@ -19,7 +19,7 @@ Deployment setup, restrictions, exact links and validation: [docs/31_PERMANENT_P
 
 ## Binding sharpness, fluidity and production-quality mandate (2026-11-10)
 
-**Read first:** [binding VQ directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [3D illustrated art target](docs/20_VISUAL_NORTH_STAR.md), and [VQ.01 real image review](docs/30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). **VQ.01 has shipped:** actual Warden Three.js preview supports CSS/DPR-aware Economy/Balanced/Sharp rendering, correct GPU/camera resize, and graphics telemetry. [CI #42888985727](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727) passed 193 tests and real DPR2 browser screenshots. Test it at `/tests/terrain-preview.html?view=movement&quality=sharp`. **Next VQ.02:** professionally sculpted original 3D keep/pads/environment, plus F3.04 playable economy. Sharper pixels do not yet solve sparse art, generic characters or diagnostic UI.
+**Read first:** [VQ directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) and [art north star](docs/20_VISUAL_NORTH_STAR.md). **VQ.01 high-DPI rendering is verified; VQ.02a visual environment slice is now merged:** [PR #31](https://github.com/lordfireballzmc/BrowserGame/pull/31) added six source-pinned Kenney CC0 textured GLB models forming an illustrated blue-roof keep with twin windowed turrets and ten gold/azure architectural tower pads in the **actual gameplay scene**. [CI #42898990215](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42898990215) passed 196 tests, Chrome real combat, and landscape/portrait before/after captures. [See actual screenshot comparison and critical review](docs/32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md). **NEXT VQ.02b** original higher-fidelity environmental/foliage/keep art and **F3.04** crown/gameplay; source assets remain non-exclusive, visual target not yet met.
 
 ## Production mandate and asset-first pilot (2026-11-10)
 
@@ -50,7 +50,8 @@ Every new chat and visible task must read [the visual north star](docs/20_VISUAL
 | File | Purpose |
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Mandatory per-turn developer protocol |
-| [VQ visual-fidelity and fluidity directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) | Binding quality policy, exact next code task and measurable art/motion acceptance |
+| [VQ visual-fidelity and fluidity directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) | Binding quality policy and remaining VQ.02b/VQ.03/VQ.04 priorities |
+| [VQ.02a real castle/pad screenshot review](docs/32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md) | Source-pinned CC0 art integration, exact Chrome before/after frames, shortcomings and further work |
 | [docs/20_VISUAL_NORTH_STAR.md](docs/20_VISUAL_NORTH_STAR.md) | Latest authoritative visual taste decision: illustrated expressive 3D cartoon, not glossy strategy realism |
 | [docs/visual-references/README.md](docs/visual-references/README.md) | Version-controlled original visual composition and concept generation recipes |
 | [docs/21_VISUAL_REVIEW_HISTORY.md](docs/21_VISUAL_REVIEW_HISTORY.md) | Record of rejected looks, what user actually wants, and remaining runtime-art gaps |

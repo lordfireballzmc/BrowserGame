@@ -4,7 +4,7 @@
 
 ## Start a fresh connected GitHub chat
 
-> Start by reading the latest GitHub `AGENTS.md`, VQ directive, original art north star, backlog, session state and [VQ.01 browser proof](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). **VQ.01 is already integrated and green. Next VQ.02**: legally sourced/independently designed coherent sculpted original keep/build-pad environment and materials in actual Three gameplay, with correct scale, pad interaction and real before/after 16:9/9:16 screenshot critique. Preserve the original playful 3D illustrated direction; no glossy strategy ads, random primitives or unverified assets. Keep F3.04 game economy active, commit tested runtime code and update handoff.
+> Resume from latest `lordfireballzmc/BrowserGame` on GitHub. First read `AGENTS.md`, `docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md`, `docs/20_VISUAL_NORTH_STAR.md`, `docs/06_EXECUTION_BACKLOG.md`, `docs/07_SESSION_STATE.md`, and [actual VQ.02a review](32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md). **VQ.01 and VQ.02a are already implemented, CI-tested and merged; do not repeat them.** Next bounded code task: VQ.02b higher-quality original/coherently licensed environment/vegetation/keep shaping with real 16:9+9:16 before-after gameplay frames, or F3.04 actual crown economy/tower gameplay when higher-value. Keep Three.js, deterministic game logic, source-pinned licenses, original playful illustrated 3D style, no glossy strategy ads. Commit actual integrated code/tests, verify CI/art, record remaining deficits and update cross-chat docs. SITE.01 Pages remains unverified publicly live; do not announce public URL.
 
 ## Continue an authorized subsequent turn
 
