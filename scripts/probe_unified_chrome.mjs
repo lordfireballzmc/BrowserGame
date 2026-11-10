@@ -6,18 +6,21 @@
  * script waits for ACTUAL in-page readiness using Node 22's native WebSocket.
  * It verifies real gameplay and captures actual single-scene browser pixels.
  *
- * Usage: node scripts/probe_unified_chrome.mjs <chrome> <url> <width,height> <orientation>
+ * Usage: node scripts/probe_unified_chrome.mjs <chrome> <url> <width,height> <orientation> [movement|map|cinematic]
  */
 import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const [browser, url, dimensions, orientation] = process.argv.slice(2);
+const [browser, url, dimensions, orientation, requestedMode="movement"] = process.argv.slice(2);
+const scene = new URL(url);
+const mode = requestedMode;
 if (!browser || !url?.startsWith("http://127.0.0.1:") ||
     !/^\d+,\d+$/.test(dimensions??"") ||
-    !["landscape","portrait"].includes(orientation)) {
-  throw new Error("Usage: node scripts/probe_unified_chrome.mjs <browser> <loopback-url> <width,height> <landscape|portrait>");
+    !["landscape","portrait"].includes(orientation) ||
+    !["movement","map","cinematic"].includes(mode)) {
+  throw new Error("Usage: node scripts/probe_unified_chrome.mjs <browser> <loopback-url> <width,height> <landscape|portrait> [movement|map|cinematic]");
 }
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const profile = mkdtempSync(join(tmpdir(), "bastionfall-cdp-"));
@@ -121,26 +124,52 @@ try {
         movementProbe:d.movementProbe, enemyProbe:d.enemyProbe,
         combatProbe:d.combatProbe, hitTargets:d.hitTargets,
         heroVisible:d.heroVisible, enemyCount:d.enemyCount,
-        trace:document.querySelector("#trace")?.textContent?.slice(0,1200)
+        sceneMode:d.sceneMode, padClickProbe:d.padClickProbe,
+        selectedPad:d.selectedPad, padCount:d.padCount,
+        sceneryCount:d.sceneryCount, composition:d.composition,
+        shadows:d.shadows,
+        trace:document.querySelector("#trace")?.textContent?.slice(0,2500)
       };
     })()`);
     if(lastState.result==="fail" || lastState.assetPilot==="error") {
       throw new Error("Game reported an actual failure: "+JSON.stringify(lastState));
     }
-    ready =
-      lastState.result==="pass" &&
+    const common = lastState.result==="pass" &&
       lastState.assetPilot==="pass" &&
       lastState.assetSource==="khronos-lantern-cc0-pilot" &&
       Number(lastState.assetTextured)>0 &&
       lastState.unifiedRenderer==="three" &&
       lastState.sharedDepth==="true" &&
       lastState.unifiedCanvases==="1" &&
-      lastState.movementProbe==="pass" &&
-      lastState.enemyProbe==="pass" &&
-      lastState.combatProbe==="pass" &&
-      lastState.heroVisible==="true" &&
-      Number(lastState.hitTargets)>0 &&
-      Number(lastState.enemyCount)===19;
+      lastState.shadows==="on" &&
+      Number(lastState.padCount)===10;
+    const trace = (()=>{ try {return JSON.parse(lastState.trace??"{}");} catch {return {};} })();
+    if (mode==="movement") {
+      ready=common &&
+        lastState.sceneMode==="combat" &&
+        lastState.movementProbe==="pass" &&
+        lastState.enemyProbe==="pass" &&
+        lastState.combatProbe==="pass" &&
+        lastState.heroVisible==="true" &&
+        Number(lastState.hitTargets)>0 &&
+        Number(lastState.enemyCount)===19;
+    } else if (mode==="map") {
+      const target=scene.searchParams.get("probePadClick");
+      ready=common &&
+        lastState.sceneMode==="map" &&
+        Number(lastState.sceneryCount)===258 &&
+        trace.roadWidthMeters===4.5 &&
+        trace.padCount===10 &&
+        lastState.padClickProbe==="pass" &&
+        lastState.selectedPad===(target==="P01"?"P01":"none");
+    } else {
+      ready=common &&
+        lastState.sceneMode==="cinematic" &&
+        Number(lastState.sceneryCount)===258 &&
+        lastState.composition===(orientation==="portrait"?"9:16":"16:9") &&
+        trace.stagedBoltSpires===2 &&
+        trace.stagedActors===15;
+    }
     if(ready)break;
     await pause(300);
   }
@@ -151,11 +180,14 @@ try {
     format:"png",captureBeyondViewport:false,fromSurface:true,
   },30000);
   if(!image.data || image.data.length<10000)throw new Error("Missing real Chrome screenshot");
-  const dest=`/tmp/bastionfall-unified-${orientation}.png`;
+  const suffix=mode==="movement" ? orientation
+    : mode==="map" ? "map-"+(scene.searchParams.get("probePadClick")??"unknown")
+    : "cinematic-"+orientation;
+  const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
-  writeFileSync(`/tmp/bastionfall-unified-${orientation}.json`,
+  writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
     JSON.stringify(lastState,null,2)+"\n");
-  console.log("PASS: ART.02 "+orientation+" single real Three.js game canvas, "+
+  console.log("PASS: ART.02 "+mode+" "+orientation+" single real Three.js game canvas, "+
     "actual GLB textures, hero+19 raiders+physical hits; image="+dest);
   console.log(JSON.stringify(lastState));
 } catch(error) {
