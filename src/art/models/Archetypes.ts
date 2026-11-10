@@ -206,6 +206,36 @@ function makeCoreParts(): RigidPart[] {
     parts.push(part("upper-brace-" + tag, "timber-post-" + tag,
       bevelBox(1.15, 0.20, 0.20, 0.04), "timber.light", [side * 1.77, 3.56, 2.94]));
   }
+  // Two inset glazed apertures and wooden shutters on each gable-facing
+  // long wall. The fixed 45-degree camera sees the east elevation most often;
+  // previously it presented several meters of uninterrupted flat stone.
+  for (const xSign of [-1, 1]) for (const zSign of [-1, 1]) {
+    const tag = (xSign < 0 ? "west" : "east") + (zSign < 0 ? "-rear" : "-front");
+    const z = zSign * 1.43;
+    parts.push(part("side-window-reveal-" + tag, "wall",
+      bevelBox(0.16, 1.15, 0.95, 0.035), "ink", [xSign*2.82, 2.40, z]));
+    parts.push(part("side-window-pane-" + tag, "side-window-reveal-" + tag,
+      bevelBox(0.10, 0.80, 0.65, 0.02), "ivory", [xSign*2.92, 2.40, z]));
+    parts.push(part("side-window-mullion-" + tag, "side-window-reveal-" + tag,
+      bevelBox(0.11, 0.88, 0.10, 0.01), "timber.base", [xSign*2.98, 2.40, z]));
+    parts.push(part("side-window-sill-" + tag, "side-window-reveal-" + tag,
+      bevelBox(0.29, 0.17, 1.16, 0.035), "timber.light", [xSign*2.90, 1.77, z]));
+    parts.push(part("side-shutter-" + tag, "side-window-reveal-" + tag,
+      bevelBox(0.15, 1.04, 0.22, 0.023), "defender.blue",
+      [xSign*2.98, 2.40, z+0.56]));
+  }
+  for (const xSign of [-1,1]) {
+    const side = xSign < 0 ? "west" : "east";
+    parts.push(part("side-timber-head-" + side, "wall",
+      bevelBox(0.22, 0.23, 5.14, 0.04), "timber.base",
+      [xSign*2.89, 3.91, 0]));
+    parts.push(part("side-timber-foot-" + side, "wall",
+      bevelBox(0.19, 0.23, 5.14, 0.04), "timber.light",
+      [xSign*2.90, 1.07, 0]));
+    parts.push(part("side-timber-stud-" + side, "wall",
+      bevelBox(0.21, 2.90, 0.25, 0.04), "timber.base",
+      [xSign*2.91, 2.47, 0]));
+  }
   parts.push(part("front-wall-timber", "wall",
     bevelBox(5.05, 0.28, 0.24, 0.055), "timber.base", [0, 3.97, 2.84]));
   parts.push(part("lower-front-timber", "wall",
