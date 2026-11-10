@@ -38,7 +38,7 @@ export function createBoltSpireStudy(): Geometry {
   add("bolt-rail", "long-stock", "metal",
     bevelBox(0.11, 0.08, 1.98, 0.03), 0, 3.68, -0.31);
   add("bolt-tip", "bolt-rail", "copper",
-    facetedCylinder(0.105, 0.38, 6, 0), 0, 3.71, -1.27);
+    facetedCylinder(0.105, 0.38, 6, 0.025), 0, 3.71, -1.27);
   add("blue-gusset", "octagonal-pier", "defender.blue",
     bevelBox(1.34, 0.78, 0.11, 0.035), 0, 2.18, 0.83);
   add("gold-crest", "blue-gusset", "defender.gold",
