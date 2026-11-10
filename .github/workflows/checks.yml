@@ -334,6 +334,24 @@ jobs:
             grep -q '"sceneryArtInstances": "82"' "/tmp/bastionfall-unified-$orientation.json"
             echo "PASS: VQ.02b original 3D tree and rock A/B ($orientation)"
           done
+          # VQ.02c: actual same-world meadow/art comparisons. Both sample
+          # identical seed, orientation and Three/WebGL2 gameplay, but the
+          # baseline disables ONLY the new ground vertex-color pigments.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&ground=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dims='900,1200'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&ground=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dims='1500,950'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dims" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-vq02c-ground-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-ground-legacy.png"
+            grep -q '"groundArt": "disabled"' "/tmp/bastionfall-unified-$orientation-ground-legacy.json"
+            grep -q '"groundArt": "pass"' "/tmp/bastionfall-unified-$orientation.json"
+            echo "PASS: VQ.02c continuous meadow surface A/B ($orientation)"
+          done
           # VQ.01: real DPR=2 Three gameplay (not just unit math). Run
           # economy/sharp selection, live CSS viewport resize + restore, and
           # verify the same Warden/19-raider/copper-bolt gameplay stays active.
@@ -487,5 +505,24 @@ jobs:
             /tmp/bastionfall-unified-portrait-scenery-legacy.json
             /tmp/bastionfall-vq02b-before-landscape.log
             /tmp/bastionfall-vq02b-before-portrait.log
+          if-no-files-found: warn
+          retention-days: 21
+
+      - name: Upload VQ.02c true game meadow/rock art screenshot comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vq02c-painted-ground-natural-rocks-before-after
+          path: |
+            /tmp/bastionfall-unified-landscape.png
+            /tmp/bastionfall-unified-portrait.png
+            /tmp/bastionfall-unified-landscape.json
+            /tmp/bastionfall-unified-portrait.json
+            /tmp/bastionfall-unified-landscape-ground-legacy.png
+            /tmp/bastionfall-unified-portrait-ground-legacy.png
+            /tmp/bastionfall-unified-landscape-ground-legacy.json
+            /tmp/bastionfall-unified-portrait-ground-legacy.json
+            /tmp/bastionfall-vq02c-ground-landscape.log
+            /tmp/bastionfall-vq02c-ground-portrait.log
           if-no-files-found: warn
           retention-days: 21
