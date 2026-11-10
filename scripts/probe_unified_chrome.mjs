@@ -199,7 +199,29 @@ try {
   for(const waiter of pending.values()) waiter.reject(new Error("Browser teardown"));
   pending.clear();
   socket?.close();
-  child.kill("SIGTERM");
-  await pause(200);
-  rmSync(profile,{force:true,recursive:true,maxRetries:3,retryDelay:100});
+  // Chromium may still be writing Preferences/Cache several hundred
+  // milliseconds after SIGTERM. Test SUCCESS must not be turned into a
+  // false negative by an ephemeral profile teardown race (ENOTEMPTY).
+  if (child.exitCode === null && !child.killed) child.kill("SIGTERM");
+  await Promise.race([
+    new Promise(resolve => {
+      if (child.exitCode !== null) resolve();
+      else child.once("exit",resolve);
+    }),
+    pause(2500),
+  ]);
+  for (let attempt=0; attempt<8; attempt++) {
+    try {
+      rmSync(profile,{force:true,recursive:true,maxRetries:2,retryDelay:100});
+      break;
+    } catch(error) {
+      if (!["ENOTEMPTY","EBUSY","EPERM"].includes(error?.code)) {
+        console.warn("Chrome cleanup warning:",String(error));
+        break;
+      }
+      if (attempt===7) {
+        console.warn("Chrome profile retained for ephemeral runner cleanup:",profile);
+      } else await pause(200);
+    }
+  }
 }
