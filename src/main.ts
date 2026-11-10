@@ -72,15 +72,17 @@ root.innerHTML = `
   </main>
 `;
 
-const splash = root.querySelector<HTMLElement>("#splash");
-const diagnostic = root.querySelector<HTMLElement>("#diagnostic-screen");
-const fatal = root.querySelector<HTMLElement>("#fatal-screen");
-const status = root.querySelector<HTMLElement>("#startup-status");
-const inspectButton = root.querySelector<HTMLButtonElement>("#show-diagnostic");
-const canvas = root.querySelector<HTMLCanvasElement>("#game");
-if (!splash || !diagnostic || !fatal || !status || !inspectButton || !canvas) {
-  throw new Error("Startup DOM structure is incomplete");
+function requiredNode<T extends Element>(parent: ParentNode, selector: string): T {
+  const found = parent.querySelector<T>(selector);
+  if (!found) throw new Error(`Required startup element missing: ${selector}`);
+  return found;
 }
+const splash = requiredNode<HTMLElement>(root, "#splash");
+const diagnostic = requiredNode<HTMLElement>(root, "#diagnostic-screen");
+const fatal = requiredNode<HTMLElement>(root, "#fatal-screen");
+const status = requiredNode<HTMLElement>(root, "#startup-status");
+const inspectButton = requiredNode<HTMLButtonElement>(root, "#show-diagnostic");
+const canvas = requiredNode<HTMLCanvasElement>(root, "#game");
 
 let state: StartupState = INITIAL_STARTUP_STATE;
 let graphics: WebGL2RenderingContext | null = null;
