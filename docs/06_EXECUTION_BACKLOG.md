@@ -28,7 +28,7 @@ Every task includes ID, dependencies, deliverable, test gate, and asset/visual g
 - [x] **F2.07** render culling, static batching, geometry memory budget diagnostics; benchmark and log. CI 42781681067: 154 tests, typecheck/build, real Chrome/WebGL2 501st-object camera rejection, unchanged pad clicks, world and cinematic screenshots. World study: 2 static terrain meshes, 16 color draws + 16 sun-depth draws, ~5.87 MB estimated allocations. See docs/16_F2_07_RENDER_BUDGET_REVIEW.md. NOT an FPS, VRAM or art-parity claim.
 
 ## F3 — first fully playable 3-wave loop
-- [ ] **F3.01** keyboard movement/collision, state snapshot, camera follow; tests diagonal speed and pause.
+- [x] **F3.01** keyboard movement/collision, state snapshot, camera follow; tests diagonal speed and pause. CI **42790695145**: 161 Vitest tests, TypeScript, build, real Chrome 90-tick keyboard/camera loop and landscape/portrait WebGL2 screenshots; previous fixed-step loop pause tests remain green. Original scene/lighting preserved. Reviewed visual quality in docs/17_F3_01_MOVEMENT_REVIEW.md. **Keyboard locomotion only—not combat, touch controls, or articulated run animation.**
 - [ ] **F3.02** enemy road progress and spawn queue, Scrapper/Runner HP/speed/attack; test deterministic movement and spawn count.
 - [ ] **F3.03** 7m hero auto aim/fire and real-time bolt projectile, hit registration, target ordering.
 - [ ] **F3.04** kill resolution and copper pickups with magnet + exact integer credit; prevent double collection.
