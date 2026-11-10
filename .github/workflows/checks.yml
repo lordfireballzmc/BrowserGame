@@ -28,3 +28,32 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Browser smoke - WebGL2 disabled recovery screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/bastionfall-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          available=0
+          for attempt in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/ -o /tmp/bastionfall-index.html 2>/dev/null; then
+              available=1
+              break
+            fi
+            sleep 0.25
+          done
+          if [ "$available" -ne 1 ]; then
+            cat /tmp/bastionfall-vite.log
+            exit 1
+          fi
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage --disable-webgl \
+            --virtual-time-budget=3000 --dump-dom http://127.0.0.1:4173/ \
+            >/tmp/bastionfall-rendered.html 2>/tmp/bastionfall-browser.log
+          if ! grep -q 'data-graphics="unavailable"' /tmp/bastionfall-rendered.html; then
+            echo "Expected explicit WebGL2 failure state in executed HTML"
+            tail -c 3500 /tmp/bastionfall-rendered.html
+            exit 1
+          fi
+          echo "PASS: app loaded and rendered an explicit WebGL2-unavailable fallback"
