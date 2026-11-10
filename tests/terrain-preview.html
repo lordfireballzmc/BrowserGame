@@ -265,6 +265,13 @@
     const demoHeadstartTicks = movement ? 30 * 60 : 0;
     for (let i=0;i<demoHeadstartTicks;i++) raiderWorld.step(FIXED_STEP_SECONDS);
     const terrain = generateTerrain(seed);
+    // VQ.02c honest same-game-frame ground review: ?ground=legacy returns
+    // flat green terrain with the identical meshes, world height and seed.
+    // Painterly color changes occur in the *one* active Three geometry only.
+    const paintedGround=unifiedThree && parameters.get("ground")!=="legacy";
+    if(paintedGround)renderer.enableGroundPigment(seed);
+    body.dataset.groundArt=paintedGround?"pass":"disabled";
+    body.dataset.groundPalette=paintedGround?"fenwall-world-pigment-vq02c":"legacy-flat";
     validatePadSites();
     const model = mat4.create();
     const instances = [];
