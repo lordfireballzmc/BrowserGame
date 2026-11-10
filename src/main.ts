@@ -28,7 +28,7 @@ root.innerHTML = `
     <header class="masthead">
       <span class="brand-mark" aria-hidden="true">B</span>
       <span>BASTIONFALL</span>
-      <span class="build-label">ENGINEERING BUILD · F0</span>
+      <span class="build-label">ENGINEERING BUILD · F1.05</span>
     </header>
 
     <section class="splash panel" id="splash" aria-labelledby="splash-title">
@@ -93,7 +93,7 @@ root.innerHTML = `
     <footer class="footer">
       <span>Original game · Original procedural art</span>
       <span>Custom WebGL2 / TypeScript</span>
-      <span>Development milestone F0.05</span>
+      <span>Development milestone F1.05</span>
     </footer>
   </main>
 `;
@@ -198,6 +198,11 @@ function paintIfVisible(nowMs = performance.now()): void {
     const frame = renderer.render(camera.matrices, [{
       meshId: "calibration", material: "stone.base", model: calibrationModel,
     }]);
+    // Dev-only negative-path test: exercise the exact UI exception boundary.
+    if (import.meta.env.DEV
+      && new URLSearchParams(location.search).get("failRender") === "1") {
+      throw new Error("Simulated diagnostic render failure");
+    }
     metrics.push(priorFrameMs ? Math.max(0, nowMs - priorFrameMs) : 0, frame);
     priorFrameMs = nowMs;
     root.dataset.orientation = resolution.portrait ? "portrait" : "landscape";
