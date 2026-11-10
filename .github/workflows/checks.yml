@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+# Superseded pushes during intensive 3D work must not waste separate
+# software-WebGL2 CI runs or upload stale screenshots.
+concurrency:
+  group: bastionfall-build-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
