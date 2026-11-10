@@ -19,7 +19,7 @@ This document records the user's **actual taste judgments and acceptance criteri
 
 **Positive traits from original concept iteration:** exaggerated hoods and rounded helmets, compact sympathetic Warden, red raiders with visibly different speeds, rich stylized trees and carved keep, approachable clean cliff/water/bridge forms, visible copper arrows and impact stars, smaller parchment/stone/wood UI, warm playful saturated colors and clean outlines over genuine 3D volumes.
 
-**Approved persistent repository assets:**
+**New persistent repository assets (awaiting explicit approval of this particular rendering):**
 - `docs/visual-references/target-illustrated-3d-composition.svg` — original version-controlled vector composition guide (art-direction document, **not** actual engine output)
 - `docs/20_VISUAL_NORTH_STAR.md` — binding positive and negative visual decisions and screenshot quality gates
 - `docs/visual-references/GENERATIVE_MOCKUP_PROMPTS.md` — reproducible recipes for original future AI visuals
