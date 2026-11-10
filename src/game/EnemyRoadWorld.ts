@@ -1,8 +1,8 @@
 /**
  * F3.02 — deterministic first-wave enemy spawn queues and road-lane movement.
  * Pure fixed-tick simulation: no wall clock, DOM, WebGL, mutable RNG or GPU.
- * Wave progression, damage application, projectile hits and deaths belong to
- * later F3 tasks. Raiders stop visibly at a safe gate staging point, NOT
+ * Wave progression, kill rewards and loot drops belong to later F3 tasks.
+ * F3.03 preserves damage and a downed actor state across ticks for real bolts. Raiders stop visibly at a safe gate staging point, NOT
  * inside the solid keep. No invented core damage or victory conditions.
  */
 import { BALANCE, type EnemyKind } from "./Balance";
@@ -29,6 +29,8 @@ export interface RoadEnemy {
   readonly kind: EarlyEnemyKind;
   readonly spawnTick: number;
   readonly hp: number;
+  /** Last authoritative fixed tick in which a bolt actually hit this actor. */
+  readonly hitTick: number | null;
   readonly maxHp: number;
   readonly contactDamagePerSecond: number;
   readonly strikeIntervalSeconds: number;
@@ -42,7 +44,7 @@ export interface RoadEnemy {
   readonly z: number;
   /** Radians for character whose forward is -Z. */
   readonly yaw: number;
-  readonly phase: "advancing" | "holding-at-gate";
+  readonly phase: "advancing" | "holding-at-gate" | "downed";
 }
 export interface EnemyWorldSnapshot {
   readonly tick: number;
@@ -124,11 +126,13 @@ export function locateRoadEnemy(
 }
 function makeEnemy(
   spawn: EnemySpawn, distance: number, seed: string | number,
+  hp = BALANCE.enemies[spawn.kind].health,
+  hitTick: number | null = null,
 ): RoadEnemy {
   const config = BALANCE.enemies[spawn.kind];
   return Object.freeze({
     ...spawn,
-    hp: config.health,
+    hp, hitTick,
     maxHp: config.health,
     contactDamagePerSecond: config.contactDamagePerSecond,
     strikeIntervalSeconds: STRIKE_INTERVAL_SECONDS,
@@ -136,8 +140,9 @@ function makeEnemy(
     speedMetersPerSecond: config.speedMetersPerSecond,
     distanceMeters: distance,
     ...locateRoadEnemy(distance, spawn.laneOffset, seed),
-    phase: distance >= GATE_STAGING_DISTANCE_METERS - spawn.gateHoldBackMeters - 1e-8
-      ? "holding-at-gate" as const : "advancing" as const,
+    phase: hp <= 0 ? "downed" as const
+      : distance >= GATE_STAGING_DISTANCE_METERS - spawn.gateHoldBackMeters - 1e-8
+        ? "holding-at-gate" as const : "advancing" as const,
   });
 }
 function frozenSnapshot(
@@ -177,10 +182,11 @@ export class EnemyRoadWorld {
     const nextTick = this.current.tick + 1;
     const next: RoadEnemy[] = this.current.enemies.map(enemy => makeEnemy(
       this.queue[enemy.id - 1]!,
-      Math.min(GATE_STAGING_DISTANCE_METERS -
-          this.queue[enemy.id - 1]!.gateHoldBackMeters,
-        enemy.distanceMeters + enemy.speedMetersPerSecond * dtSeconds),
-      this.seed,
+      enemy.hp === 0 ? enemy.distanceMeters
+        : Math.min(GATE_STAGING_DISTANCE_METERS -
+            this.queue[enemy.id - 1]!.gateHoldBackMeters,
+          enemy.distanceMeters + enemy.speedMetersPerSecond * dtSeconds),
+      this.seed, enemy.hp, enemy.hitTick,
     ));
     for (const scheduled of this.queue) {
       if (scheduled.id <= this.current.spawned) continue;
@@ -190,6 +196,29 @@ export class EnemyRoadWorld {
     this.previous = this.current;
     this.current = frozenSnapshot(nextTick, next, this.queue.length);
     return this.current;
+  }
+
+  /**
+   * Apply actual positive integer projectile damage to one stable entity ID.
+   * F3.04 will own kill payouts and removal; this state only stops a defeated
+   * raider and prevents further targeting. Never respawn or restore its HP.
+   */
+  applyBoltDamage(enemyId: number, damage: number): number {
+    if (!Number.isInteger(enemyId) || enemyId < 1
+      || !Number.isInteger(damage) || damage <= 0) {
+      throw new RangeError("Bolt damage requires a valid ID and positive integer damage");
+    }
+    const old = this.current.enemies.find(enemy => enemy.id === enemyId);
+    if (!old || old.hp === 0) return 0;
+    const actual = Math.min(old.hp, damage);
+    const next = this.current.enemies.map(enemy => enemy.id !== enemyId
+      ? enemy
+      : Object.freeze({
+          ...enemy, hp: enemy.hp - actual, hitTick: this.current.tick,
+          phase: enemy.hp - actual === 0 ? "downed" as const : enemy.phase,
+        }));
+    this.current = frozenSnapshot(this.current.tick, next, this.queue.length);
+    return actual;
   }
 
   /** Interpolate distance and a shortest-arc yaw. Never mutate a saved tick. */
