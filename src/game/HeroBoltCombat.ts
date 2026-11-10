@@ -183,7 +183,7 @@ export class HeroBoltCombat {
             0.6)*target.speedMetersPerSecond : 0;
         const predict=locateRoadEnemy(
           Math.min(GATE_STAGING_DISTANCE_METERS-target.gateHoldBackMeters,
-            target.distanceMeters+advance),target.laneOffset,"fenwall-crossing-v1");
+            target.distanceMeters+advance),target.laneOffset,world.seed);
         const dx=predict.x-barrelX,dy=predict.y+1.10-barrelY,dz=predict.z-barrelZ;
         const norm=Math.hypot(dx,dy,dz);
         if (norm>1e-5) {
