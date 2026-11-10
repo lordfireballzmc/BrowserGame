@@ -85,3 +85,23 @@ jobs:
           fi
           grep -o '<pre id="trace">[^<]*' /tmp/bastionfall-instancing.html | head -1
           echo "PASS: WebGL2 rendered 500 instances with one draw call and nonempty framebuffer"
+          # F1.05 main-app integration: actually render the diagnostic in both
+          # portrait and landscape, not merely calculate dimensions in Vitest.
+          for orientation in portrait landscape; do
+            if [ "$orientation" = portrait ]; then dimensions="420,1000"; else dimensions="1200,720"; fi
+            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+              --window-size="$dimensions" --virtual-time-budget=5000 \
+              --dump-dom 'http://127.0.0.1:4173/?diagnostic=1' \
+              >"/tmp/bastionfall-$orientation.html" 2>"/tmp/bastionfall-$orientation.log"
+            if ! grep -q 'data-render-state="active"' "/tmp/bastionfall-$orientation.html" \
+              || ! grep -q "data-orientation=\"$orientation\"" "/tmp/bastionfall-$orientation.html" \
+              || ! grep -q 'Draws 1' "/tmp/bastionfall-$orientation.html" \
+              || ! grep -q 'GPU [0-9]' "/tmp/bastionfall-$orientation.html"; then
+              echo "F1.05 main-app $orientation canvas diagnostic failed"
+              tail -c 4500 "/tmp/bastionfall-$orientation.html"
+              tail -c 1500 "/tmp/bastionfall-$orientation.log"
+              exit 1
+            fi
+            echo "PASS: $orientation responsive canvas and true instanced-renderer metrics"
+          done
