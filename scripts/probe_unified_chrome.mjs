@@ -72,14 +72,29 @@ async function evaluate(expression) {
 }
 async function openChromePage() {
   const file=join(profile,"DevToolsActivePort");
-  const deadline=Date.now()+14000;
-  while(!existsSync(file)) {
-    if (child.exitCode!==null)throw new Error("Chrome exited before DevTools startup");
-    if (Date.now()>deadline)throw new Error("Timed out starting Chrome DevTools");
+  const deadline=Date.now()+20000;
+  let port=0;
+  // Chrome creates DevToolsActivePort before both text lines are guaranteed
+  // to be flushed. Merely checking file existence races with the first write
+  // and occasionally parses an empty string as port 0. Never classify that
+  // runner startup race as a failed gameplay frame.
+  while(Date.now()<deadline) {
+    if (child.exitCode!==null)throw new Error(
+      "Chrome exited before DevTools startup: "+browserLog.join("").slice(-900));
+    if(existsSync(file)){
+      const raw=readFileSync(file,"utf8").split("\n")[0]?.trim()??"";
+      const candidate=Number(raw);
+      if(/^\d+$/.test(raw)&&Number.isInteger(candidate)&&
+         candidate>0&&candidate<=65535){
+        port=candidate;
+        break;
+      }
+    }
     await pause(120);
   }
-  const port=Number(readFileSync(file,"utf8").split("\n")[0]);
-  if(!Number.isInteger(port) || port<=0)throw new Error("Invalid Chrome DevTools port");
+  if(!port)throw new Error(
+    "Timed out waiting for valid Chrome DevTools port: "+
+      browserLog.join("").slice(-900));
   let page;
   for(let i=0;i<30;i++) {
     try {
