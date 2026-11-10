@@ -2,7 +2,9 @@ import { describe,expect,it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { MeshStandardMaterial, Scene } from "three";
-import { RiggedCharacterLayer, stylizeActorMaterial, factionFragment } from "../src/engine/render/RiggedCharacterLayer";
+import { RiggedCharacterLayer, stylizeActorMaterial, factionFragment,
+  classifyActorPart, isSelectedEquipment, ACTOR_PALETTES,
+} from "../src/engine/render/RiggedCharacterLayer";
 
 const base="public/assets/characters/";
 const manifest=JSON.parse(readFileSync(base+"manifest.json","utf8")) as {
@@ -66,39 +68,78 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
       anim.samplers.length>0 && anim.channels.length>0)).toBe(true);
   });
 
-  it("replaces green/brown atlas hue with bright blue/red faction color after map sampling",()=>{
+  it("paints each already-authored mesh part independently, preserving source atlas values",()=>{
     const shader="#include <map_fragment>";
-    const wardenShader=factionFragment(shader,"warden");
-    const scrapperShader=factionFragment(shader,"scrapper");
-    const runnerShader=factionFragment(shader,"runner");
-    for(const out of [wardenShader,scrapperShader,runnerShader]){
-      expect(out).toContain("sourceLuma");
-      expect(out).toContain("paintLight");
-      expect(out).toContain("diffuseColor.rgb=mix(diffuseColor.rgb,factionPaint,0.91)");
+    const body=factionFragment(shader,"warden","body");
+    const helmet=factionFragment(shader,"warden","headgear");
+    const cape=factionFragment(shader,"warden","cape");
+    const head=factionFragment(shader,"warden","face");
+    const axe=factionFragment(shader,"scrapper","weapon");
+    const raider=factionFragment(shader,"scrapper","body");
+    const hood=factionFragment(shader,"runner","headgear");
+    for(const output of [body,helmet,cape,head,axe,raider,hood]){
+      expect(output).toContain("sourceLuma");
+      expect(output).toContain("paintLight");
+      expect(output).toContain("diffuseColor.rgb=mix(diffuseColor.rgb,factionPaint");
+      expect(output).toContain("sourceLuma*1.48");
     }
-    expect(wardenShader).toContain("vec3(0.13,0.43,0.88)");
-    expect(wardenShader).toContain("goldAccent");
-    expect(scrapperShader).toContain("vec3(0.91,0.13,0.20)");
-    expect(runnerShader).toContain("vec3(0.86,0.07,0.23)");
-    expect(scrapperShader).not.toContain("goldAccent");
+    expect(body).not.toBe(helmet);
+    expect(cape).not.toBe(body);
+    expect(head).not.toBe(helmet);
+    expect(axe).not.toBe(raider);
+    expect(hood).not.toBe(raider);
+    expect(body).toContain("vec3(0.0900,0.3400,0.8800)");
+    expect(helmet).toContain("vec3(0.9200,0.5700,0.1400)");
+    expect(cape).toContain("vec3(0.0350,0.1900,0.5800)");
+    expect(raider).toContain("vec3(0.7900,0.0600,0.0900)");
+    expect(hood).toContain("vec3(0.4500,0.0350,0.1300)");
     expect(()=>factionFragment("void main(){}","warden")).toThrow();
+    expect(ACTOR_PALETTES.warden.body[2]).toBeGreaterThan(ACTOR_PALETTES.warden.body[0]);
+    expect(ACTOR_PALETTES.warden.headgear[0]).toBeGreaterThan(ACTOR_PALETTES.warden.headgear[2]);
+    expect(ACTOR_PALETTES.runner.leg[0]).toBeLessThan(ACTOR_PALETTES.runner.body[0]);
     const source=new MeshStandardMaterial({color:0x67ad36,roughness:0.52,metalness:0.4});
-    const originals=source.color.clone();
-    const variants=["warden","scrapper","runner"] as const;
+    const originalColor=source.color.clone();
+    const variants=[["warden","body"],["warden","headgear"],["warden","cape"],
+      ["scrapper","body"],["scrapper","face"],["runner","headgear"]] as const;
     const keys=new Set<string>();
-    for(const role of variants){
-      const styled=stylizeActorMaterial(source,role);
+    for(const [role,part] of variants){
+      const styled=stylizeActorMaterial(source,role,part);
       expect(styled).not.toBe(source);
       expect(styled.color.getHex()).toBe(0xffffff);
-      expect(styled.roughness).toBeCloseTo(0.89,4);
-      expect(styled.metalness).toBeLessThanOrEqual(0.14);
+      expect(styled.metalness).toBeLessThanOrEqual(0.22);
+      expect(styled.roughness).toBeGreaterThan(0.5);
       keys.add(styled.customProgramCacheKey());
       styled.dispose();
     }
-    expect(keys.size).toBe(3);
-    expect(source.color.equals(originals)).toBe(true);
+    expect(keys.size).toBe(variants.length);
+    expect(source.color.equals(originalColor)).toBe(true);
     expect(source.roughness).toBe(0.52);
     source.dispose();
+  });
+
+  it.each([
+    ["warden","warden-kaykit.glb",["1H_Sword","Badge_Shield"]],
+    ["scrapper","scrapper-kaykit.glb",["1H_Axe","Barbarian_Round_Shield"]],
+    ["runner","runner-kaykit.glb",["1H_Crossbow","Knife_Offhand"]],
+  ] as const)("selects exactly two artist-authored held accessories for %s",(
+    role,filename,expected,
+  )=>{
+    const bin=readFileSync(base+filename);
+    const length=bin.readUInt32LE(12);
+    const doc=JSON.parse(bin.subarray(20,20+length).toString("utf8")) as {
+      nodes:Array<{name?:string;mesh?:number}>;
+    };
+    const nodes=doc.nodes.filter(n=>n.mesh!==undefined).map(n=>n.name??"");
+    const visible=nodes.filter(n=>isSelectedEquipment(n,role));
+    const recognized=nodes.filter(n=>!isSelectedEquipment(n,role));
+    expect(expected.every(name=>visible.includes(name))).toBe(true);
+    expect(recognized.length).toBeGreaterThanOrEqual(role==="warden"?4:2);
+    expect(visible.some(n=>classifyActorPart(n,role)==="body")).toBe(true);
+    expect(visible.some(n=>classifyActorPart(n,role)==="cape")).toBe(true);
+    expect(visible.some(n=>classifyActorPart(n,role)==="weapon")).toBe(true);
+    expect(visible.some(n=>classifyActorPart(n,role)==="headgear")).toBe(true);
+    expect(visible.some(n=>classifyActorPart(n,role)==="leg")).toBe(true);
+    expect(visible.some(n=>classifyActorPart(n,role)==="arm")).toBe(true);
   });
 
   it("validates deterministic visual-only animation clocks without requiring WebGL",()=>{
