@@ -98,6 +98,21 @@ button {
   color: #f3e8ce;
   font-weight: 700;
 }
+.world-preview-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 11px 20px;
+  color: #f3e8ce;
+  background: #365d4e;
+  border: 1px solid #365d4e;
+  border-radius: 4px;
+  font-weight: 750;
+  text-decoration: none;
+}
+.world-preview-link:hover { background: #497555; border-color: #497555; }
+.world-preview-link:focus-visible { outline: 3px solid #466d88; outline-offset: 3px; }
 button:hover:not(:disabled) { background: #466d88; border-color: #466d88; }
 button.secondary { background: transparent; color: #243338; border-color: #7e898c; }
 button.secondary:hover:not(:disabled) { background: #dedbc9; border-color: #57656b; }
