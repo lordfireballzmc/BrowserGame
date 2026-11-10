@@ -15,7 +15,7 @@ export const ROAD_SPEC = {
   widthMeters: 4.5,
   halfWidthMeters: 2.25,
   maxSampleStepMeters: 0.55,
-  heightAboveSurfaceMeters: 0.04,
+  heightAboveSurfaceMeters: 0.02,
   miterLimit: 1.35,
   flatTerrainHalfWidthMeters: 3.75,
   terrainFeatherMeters: 1.6,
