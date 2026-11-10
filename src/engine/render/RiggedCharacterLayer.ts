@@ -59,21 +59,21 @@ type ActorColors = Readonly<Record<ActorPart,ColorTriplet>>;
 /** Deliberate THREE linear-fragment palette; original texture supplies tone. */
 export const ACTOR_PALETTES:Readonly<Record<Role,ActorColors>>={
   warden:{
-    body:[0.09,0.34,0.88],arm:[0.63,0.39,0.09],
-    leg:[0.055,0.16,0.43],face:[0.87,0.55,0.32],
-    headgear:[0.92,0.57,0.14],cape:[0.035,0.19,0.58],
+    body:[0.08,0.36,0.88],arm:[0.56,0.32,0.07],
+    leg:[0.045,0.19,0.48],face:[0.87,0.55,0.32],
+    headgear:[0.10,0.37,0.77],cape:[0.035,0.19,0.62],
     weapon:[0.64,0.76,0.83],shield:[0.90,0.50,0.09],
   },
   scrapper:{
-    body:[0.79,0.06,0.09],arm:[0.69,0.19,0.11],
-    leg:[0.29,0.08,0.11],face:[0.86,0.49,0.26],
-    headgear:[0.45,0.09,0.10],cape:[0.38,0.025,0.08],
+    body:[1.00,0.035,0.045],arm:[0.91,0.055,0.06],
+    leg:[0.49,0.025,0.055],face:[0.89,0.47,0.27],
+    headgear:[0.94,0.035,0.07],cape:[0.62,0.020,0.065],
     weapon:[0.72,0.44,0.20],shield:[0.59,0.20,0.12],
   },
   runner:{
-    body:[0.84,0.055,0.14],arm:[0.60,0.13,0.18],
-    leg:[0.21,0.04,0.12],face:[0.84,0.48,0.27],
-    headgear:[0.45,0.035,0.13],cape:[0.31,0.025,0.11],
+    body:[0.98,0.045,0.13],arm:[0.81,0.075,0.12],
+    leg:[0.42,0.025,0.085],face:[0.84,0.48,0.27],
+    headgear:[0.84,0.025,0.125],cape:[0.55,0.025,0.10],
     weapon:[0.77,0.55,0.29],shield:[0.50,0.12,0.18],
   },
 } as const;
