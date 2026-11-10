@@ -15,8 +15,12 @@ import {
   type StartupState,
 } from "./platform/Startup";
 
-const root = document.querySelector<HTMLDivElement>("#app");
-if (!root) throw new Error("App element #app is missing");
+function requireAppRoot(): HTMLDivElement {
+  const element = document.querySelector<HTMLDivElement>("#app");
+  if (!element) throw new Error("App element #app is missing");
+  return element;
+}
+const root = requireAppRoot();
 
 // F0.05 is an honest engineering splash, NOT an interactive game or asset preview.
 root.innerHTML = `
