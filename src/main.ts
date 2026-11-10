@@ -28,7 +28,7 @@ root.innerHTML = `
     <header class="masthead">
       <span class="brand-mark" aria-hidden="true">B</span>
       <span>BASTIONFALL</span>
-      <span class="build-label">ENGINEERING BUILD · F1.06</span>
+      <span class="build-label">ENGINEERING BUILD · F3.01</span>
     </header>
 
     <section class="splash panel" id="splash" aria-labelledby="splash-title">
@@ -36,9 +36,13 @@ root.innerHTML = `
       <h1 id="splash-title">Hold the line.<br />Build the frontier.</h1>
       <p class="lead">
         A hero-action tower-defense game built on an original WebGL2 engine.
-        The engine foundations are being assembled. Gameplay is not available yet.
+        Step into our original 3D frontier. The Warden now responds to keyboard movement
+        with weight, grounded collision and a smoothly following camera. Combat is still in development.
       </p>
       <div class="actions">
+        <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement">
+          Move the Warden · early prototype
+        </a>
         <a class="world-preview-link" href="/tests/terrain-preview.html?view=cinematic">
           View the new 3D world study
         </a>
@@ -47,7 +51,8 @@ root.innerHTML = `
           Play unavailable
         </button>
       </div>
-      <p class="preview-note">The diagnostic checks graphics capability; it is not a playable level.</p>
+      <p class="preview-note">Early movement preview: WASD or arrow keys to move, Esc to pause.
+        Real enemies, attacks, construction and touch controls are not available yet.</p>
     </section>
 
     <section class="diagnostic-screen panel" id="diagnostic-screen" aria-labelledby="diagnostic-title" hidden>
@@ -102,7 +107,7 @@ root.innerHTML = `
     <footer class="footer">
       <span>Original game · Original procedural art</span>
       <span>Custom WebGL2 / TypeScript</span>
-      <span>Development milestone F1.06</span>
+      <span>Development milestone F3.01</span>
     </footer>
   </main>
 `;
