@@ -12,7 +12,7 @@ Every task includes ID, dependencies, deliverable, test gate, and asset/visual g
 
 ## F1 — graphics engine
 - [x] **F1.01** shader compile/error reporting, GPU resource manager, context loss, cleanup; gate no leaked buffers on reset.
-- [ ] **F1.02** gl-matrix ortho camera / world-screen projection and following; gate corner/unit tests for aspect ratios.
+- [x] **F1.02** gl-matrix ortho camera / world-screen projection and following; gate corner/unit tests for aspect ratios.
 - [ ] **F1.03** geometry core: bevel box, faceted cylinder, pyramid/wedge, low-poly ellipsoid, planar ribbon, disks; vertex/index/normal validation.
 - [ ] **F1.04** instanced renderer with static buffers, material palette, gamma treatment, depth/cull/blend passes; gate 500 instances benchmark trace.
 - [ ] **F1.05** canvas resize/render-resolution controls, viewport portrait, error overlay, render metrics.
