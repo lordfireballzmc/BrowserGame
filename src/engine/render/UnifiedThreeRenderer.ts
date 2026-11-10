@@ -24,6 +24,8 @@ import {
   EnvironmentArtLayer, type EnvironmentArtStatus,
   type EnvironmentPlacement, type EnvironmentPadPlacement,
 } from "./EnvironmentArtLayer";
+import { SceneryArtLayer, type SceneryArtStats } from "./SceneryArtLayer";
+import type { SceneryPlacement } from "../../art/scenery/Scenery";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
 /** Nonvisual provenance and validation returned by the locally loaded GLB. */
 export interface ImportedAssetStatus {
@@ -86,6 +88,7 @@ export class UnifiedThreeRenderer {
   private readonly imported = new Group();
   private readonly animatedCharacters = new RiggedCharacterLayer(this.scene);
   private readonly environment = new EnvironmentArtLayer(this.scene);
+  private readonly sceneryArt = new SceneryArtLayer(this.scene);
   private destroyed = false;
   private useShadows = false;
   private useCulling = false;
@@ -152,6 +155,12 @@ export class UnifiedThreeRenderer {
   get riggedStatus(): RiggedCharacterStats | null { return this.animatedCharacters.stats; }
   get riggedCharactersReady(): boolean { return this.animatedCharacters.ready; }
   get environmentStatus(): EnvironmentArtStatus | null { return this.environment.status; }
+  get sceneryArtStatus(): SceneryArtStats | null { return this.sceneryArt.stats; }
+  get sceneryArtReady(): boolean { return this.sceneryArt.ready; }
+  async loadSceneryArt(placements:readonly SceneryPlacement[]):Promise<SceneryArtStats> {
+    this.assertActive();
+    return this.sceneryArt.load(placements);
+  }
   get environmentReady(): boolean { return this.environment.ready; }
   /** Load optional art atomically; preserved procedural actors and pads remain
    * valid collision/selection fallbacks until these GLBs are fully decoded. */
@@ -292,6 +301,15 @@ export class UnifiedThreeRenderer {
         visible++; // actual same-scene SkinnedMesh replaces the instanced actor
         continue;
       }
+      if (this.sceneryArt.ready &&
+          (source.meshId==="scenery-pine" ||
+           source.meshId==="scenery-broadleaf" ||
+           source.meshId==="scenery-rock")) {
+        // The same authoritative F2.05 positions are now drawn by batched
+        // source-verified 3D GLBs, never by both old and new visual systems.
+        culled++;
+        continue;
+      }
       if (this.environment.ready &&
           (source.meshId==="staged-core" || source.meshId==="carved-pad")) {
         // Authored textured castle architecture occupies identical world
@@ -397,6 +415,7 @@ export class UnifiedThreeRenderer {
     });
     this.animatedCharacters.dispose();
     this.environment.dispose();
+    this.sceneryArt.dispose();
     this.gpu.dispose();
     this.pools.clear();
     this.variants.clear();
