@@ -32,7 +32,7 @@ export const PAD_SITES: readonly PadSite[] = Object.freeze([
   { id:"P08", x:13.2995, z:-14.1030, unlockWave:7 },
   { id:"P09", x:17.9568, z:0.4221, unlockWave:7 },
   { id:"P10", x:31.7920, z:-7.7761, unlockWave:7 },
-].map(s => Object.freeze(s)));
+].map(s => Object.freeze(s as PadSite)));
 
 function validWave(wave: number): void {
   if (!Number.isInteger(wave) || wave < 1 || wave > 10)
