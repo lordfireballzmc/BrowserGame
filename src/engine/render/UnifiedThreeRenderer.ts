@@ -20,6 +20,10 @@ import { TERRAIN_ASSETS } from "../../art/assets/AssetManifest";
 import { linearColor, vertexMaterialColor, type MaterialToken } from "./Palette";
 import { aabbIntersectsFrustum } from "./Frustum";
 import { RiggedCharacterLayer, type ActorMotion, type RiggedCharacterStats } from "./RiggedCharacterLayer";
+import {
+  EnvironmentArtLayer, type EnvironmentArtStatus,
+  type EnvironmentPlacement, type EnvironmentPadPlacement,
+} from "./EnvironmentArtLayer";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
 /** Nonvisual provenance and validation returned by the locally loaded GLB. */
 export interface ImportedAssetStatus {
@@ -81,6 +85,7 @@ export class UnifiedThreeRenderer {
   private readonly matrix = new Matrix4();
   private readonly imported = new Group();
   private readonly animatedCharacters = new RiggedCharacterLayer(this.scene);
+  private readonly environment = new EnvironmentArtLayer(this.scene);
   private destroyed = false;
   private useShadows = false;
   private useCulling = false;
@@ -146,6 +151,15 @@ export class UnifiedThreeRenderer {
   get importedStatus(): ImportedAssetStatus | null { return this.sourceStatus; }
   get riggedStatus(): RiggedCharacterStats | null { return this.animatedCharacters.stats; }
   get riggedCharactersReady(): boolean { return this.animatedCharacters.ready; }
+  get environmentStatus(): EnvironmentArtStatus | null { return this.environment.status; }
+  get environmentReady(): boolean { return this.environment.ready; }
+  /** Load optional art atomically; preserved procedural actors and pads remain
+   * valid collision/selection fallbacks until these GLBs are fully decoded. */
+  async loadEnvironmentArt(keep:EnvironmentPlacement,
+    pads:readonly EnvironmentPadPlacement[]):Promise<EnvironmentArtStatus> {
+    this.assertActive();
+    return this.environment.load(keep,pads);
+  }
   async loadRiggedCharacters(): Promise<RiggedCharacterStats> {
     this.assertActive();
     return this.animatedCharacters.load();
@@ -278,6 +292,14 @@ export class UnifiedThreeRenderer {
         visible++; // actual same-scene SkinnedMesh replaces the instanced actor
         continue;
       }
+      if (this.environment.ready &&
+          (source.meshId==="staged-core" || source.meshId==="carved-pad")) {
+        // Authored textured castle architecture occupies identical world
+        // locations. Retire only its original visual mesh; the deterministic
+        // collision, build-pad hit regions and site positions remain untouched.
+        culled++;
+        continue;
+      }
       if (this.useCulling
         && !aabbIntersectsFrustum(geometry.bounds,source.model,camera.viewProjection)) {
         culled++;
@@ -374,6 +396,7 @@ export class UnifiedThreeRenderer {
       }
     });
     this.animatedCharacters.dispose();
+    this.environment.dispose();
     this.gpu.dispose();
     this.pools.clear();
     this.variants.clear();
