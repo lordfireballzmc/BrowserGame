@@ -315,6 +315,25 @@ jobs:
             grep -q '"environmentArt": "pass"' "/tmp/bastionfall-unified-$orientation.json"
             echo "PASS: VQ.02 $orientation real Three world original / authored castle comparison"
           done
+          # VQ.02b actual in-game source art A/B: preserve VQ.02a castle,
+          # camera, combat, deterministic scenery positions and Three renderer.
+          # Change ONLY tree and rock visuals to the procedural fallback.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&scenery=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='900,1200'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&scenery=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='1500,950'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-vq02b-before-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-scenery-legacy.png"
+            grep -q '"sceneryArt": "disabled"' "/tmp/bastionfall-unified-$orientation-scenery-legacy.json"
+            grep -q '"sceneryArt": "pass"' "/tmp/bastionfall-unified-$orientation.json"
+            grep -q '"sceneryArtInstances": "82"' "/tmp/bastionfall-unified-$orientation.json"
+            echo "PASS: VQ.02b original 3D tree and rock A/B ($orientation)"
+          done
           # VQ.01: real DPR=2 Three gameplay (not just unit math). Run
           # economy/sharp selection, live CSS viewport resize + restore, and
           # verify the same Warden/19-raider/copper-bolt gameplay stays active.
@@ -449,5 +468,24 @@ jobs:
             /tmp/bastionfall-unified-portrait-env-legacy.json
             /tmp/bastionfall-vq02-before-landscape.log
             /tmp/bastionfall-vq02-before-portrait.log
+          if-no-files-found: warn
+          retention-days: 21
+
+      - name: Upload VQ.02b true original-asset foliage gameplay before-after
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vq02b-source-pinned-instanced-foliage-before-after
+          path: |
+            /tmp/bastionfall-unified-landscape.png
+            /tmp/bastionfall-unified-portrait.png
+            /tmp/bastionfall-unified-landscape.json
+            /tmp/bastionfall-unified-portrait.json
+            /tmp/bastionfall-unified-landscape-scenery-legacy.png
+            /tmp/bastionfall-unified-portrait-scenery-legacy.png
+            /tmp/bastionfall-unified-landscape-scenery-legacy.json
+            /tmp/bastionfall-unified-portrait-scenery-legacy.json
+            /tmp/bastionfall-vq02b-before-landscape.log
+            /tmp/bastionfall-vq02b-before-portrait.log
           if-no-files-found: warn
           retention-days: 21
