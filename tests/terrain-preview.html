@@ -141,7 +141,7 @@
       mat4.scale(m,m,[scale,scale,scale]);
       instances.push({meshId:"staged-"+id, material:"stone.base", model:m});
     };
-    stageActor("core",31,2,Math.PI);
+    stageActor("core",31,2);
     stageActor("warden",24,-4,Math.PI*0.70);
     for (const [x,z] of [[9,-4.1],[11,-5.3],[13,-6.5],[15,-7],[17,-7.2],
                           [19,-6.9],[20,-5.2],[21,-7],[22,-5.8],
