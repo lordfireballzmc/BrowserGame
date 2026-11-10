@@ -91,7 +91,7 @@ describe("F2.04: northern decorative river and stratified banks", () => {
       expect(riverCarveDepth(pad.x,pad.z)).toBe(0);
     }
     for (const bridge of water.bridgePositions) {
-      expect(riverCarveDepth(bridge[0],bridge[2])).toBeGreaterThan(0.6);
+      expect(riverCarveDepth(bridge[0],bridge[2])).toBeCloseTo(RIVER_SPEC.maximumCarveMeters, 6);
     }
   });
 
