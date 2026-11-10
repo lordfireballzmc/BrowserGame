@@ -464,8 +464,12 @@
         return status;
       });
       body.dataset.riggedArt="loading";
-      body.dataset.environmentArt="loading";
-      const environmentLoad=renderer.loadEnvironmentArt(
+      // VQ.02 A/B browser art review: ?environment=legacy leaves the exact
+      // same camera, seed, animation, physical combat and Three engine intact
+      // while rendering the prior procedural keep/pads for fair comparison.
+      const environmentEnabled=parameters.get("environment")!=="legacy";
+      body.dataset.environmentArt=environmentEnabled?"loading":"disabled";
+      const environmentLoad=environmentEnabled ? renderer.loadEnvironmentArt(
         {x:31,y:terrainHeight(seed,31,2)+0.04,z:2},
         PAD_SITES.map(site=>({
           x:site.x,y:padGroundHeight(site,seed),z:site.z,
@@ -486,7 +490,7 @@
         body.dataset.environmentInstances=String(status.instances);
         body.dataset.environmentVisuals="kenney-castle-kit-vq02";
         return status;
-      });
+      }) : Promise.resolve(null);
       if (!movement || parameters.has("probeMovement")
         || parameters.has("probeEnemies") || parameters.has("probeCombat")
         || parameters.has("probeCharacters")) {
