@@ -195,6 +195,41 @@ jobs:
             fi
           done
           echo "PASS: real canvas click selects unlocked pad and rejects locked pad"
+          # F2.06 real shadow-map and cinematic camera tests, not screenshot claims
+          # from code alone. Two real WebGL2 compositions use identical scene data.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&aspect=portrait'
+              dimensions="900,1200"
+              composition='9:16'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic'
+              dimensions="1500,950"
+              composition='16:9'
+            fi
+            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+              --window-size="$dimensions" --virtual-time-budget=11000 \
+              --dump-dom "$url" \
+              >"/tmp/bastionfall-cinematic-$orientation.html" \
+              2>"/tmp/bastionfall-cinematic-$orientation.log"
+            if ! grep -q 'data-result="pass"' "/tmp/bastionfall-cinematic-$orientation.html" \
+              || ! grep -q 'data-shadows="on"' "/tmp/bastionfall-cinematic-$orientation.html" \
+              || ! grep -q "data-composition=\"$composition\"" "/tmp/bastionfall-cinematic-$orientation.html" \
+              || ! grep -q '"stagedBoltSpires":2' "/tmp/bastionfall-cinematic-$orientation.html"; then
+              echo "F2.06 $orientation WebGL2 lighting/composition regression"
+              tail -c 6500 "/tmp/bastionfall-cinematic-$orientation.html"
+              tail -c 2200 "/tmp/bastionfall-cinematic-$orientation.log"
+              exit 1
+            fi
+            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+              --window-size="$dimensions" --virtual-time-budget=11000 \
+              --screenshot="/tmp/bastionfall-cinematic-$orientation.png" "$url" \
+              >"/tmp/bastionfall-cinematic-$orientation-capture.log" 2>&1
+            test -s "/tmp/bastionfall-cinematic-$orientation.png"
+            echo "PASS: actual $orientation WebGL2 shadowed scene, screenshot captured"
+          done
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
         uses: actions/upload-artifact@v4
@@ -210,5 +245,16 @@ jobs:
         with:
           name: f2-05-seeded-scenery-screenshot
           path: /tmp/bastionfall-terrain-preview.png
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload F2.06 WebGL2 cinematic composition screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f2-06-cinematic-visual-studies
+          path: |
+            /tmp/bastionfall-cinematic-landscape.png
+            /tmp/bastionfall-cinematic-portrait.png
           if-no-files-found: warn
           retention-days: 14
