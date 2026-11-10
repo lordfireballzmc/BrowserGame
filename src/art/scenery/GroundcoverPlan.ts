@@ -71,10 +71,16 @@ export function generateGroundcover(
   for(const p of grass)for(let i=0;i<GROUNDCOVER_BUDGET.grassPerSite;i++){
     const angle=p.rotation+i*Math.PI*2/3;
     const distance=i===0?0:0.13;
-    const x=p.x+Math.cos(angle)*distance;
-    const z=p.z+Math.sin(angle)*distance;
-    if(!sceneryClearance(x,z,"grass",1.4))
-      throw new RangeError("Original grass placement crossed safety verge");
+    let x=p.x+Math.cos(angle)*distance;
+    let z=p.z+Math.sin(angle)*distance;
+    // A few canonical tufts are right against the legal shoreline/road
+    // clearance limit. Keep the ORIGINAL authorized point in that case:
+    // decorative clumps can overlap each other but never force a new site.
+    if(!sceneryClearance(x,z,"grass",1.4)){
+      x=p.x;z=p.z;
+      if(!sceneryClearance(x,z,"grass",p.scale))
+        throw new RangeError("Original grass source failed its own clearance");
+    }
     out.push(place("grass","grass",x,z,angle,
       0.82+0.31*rng.nextFloat(),"canonical",key));
   }
@@ -83,10 +89,13 @@ export function generateGroundcover(
   for(const p of flowers)for(let i=0;i<GROUNDCOVER_BUDGET.flowersPerSite;i++){
     const angle=p.rotation+i*Math.PI*2/3;
     const distance=i===0?0:0.16;
-    const x=p.x+Math.cos(angle)*distance;
-    const z=p.z+Math.sin(angle)*distance;
-    if(!sceneryClearance(x,z,"flower",1.65))
-      throw new RangeError("Canonical flower cluster crossed safety verge");
+    let x=p.x+Math.cos(angle)*distance;
+    let z=p.z+Math.sin(angle)*distance;
+    if(!sceneryClearance(x,z,"flower",1.65)){
+      x=p.x;z=p.z;
+      if(!sceneryClearance(x,z,"flower",p.scale))
+        throw new RangeError("Original flower source failed its own clearance");
+    }
     out.push(place("flower",sourceFor("flower",i),x,z,angle,
       0.82+0.24*rng.nextFloat(),"canonical",key));
   }
