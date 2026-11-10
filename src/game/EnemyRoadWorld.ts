@@ -36,6 +36,7 @@ export interface RoadEnemy {
   readonly speedMetersPerSecond: number;
   readonly distanceMeters: number;
   readonly laneOffset: number;
+  readonly gateHoldBackMeters: number;
   readonly x: number;
   readonly y: number;
   readonly z: number;
