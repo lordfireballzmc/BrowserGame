@@ -1,0 +1,89 @@
+# Execution backlog — machine-readable human-readable source of truth
+
+Every task includes ID, dependencies, deliverable, test gate, and asset/visual gate. The agent must implement **one bounded incomplete task at a time**, commit, update status, then continue. Status: [ ] not started, [~] in progress, [x] completed with verification. Never check off without evidence. Ordering may be changed only with written rationale. **F0 is first.** F3 finish provides true playable loop; no fake demo presented as full product.
+
+## F0 — bootstrap (required before visual code)
+- [ ] **F0.01** Initialize Vite strict TS, package manager lockfile, Node version, scripts dev/build/typecheck/test; output `package.json, tsconfig.json, index.html`; gate install/typecheck/build.
+- [ ] **F0.02** CI GitHub Actions for typecheck/unit/build with caches, least privileges; gate documented green workflow.
+- [ ] **F0.03** deterministic PRNG + test vectors, balance data schema; gate same seed returns same numbers and no Math.random in state.
+- [ ] **F0.04** fixed-step Loop with pause/visibility handling, test fake clock; gate exact number of steps, cap catch-up, no async reentrant loops.
+- [ ] **F0.05** app state, splash, WebGL2 detector and fatal fallback; gate HTML loads; fails gracefully without context.
+- [ ] **F0.06** architecture ADR docs updated for actual pinned dependency versions, attribution.
+
+## F1 — graphics engine
+- [ ] **F1.01** shader compile/error reporting, GPU resource manager, context loss, cleanup; gate no leaked buffers on reset.
+- [ ] **F1.02** gl-matrix ortho camera / world-screen projection and following; gate corner/unit tests for aspect ratios.
+- [ ] **F1.03** geometry core: bevel box, faceted cylinder, pyramid/wedge, low-poly ellipsoid, planar ribbon, disks; vertex/index/normal validation.
+- [ ] **F1.04** instanced renderer with static buffers, material palette, gamma treatment, depth/cull/blend passes; gate 500 instances benchmark trace.
+- [ ] **F1.05** canvas resize/render-resolution controls, viewport portrait, error overlay, render metrics.
+- [ ] **F1.06** initial *artistically intentional* hero, 2 enemy archetypes and core; compare actual browser screenshot against art bible.
+
+## F2 — coherent procedural world
+- [ ] **F2.01** 72×48m deterministic heightfield mesh tiles with seam equality tests, clipped island rim and rock stratum.
+- [ ] **F2.02** authored spline road / road quad strip with consistent width; visual and collision lane checks.
+- [ ] **F2.03** build pad octagonal mesh, screen projection price tag, interaction region, 10 authored coordinates.
+- [ ] **F2.04** riverbank and cliff low-poly geometry, consistent palette, no water texture or visual fog.
+- [ ] **F2.05** seed-based grass/tree/rock/flower distribution with no-build zones, Poisson strategy and caching.
+- [ ] **F2.06** lighting/contact-shadow flat material treatment; screenshot composition 1080p and 9:16.
+- [ ] **F2.07** render culling, static batching, geometry memory budget diagnostics; benchmark and log.
+
+## F3 — first fully playable 3-wave loop
+- [ ] **F3.01** keyboard movement/collision, state snapshot, camera follow; tests diagonal speed and pause.
+- [ ] **F3.02** enemy road progress and spawn queue, Scrapper/Runner HP/speed/attack; test deterministic movement and spawn count.
+- [ ] **F3.03** 7m hero auto aim/fire and real-time bolt projectile, hit registration, target ordering.
+- [ ] **F3.04** kill resolution and copper pickups with magnet + exact integer credit; prevent double collection.
+- [ ] **F3.05** Bolt Spire pad selection, 20-coin buy, spawn, firing, upgrade T2; atomic cost validation.
+- [ ] **F3.06** core damage/death, hero respawn, pause, win/lose HUD; end-to-end tests.
+- [ ] **F3.07** waves 1–3, recovery transitions, wave reward, cost progression; seeded simulation golden tests.
+- [ ] **F3.08** onboarding four microprompts, desktop HUD, input feedback, no obscuring overlays.
+- [ ] **F3.09** Playwright real browser smoke and movement/build flow; capture screenshots. Human playtest milestone.
+
+## F4 — art completeness and animations
+- [ ] **F4.01** rigid skeleton pivot animator + state transitions idle/run/fire/dash/hit/die; deterministic animation clocks.
+- [ ] **F4.02** all enemy archetype parameterized meshes, role-distinguishable in 1080p and portrait.
+- [ ] **F4.03** detailed hero mantle, cloth hinge, bolt yoke, distinctive gold read; art gate.
+- [ ] **F4.04** towers family meshes including tiers 1/2/3; model visibly changes with each tier.
+- [ ] **F4.05** projectiles/mortar trajectories, low-cost impact VFX, pooled geometry.
+- [ ] **F4.06** wave presentation + victory/defeat animations, reduced motion alternatives.
+- [ ] **F4.07** baseline screenshot comparison to bible's strict palette/silhouette standards.
+
+## F5 — combat depth / control
+- [ ] **F5.01** Shieldbearer frontal directional damage and visual reaction; combat unit tests.
+- [ ] **F5.02** Sapper tower targeting, tower HP/repair; test no hidden reroute.
+- [ ] **F5.03** Banner aura capped 1.2× and readable periodic pulse; tests no multiplicative stacking.
+- [ ] **F5.04** Behemoth boss attacks, warning geometry and spawns, budget cap.
+- [ ] **F5.05** Arrow Rack / Lobber / Signal Ward full behaviors and upgrades; test DPS/area/buff.
+- [ ] **F5.06** touch analog joystick and dash/build buttons via nipplejs; mobile Playwright and real device inspection.
+- [ ] **F5.07** ZzFX audio presets, user gesture unlock, audio concurrency limits, mute/mix controls.
+- [ ] **F5.08** player dash and ability rally pulse; fixed tick and collision tests.
+
+## F6 — campaign / persistence
+- [ ] **F6.01** rounds 4–10 with exact composition/boss wave and balancing.
+- [ ] **F6.02** 3 more map templates, seeded prop/road generation with protected collision zones.
+- [ ] **F6.03** upgrades/recovery bonuses/repair/sell rules and no-grind campaign progression.
+- [ ] **F6.04** results screen stats, seed, restarts.
+- [ ] **F6.05** IndexedDB schema, save/resume/migrations and corrupt save recovery, tests.
+- [ ] **F6.06** route-branching prototyping with PathFinding.js **only if needed**.
+- [ ] **F6.07** difficulty profile tests: beginner, deliberate and stress play patterns.
+
+## F7 — performance, polish, accessibility
+- [ ] **F7.01** instancing draw-call and GPU memory measurements (100+ enemies).
+- [ ] **F7.02** broadphase spatial hash, pooled effects, no per-tick allocations hot path after warm-up.
+- [ ] **F7.03** mobile resolution/render scaling, reduced-motion and high contrast.
+- [ ] **F7.04** keyboard focus, UI semantic labels, menus, touch safe zones.
+- [ ] **F7.05** integration QA against browser consoles/screenshot diffs/balance table.
+- [ ] **F7.06** first-run onboarding polish, no tutorial wall, input responsiveness benchmark.
+- [ ] **F7.07** audio art-direction pass and no faux epic soundtrack.
+
+## F8 — delivery and maintenance
+- [ ] **F8.01** repeatable build/deploy with staging URL; verify actual host and its HTTPS conditions.
+- [ ] **F8.02** visual regression baselines; no reference screenshot used as direct game asset.
+- [ ] **F8.03** third-party attribution, exact licenses, dependency audit and SBOM.
+- [ ] **F8.04** README operating handbook, controls, troubleshooting, game loop and settings.
+- [ ] **F8.05** release candidate tests with artifacts; user signoff before public production release.
+
+## Dependency graph
+F0 → F1 → F2 → F3 (PLAYABLE VERTICAL SLICE); then F4+F5 → F6 → F7 → F8. Certain F0 unit tasks and F1 graphics tasks can run independently *but* this conversation loop must keep changes small, testable and reviewable.
+
+## The anti-fake completion law
+Never mark an item done because code was written alone. Completion requires: corresponding code on GitHub, tests actually executed and logged, build status, screenshot evidence for visual work, and cross-system integration where applicable. If tools cannot execute commands, label **implementation committed; verification pending** and leave task unchecked. A future turn can verify with CI if available.
