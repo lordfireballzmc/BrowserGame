@@ -43,6 +43,9 @@ root.innerHTML = `
         <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement">
           Move the Warden · early prototype
         </a>
+        <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement&amp;assetPilot=1">
+          Inspect the new textured 3D asset pipeline
+        </a>
         <a class="world-preview-link" href="/tests/terrain-preview.html?view=cinematic">
           View the new 3D world study
         </a>
