@@ -18,6 +18,10 @@ Source-pinned CC0 KayKit Knight (Warden), Barbarian (Scrapper), and Hooded Rogue
 
 These models are **licensed third-party starter assets**, not the final exclusive Bastionfall designs. The environment, attack sockets, skeletal performance and mobile UI still need serious improvements.
 
+## ART.03b — Layered fantasy costumes, authentic equipment and smoother skeletal transitions
+
+The live Three.js Warden/Scrapper/Runner models now receive **eight region-specific illustrated materials per role**, derived from true named GLB mesh parts (helmet, face, body, limbs, cape, weapon and shield) instead of a single plastic-looking faction tint. Selected source-authored hand-socket accessories are limited to the Warden sword/shield, Scrapper axe/shield and Runner small crossbow/offhand knife rather than stacking every weapon variant. The existing 41-joint KayKit CC0 rigs now **smoothstep-crossfade** 140ms when switching their actual Idle/Walk/Run/Attack/Death animations, entirely visual and sampled from deterministic world time. First [ART.03b CI #42850500809](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42850500809) passed 192 unit tests, browser movement/combat/pad selection and both screen orientations. First actual screenshots showed the Warden's helmet **too gold** and raiders' hats **too brown**; revised blue helmet and brighter crimson headgear require final browser visual verification, not yet proof of commercial-quality character art. See [ART.03b review](docs/28_ART03B_CHARACTER_IDENTITY_REVIEW.md).
+
 ## Current art-direction decision (2026-11-10)
 
 The user explicitly rejected the overly glossy, realistic *Rise of Kingdoms*-leaning Bastionfall AI mockups and instead wants an **original, playful, illustrated-cartoon tower defense in genuinely sculpted 3D**, drawing only general readability/personality/motion inspiration from *Kingdom Rush* (no copying third-party characters, maps, UI or game art). This decision **overrides older muted mobile-strategy styling** for future visual tasks; it does **not** mean the current runtime already meets that level.
