@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           npm install --no-audit --no-fund --save-exact three@0.184.0
-          npm install --no-audit --no-fund --save-dev --save-exact @types/three@0.184.0
+          npm install --no-audit --no-fund --save-dev --save-exact @types/three@0.184.0 @types/node@22.15.30
           npm ci --no-audit --no-fund
       - name: Prepare isolated pinned image tool
         shell: bash
