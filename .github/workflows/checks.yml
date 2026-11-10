@@ -274,9 +274,10 @@ jobs:
             test -s "/tmp/bastionfall-movement-$orientation.png"
             echo "PASS: keyboard + 19 road raiders + swept 3D bolt hits and in-flight projectile ($orientation)"
           done
-          # ART.02: actual shared WebGL2 context: every original terrain,
-          # Warden, raider and copper projectile plus a GLB texture use ONE
-          # Three.js scene and canvas. Legacy mode is still tested above.
+          # ART.02: native Chrome DevTools Protocol waits for true glTF texture
+          # readiness rather than dumping 'pending' during async ImageBitmap
+          # decode. Capture real frames only after Warden, 19 raiders, hit
+          # registration and the one shared Three/WebGL2 context are proven.
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
               url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
@@ -285,32 +286,10 @@ jobs:
               url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
               dimensions='1500,950'
             fi
-            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
-              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
-              --window-size="$dimensions" --virtual-time-budget=24000 \
-              --dump-dom "$url" \
-              >"/tmp/bastionfall-unified-$orientation.html" \
-              2>"/tmp/bastionfall-unified-$orientation.log"
-            if ! grep -q 'data-result="pass"' "/tmp/bastionfall-unified-$orientation.html" \
-              || ! grep -q 'data-unified-renderer="three"' "/tmp/bastionfall-unified-$orientation.html" \
-              || ! grep -q 'data-shared-depth="true"' "/tmp/bastionfall-unified-$orientation.html" \
-              || ! grep -q 'data-unified-canvases="1"' "/tmp/bastionfall-unified-$orientation.html" \
-              || ! grep -Eq 'data-asset-textured="[1-9][0-9]*"' "/tmp/bastionfall-unified-$orientation.html" \
-              || ! grep -q 'data-movement-probe="pass"' "/tmp/bastionfall-unified-$orientation.html" \
-              || ! grep -q 'data-enemy-probe="pass"' "/tmp/bastionfall-unified-$orientation.html" \
-              || ! grep -q 'data-combat-probe="pass"' "/tmp/bastionfall-unified-$orientation.html"; then
-              echo "ART.02 $orientation one-scene Three.js browser regression"
-              tail -c 7000 "/tmp/bastionfall-unified-$orientation.html"
-              tail -c 2500 "/tmp/bastionfall-unified-$orientation.log"
-              exit 1
-            fi
-            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
-              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
-              --window-size="$dimensions" --virtual-time-budget=24000 \
-              --screenshot="/tmp/bastionfall-unified-$orientation.png" "$url" \
-              >"/tmp/bastionfall-unified-$orientation-screenshot.log" 2>&1
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-unified-$orientation.log"
             test -s "/tmp/bastionfall-unified-$orientation.png"
-            echo "PASS: ART.02 $orientation one-scene Three GLB + road + Warden + physical hits"
+            test -s "/tmp/bastionfall-unified-$orientation.json"
           done
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
@@ -360,5 +339,7 @@ jobs:
           path: |
             /tmp/bastionfall-unified-landscape.png
             /tmp/bastionfall-unified-portrait.png
+            /tmp/bastionfall-unified-landscape.json
+            /tmp/bastionfall-unified-portrait.json
           if-no-files-found: warn
           retention-days: 21
