@@ -1,0 +1,33 @@
+# ART.03b — Region-painted characters, authentic equipment and smoother pose changes
+**Date:** 2026-11-10. **Milestone:** ART.03b first authored character-art refinement; PR #27.  
+**Status:** initial exact-game render and 192-test browser suite passed in [CI #42850500809](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42850500809); final vivid-faction palette refinement and exact-head browser screenshot approval remain required. **Not complete custom art.**
+
+## The artwork and the problem, based on real frames
+ART.03a had 3 genuine CC0 KayKit character skeletons with actual 41-bone source animation, but the first shader made every member of a faction nearly the same hue; at action-camera scale the Warden became a pale-blue toy and raiders uniform coral/pink. The user wants **personality, sculpted original 3D storybook proportions and commercially polished illustrated materials**—not photoreal Rise-of-Kingdoms armor, cloned Kingdom Rush sprites or a uniform tinted plastic army.
+
+We inspected **the actual three pinned GLB JSON manifests**, not hypothetical meshes. Each model uses one shared artist UV atlas and exposes independent meaningful geometry:
+- **Warden / Knight:** `Knight_Body`, `Knight_ArmLeft/Right`, `Knight_LegLeft/Right`, `Knight_Head`, `Knight_Helmet`, `Knight_Cape`; authentic skeletal hand sockets offer `1H_Sword`, `2H_Sword`, `1H_Sword_Offhand` and four shields. Warden selection: **one original `1H_Sword` plus `Badge_Shield`**, other unused weapon/shield alternatives hidden.
+- **Scrapper / Barbarian:** six bodily meshes, `Barbarian_Hat`, `Barbarian_Cape`, `1H_Axe` / `2H_Axe` / `Mug` and offhand `Barbarian_Round_Shield` / axe. Selection: **`1H_Axe` plus `Barbarian_Round_Shield`**.
+- **Runner / Rogue_Hooded:** six bodily meshes, hooded head, `Rogue_Cape`, hand-socket `1H_Crossbow`, `2H_Crossbow`, `Knife`, `Knife_Offhand`, `Throwable`. Selection: **`1H_Crossbow` plus `Knife_Offhand`**.
+
+## Actual ART.03b production changes
+- Kept **the same locally bundled authored meshes, authentic 41-joint skeleton per role, skin weights, source UV atlas and 15 source animations**, in one existing Three.js scene, under existing combat shadow/depth. No runtime CDN, AI-generated sprites or invented meshes.
+- `classifyActorPart` maps actual source mesh names into **8 separate artist material treatments**: body, arms, legs, face, headgear, cape, weapon, shield. Original KayKit texture values/folds remain in shader; the authored per-mesh colors restore different metallic helmet/armor, blue cape/body, warm skin, brass/copper weapons, dark-red boots and crimson raider clothing. The Three `MeshStandardMaterial` shader cache is keyed by **role + part** so programs cannot silently share the wrong faction color. The source UV image and model files are not modified.
+- The existing single-skin armature's real hand sockets correctly carry **selected source-authored accessories** instead of rendering multiple overlapping alternatives. The selection is verified against the original GLB JSON node names and refuses missing/unrecognized desired accessories.
+- `animationBlend` adds **140ms smoothstep weighted pose transitions** among actual Idle, Walk, Run, Attack and Death clips, using authoritative fixed-step simulation seconds. A pause/reload does not advance gameplay state or use wall-clock animation drift.
+- Vitest validates multi-role/multi-part shader strings and cache separation, real source model material regions and equipment names, source GLB integrity and the monotonic transition weights. It does **not** substitute for inspecting actual shaded browser frames.
+
+## Initial in-game screenshot inspection
+[Actions #42850500809](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42850500809) passed **192 Vitest tests**, strict TypeScript, Vite build, standard Chromium/SwiftShader browser checks, legacy map and pad selection, Warden/19 raider physical hits and both cinematic orientations. Screenshots captured in artifact **13780501277**, downloaded and manually inspected at 1500×950 gameplay, 900×1200 portrait and static cinematic landscape/portrait.
+
+**What got better:** actual shields/weapons no longer pile up as alternatives; Warden helmet/arms, blue cape, enemy cloth/heads and weapon fittings now have independent materials rather than homogeneous red/blue. The normal gameplay road, 19 actor movement, shots, camera and keep remain framed correctly. The shadows and physical geometry are unchanged.
+
+**Remaining visible failures in first pass:** dominant **all-gold Warden helmet** undermined blue-first faction readability; dark-red Scrapper headdress read **brown** beside tan faces; the battlefield still has great expanses of plain flat grass, blank gray tower pads, overly simple keep/river banks and unexpressive UI. We immediately revised the **Warden helmet to blue** while retaining gold on the arms/shield, and **brightened crimson hats/capes/bodies** with distinct darker red Runner accents. **That corrected revision is not yet visually verified; the initial screenshots do not prove this final paint change.**
+
+## Boundaries / next work
+1. **First** pass exact-head full WebGL2 Chrome both-orientation screenshots of updated faction palette; reject if the Warden looks mostly gold or red raiders read brown. PR remains open until proof.
+2. The actor atlas still reads as low-poly commercial CC0 source art; original Bastionfall headgear, weapons, fabric shapes, face animation, motion anticipation/follow-through, foot contact and hero attack FX remain to be authored. Smarter material paint is not a replacement for those assets.
+3. There are 20 independent skinned models (source rigs each have up to ~15 draw-call parts); Chrome SwiftShader success is **not** 30/60 FPS real mobile proof. Profile on actual phones, use batching/LOD/material compression and test low-quality profiles before claiming mobile readiness.
+4. The wider scene remains inferior to the quality reference. **ART.03c** should replace the bare pad/keep/foliage with a coherent set of **authored licensed or custom detailed stylized 3D models** and improve touch-first HUD. **F3.04** coins/economy still missing, independent of all art work.
+
+See [binding visual north star](20_VISUAL_NORTH_STAR.md), [ART.03a screenshots](27_ART03A_RIGGED_CHARACTERS_REVIEW.md) and [full master directive](00_MASTER_PRODUCTION_DIRECTIVE.md). User has not separately approved/rejected the corrected palette.
