@@ -168,6 +168,14 @@ describe("F2.02 fixed 4.5m authored collision lane", () => {
     }
   });
 
+  it("does not reintroduce isolated hard-threshold grass-shadow triangles by the road", () => {
+    const island = generateTerrain("fenwall-crossing-v1");
+    const grass = MATERIAL_TOKENS.indexOf("grass.primary") + 1;
+    for (const tile of island.tiles) {
+      expect([...tile.surface.materialIds].every(slot => slot === grass)).toBe(true);
+    }
+  });
+
   it("is deterministic and rejects invalid position/distance/radius input", () => {
     expect(createAuthoredRoad()).toBe(createAuthoredRoad());
     const road = createAuthoredRoad();
