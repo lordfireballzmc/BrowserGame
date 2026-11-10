@@ -149,6 +149,14 @@ try {
         sceneryArtBatches:d.sceneryArtBatches,
         sceneryArtInstances:d.sceneryArtInstances,
         sceneryArtError:d.sceneryArtError,
+        groundcoverArt:d.groundcoverArt,
+        groundcoverSources:d.groundcoverSources,
+        groundcoverGrass:d.groundcoverGrass,
+        groundcoverShrubs:d.groundcoverShrubs,
+        groundcoverFlowers:d.groundcoverFlowers,
+        groundcoverInstances:d.groundcoverInstances,
+        groundcoverBatches:d.groundcoverBatches,
+        groundcoverTriangles:d.groundcoverTriangles,
         groundArt:d.groundArt,groundPalette:d.groundPalette,
         shadows:d.shadows,
         environmentArt:d.environmentArt,
@@ -172,7 +180,8 @@ try {
     })()`);
     if(lastState.result==="fail" || lastState.assetPilot==="error" ||
        lastState.environmentArt==="error" ||
-       lastState.sceneryArt==="error") {
+       lastState.sceneryArt==="error" ||
+       lastState.groundcoverArt==="error") {
       throw new Error("Game reported an actual failure: "+JSON.stringify(lastState));
     }
     const common = lastState.result==="pass" &&
@@ -184,6 +193,18 @@ try {
       lastState.unifiedCanvases==="1" &&
       lastState.shadows==="on" &&
       Number(lastState.padCount)===10 &&
+      (scene.searchParams.get("understory")==="legacy" ||
+       scene.searchParams.get("scenery")==="legacy"
+        ? lastState.groundcoverArt==="disabled"
+        : lastState.groundcoverArt==="pass" &&
+          Number(lastState.groundcoverSources)===5 &&
+          Number(lastState.groundcoverGrass)===736 &&
+          Number(lastState.groundcoverShrubs)===48 &&
+          Number(lastState.groundcoverFlowers)===120 &&
+          Number(lastState.groundcoverInstances)===904 &&
+          Number(lastState.groundcoverBatches)>=5 &&
+          Number(lastState.groundcoverBatches)<=12 &&
+          Number(lastState.groundcoverTriangles)<=650000) &&
       (scene.searchParams.get("ground")==="legacy"
         ? lastState.groundArt==="disabled"
         : lastState.groundArt==="pass" &&
@@ -346,7 +367,8 @@ try {
   const suffix=suffixBase+
     (scene.searchParams.get("environment")==="legacy" ? "-env-legacy" : "")+
     (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "")+
-    (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "");
+    (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "")+
+    (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
