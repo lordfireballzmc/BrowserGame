@@ -5,8 +5,9 @@
  * owned by the existing game systems.
  *
  * GPU instancing avoids one draw call per tree/rock. Artist-made geometry and
- * shared original KayKit gradient atlas is kept with all seven authored
- * source mesh silhouettes. The smaller grass/flowers
+ * original KayKit gradient atlas remains for five tree silhouettes; two
+ * separately pinned Kenney Castle Kit CC0 PBR GLBs replace stone silhouettes.
+ * Seven total source model groups remain GPU-instanced. The smaller grass/flowers
  * remain the existing cheap double-sided source and are not disguised as art.
  */
 import {

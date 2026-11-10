@@ -1,6 +1,6 @@
 /**
- * VQ.02b final source: one CC0 KayKit Forest Nature artist atlas with seven
- * selected in-file models. The free source pack is by Kay Lousberg; the GLB
+ * VQ.02b final source: one CC0 KayKit Forest Nature artist atlas with five TREE
+ * selected in-file tree models; VQ.02c rocks are separate CC0 Kenney GLBs. The free source pack is by Kay Lousberg; the GLB
  * below is a byte-perfect bundled derivative from bot-crossing at exact SHA.
  * No runtime CDN, no paid extras, no copyrighted Kingdom Rush assets.
  */
