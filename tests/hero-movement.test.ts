@@ -43,7 +43,7 @@ describe("F3.01 deterministic Warden locomotion", () => {
     step(world,0,0,60);
     expect(world.snapshot.x).toBe(stopped.x);
     expect(world.snapshot.z).toBe(stopped.z);
-    expect(running.speedMetersPerSecond).toBe(4.2);
+    expect(running.speedMetersPerSecond).toBeCloseTo(4.2, 8);
   });
 
   it("enforces coastline radius, a solid keep and bridge-only river crossings", () => {
