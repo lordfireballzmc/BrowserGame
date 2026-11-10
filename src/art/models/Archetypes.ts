@@ -44,10 +44,6 @@ function part(
   return { name, parent, pivot: position, geometry, material, position, rotationY, rotationX };
 }
 
-function torso(width: number, height: number, depth: number) {
-  return facetedCylinder(width / 2, height, 7, depth / 2);
-}
-
 /** Hard-normal, CCW merged mesh. Primitive identity is kept in the named part list. */
 export function combineRigidParts(parts: readonly RigidPart[]): Geometry {
   if (!parts.length) throw new Error("Archetype requires at least one authored part");
