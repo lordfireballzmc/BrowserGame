@@ -2,7 +2,11 @@
 
 **Private repository:** `lordfireballzmc/BrowserGame`  
 **Status:** F0/F1 foundations and F2.01–F2.07 world/render foundations are implemented: island, winding road, ten pads, northern river, and 258 reproducibly seeded scenery props. The browser contains an original archetype gallery and a separate WebGL2 world inspection preview with projected pad prices and click selection, plus **staged** 3D heroes/raiders, an authored keep, optional cinematic compositions, and soft directional WebGL2 shadows. **F3.03 adds genuine 7m Warden auto-fire: original 3D copper bolts travel at 15m/s and can physically hit the marching Scrappers/Runners, permanently lowering their HP. Enemy attacks, coin payouts, tower purchases and full waves are still not playable.** No public deployment or live game URL.  
-**Goal:** an honest, satisfying playable interpretation of the *advertised* real-time defense/collect/build fantasy in Kingshot-style mobile promotions, built with original IP, procedural geometry and a custom WebGL2 engine.
+**Goal:** a real playable original illustrated 3D fantasy-defense game with sharp high-density rendering, professionally authored coherent 3D assets, expressive animation and fluid combat. The primary current renderer is Three.js/WebGL2 with deterministic TypeScript gameplay; promotional screenshots are historic craft references, **not** the chosen art style.
+
+## Binding sharpness, fluidity and production-quality mandate (2026-11-10)
+
+**Read first:** [VQ fidelity & fluidity directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [original illustrated 3D visual north star](docs/20_VISUAL_NORTH_STAR.md) and [AGENTS.md](AGENTS.md). The first pending code task is **VQ.01**: use existing CanvasRuntime CSS/DPR graphics presets to eliminate the fixed 1280×720 movement-preview render ceiling, maintain correct camera/pad picking and prove true high-DPI, landscape/portrait sharpness with actual WebGL browser captures. VQ.02 follows with coherent original keep, pads and foliage assets; VQ.03+ strengthens materials, animation and UI while continuing F3.04 gameplay. **Planned, not yet shipped**; documentation is not a graphics improvement.
 
 ## Production mandate and asset-first pilot (2026-11-10)
 
@@ -33,6 +37,7 @@ Every new chat and visible task must read [the visual north star](docs/20_VISUAL
 | File | Purpose |
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Mandatory per-turn developer protocol |
+| [VQ visual-fidelity and fluidity directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) | Binding quality policy, exact next code task and measurable art/motion acceptance |
 | [docs/20_VISUAL_NORTH_STAR.md](docs/20_VISUAL_NORTH_STAR.md) | Latest authoritative visual taste decision: illustrated expressive 3D cartoon, not glossy strategy realism |
 | [docs/visual-references/README.md](docs/visual-references/README.md) | Version-controlled original visual composition and concept generation recipes |
 | [docs/21_VISUAL_REVIEW_HISTORY.md](docs/21_VISUAL_REVIEW_HISTORY.md) | Record of rejected looks, what user actually wants, and remaining runtime-art gaps |
