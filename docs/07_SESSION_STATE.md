@@ -5,11 +5,11 @@ Canonical repository: lordfireballzmc/BrowserGame
 
 ## Current milestone
 - F0.01 — **COMPLETE**, with GitHub Actions evidence. Strict TS/Vite/WebGL2 diagnostic scaffold, `package-lock.json` version 3, Node 22 workflow, npm scripts, and test harness are present.
-- F0.02 — **NEXT**. GitHub Actions job passed on feature branch, but verify the merged `main` workflow before marking the milestone complete.
-- Following task: F0.03 deterministic PRNG and balance schema.
+- F0.02 — **COMPLETE**. Normal read-only cached npm CI passed on PR #1 at run 42738621062 (job 129573896738) and identical workflow content was merged into `main`; an independent post-merge push run was not retrieved.
+- F0.03 — **COMPLETE**. Versioned deterministic PRNG, seeded crown rolls, typed game balance and tests. PR #2 GitHub Actions run 42741214912 job 129582441687 passed npm ci, typecheck, unit tests, build.
 - Latest implemented product: browser WebGL2 capability diagnostic screen, **not a playable game**.
 - Host / preview URL: NONE configured. Visual or runtime browser QA: NOT performed.
-- All remaining F0–F8 game/engine tasks: not yet implemented.
+- All remaining game/engine tasks except F0.03: not yet implemented.
 
 ## Verifiable build evidence
 - [PR #1](https://github.com/lordfireballzmc/BrowserGame/pull/1): `bootstrap/f0-01-verified-lockfile`.
@@ -34,5 +34,9 @@ Canonical repository: lordfireballzmc/BrowserGame
 ## Next-session protocol
 1. Fetch `AGENTS.md`, this file and `docs/06_EXECUTION_BACKLOG.md`; inspect latest main head and PR #1 merge state.
 2. If PR remains open, verify green CI on latest head and complete merge when safe. If already merged, inspect main CI.
-3. Finish F0.02 only after green main GitHub Actions evidence; then proceed to F0.03.
+3. Verify PR #2 merge state, then implement F0.04 fixed-step loop with fake-clock tests. Inspect main CI when available.
 4. Preserve strict truthfulness: do not claim deployment, playable graphics, or end-to-end browser interaction yet.
+
+- 2026-11-10 (continuation): F0.02 accepted based on successful normal cached npm CI in PR #1, merged unmodified into main. Added F0.03 on branch `feat/f0-03-deterministic-balance`: `src/game/Random.ts` (versioned xorshift32 PRNG with FNV-1a string seeds, snapshot, unbiased inclusive integer rolls), `src/game/Balance.ts` (canonical typed hero/core/enemy/tower/economy values), and `tests/foundation.test.ts` (golden vectors, replay, bounds, balance). Tests newly authored but no verified CI yet. No playable change; pending PR CI.
+
+- 2026-11-10: F0.03 GitHub Actions run 42741214912 job 129582441687 COMPLETED success; npm ci, typecheck, Vitest and Vite build all green on PR #2. Backlog marked [x]; next F0.04. PR must still be merged into main; check PR merge state next turn.
