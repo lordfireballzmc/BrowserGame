@@ -29,6 +29,23 @@ A GitHub commit is not a passing build; WebGL screenshots cannot be inferred fro
 - Never mark more than one F-task complete without independent proof.
 - Maintain consistent 3D assets, semantic color tokens, camera and animation rules. No arbitrary neon shapes or asset placeholders disguised as production graphics.
 
+## Professional art and motion quality gate (standing instruction)
+For each task that adds or changes anything visible, treat *game feel and presentation*
+as acceptance criteria, not a separate cosmetic afterthought. Preserve the original
+miniature art direction while improving readable silhouettes, geometry, grounding,
+sun/contact shadows, color hierarchy, lighting, and UI layout at gameplay zoom.
+Prefer genuine 3D motion with stable simulation clocks; do not mistake moving an
+entire rigid mesh for a completed articulated run/fire animation.
+
+Before marking a visible task complete, run real WebGL2 browser checks and inspect
+both landscape and portrait captures for camera framing, clipping, depth,
+unintended empty areas, legibility and focus. Record what still looks unfinished,
+including comparisons with the Kingshot-style reference's *qualities*, never
+copying its artwork. Test controls, pause, collision and performance honestly:
+CPU-submit timing isn't GPU frame time; a Chrome software render is not mobile
+hardware testing. Never claim a studio-quality polish gate without evidence.
+Keep graphics and interaction regressions covered as gameplay systems expand.
+
 ## Stop conditions
 Stop and ask for user decision if:
 - specification ambiguity could change core gameplay or art identity;
