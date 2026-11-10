@@ -65,7 +65,6 @@ const SLOT = (name: MaterialToken): number => MATERIAL_TOKENS.indexOf(name) + 1;
 const SLOTS = {
   grass: SLOT("grass.primary"),
   shade: SLOT("grass.shadow"),
-  dry: SLOT("grass.dry"),
   earth: SLOT("earth.cut"),
   stone: SLOT("stone.shadow"),
 };
@@ -271,13 +270,13 @@ function buildTile(seed: number, column: number, row: number): TerrainTile {
         if (polygon.length < 3) continue;
         for (let p = 1; p < polygon.length - 1; p++) {
           const aa = polygon[0]!, bb = polygon[p]!, cc = polygon[p + 1]!;
-          const midX = (aa.x + bb.x + cc.x) / 3;
-          const midZ = (aa.z + bb.z + cc.z) / 3;
           const steepness = Math.max(
             Math.abs(aa.y - bb.y), Math.abs(bb.y - cc.y), Math.abs(cc.y - aa.y),
           );
-          const slot = signedCoast(midX, midZ) > -0.12 ? SLOTS.dry
-            : steepness > 0.16 ? SLOTS.shade : SLOTS.grass;
+          // Avoid triangle-by-triangle coastline tinting: it produces a
+          // high-frequency sawtooth band in the actual orthographic screenshot.
+          // Authored road/shoulder coloration is reserved for F2.02.
+          const slot = steepness > 0.16 ? SLOTS.shade : SLOTS.grass;
           ground.add(
             [aa.x, aa.y, aa.z], [bb.x, bb.y, bb.z], [cc.x, cc.y, cc.z],
             [0, 1, 0], slot,
