@@ -8,6 +8,7 @@ import { validateGeometry } from "../../art/mesh/Primitives";
 import type { MaterialToken, LinearRgb } from "./Palette";
 import { linearColor, vertexMaterialColor } from "./Palette";
 import { GpuResources } from "./GpuResources";
+import { SunShadowPass, createSunViewProjection } from "./SunShadowPass";
 
 export interface RenderInstance {
   readonly meshId: string;
@@ -62,12 +63,16 @@ export const VERTEX_SHADER = [
   "layout(location = 6) in vec4 aInstanceColor;",
   "layout(location = 7) in vec3 aVertexColor;",
   "uniform mat4 uViewProjection;",
+  "uniform mat4 uSunViewProjection;",
   "out vec3 vNormal;",
   "out vec3 vLinearColor;",
   "out float vAlpha;",
+  "out vec4 vSunPosition;",
   "void main() {",
   "  mat4 model = mat4(aModel0, aModel1, aModel2, aModel3);",
-  "  gl_Position = uViewProjection * model * vec4(aPosition, 1.0);",
+  "  vec4 world = model * vec4(aPosition, 1.0);",
+  "  gl_Position = uViewProjection * world;",
+  "  vSunPosition = uSunViewProjection * world;",
   "  vNormal = normalize(transpose(inverse(mat3(model))) * aNormal);",
   "  vLinearColor = aVertexColor.r < 0.0 ? aInstanceColor.rgb : aVertexColor;",
   "  vAlpha = aInstanceColor.a;",
@@ -80,16 +85,45 @@ export const FRAGMENT_SHADER = [
   "in vec3 vNormal;",
   "in vec3 vLinearColor;",
   "in float vAlpha;",
+  "in vec4 vSunPosition;",
+  "uniform int uShadowEnabled;",
+  "uniform sampler2D uShadowMap;",
   "out vec4 outColor;",
   "vec3 encodeSRGB(vec3 light) {",
   "  vec3 lo = light * 12.92;",
   "  vec3 hi = 1.055 * pow(max(light, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055;",
   "  return clamp(mix(hi, lo, lessThanEqual(light, vec3(0.0031308))), 0.0, 1.0);",
   "}",
+  "float sunVisibility(vec3 normal, vec3 sun) {",
+  "  if (uShadowEnabled == 0) return 1.0;",
+  "  vec3 shadow = vSunPosition.xyz / max(vSunPosition.w, 0.00001);",
+  "  shadow = shadow * 0.5 + 0.5;",
+  "  if (shadow.x <= 0.0 || shadow.y <= 0.0 || shadow.x >= 1.0 || shadow.y >= 1.0",
+  "      || shadow.z <= 0.0 || shadow.z >= 1.0) return 1.0;",
+  "  float bias = max(0.00032, 0.0014 * (1.0 - max(dot(normal, sun), 0.0)));",
+  "  vec2 texel = 1.7 / vec2(textureSize(uShadowMap, 0));",
+  "  float visible = 0.0;",
+  "  for (int x = -1; x <= 1; x++) {",
+  "    for (int y = -1; y <= 1; y++) {",
+  "      float depth = texture(uShadowMap, shadow.xy + vec2(float(x), float(y)) * texel).r;",
+  "      visible += shadow.z - bias <= depth ? 1.0 : 0.0;",
+  "    }",
+  "  }",
+  "  return mix(0.36, 1.0, visible / 9.0);",
+  "}",
   "void main() {",
-  "  vec3 direction = normalize(vec3(-0.45, 0.82, 0.35));",
-  "  float diffuse = max(dot(normalize(vNormal), direction), 0.0);",
-  "  vec3 lit = vLinearColor * (0.44 + 0.56 * diffuse);",
+  "  vec3 normal = normalize(vNormal);",
+  "  vec3 sun = normalize(vec3(-0.52, 0.82, 0.37));",
+  "  float diffuse = max(dot(normal, sun), 0.0);",
+  "  float shadow = sunVisibility(normal, sun);",
+  "  // Cool hemispheric ambient keeps underside details legible; a warm",
+  "  // directional key and weak opposing bounce separate the physical planes.",
+  "  vec3 ambient = vec3(0.77, 0.87, 1.06) * (0.52 + 0.13 * max(normal.y, 0.0));",
+  "  vec3 direct = vec3(1.20, 1.05, 0.85) * (0.78 * diffuse * shadow);",
+  "  float bounce = max(dot(normal, normalize(vec3(0.65, 0.25, -0.72))), 0.0);",
+  "  vec3 lit = vLinearColor * (ambient + direct + vec3(0.10, 0.09, 0.07) * bounce);",
+  "  // Gentle highlight shoulder in linear light; no bloom, vignette or fog.",
+  "  lit /= vec3(1.0) + 0.16 * lit;",
   "  outColor = vec4(encodeSRGB(lit), vAlpha);",
   "}",
 ].join("\n");
@@ -106,6 +140,11 @@ export class InstancedRenderer {
   private readonly meshes = new Map<string, GpuMesh>();
   private readonly program: WebGLProgram;
   private readonly viewProjectionUniform: WebGLUniformLocation;
+  private readonly sunMatrixUniform: WebGLUniformLocation;
+  private readonly shadowEnabledUniform: WebGLUniformLocation;
+  private readonly shadowMapUniform: WebGLUniformLocation;
+  private readonly sunMatrix = createSunViewProjection();
+  private shadow: SunShadowPass | null = null;
   private readonly stream: WebGLBuffer;
   private capacity = INITIAL_INSTANCE_CAPACITY;
   private scratch = new Float32Array(INITIAL_INSTANCE_CAPACITY * FLOATS_PER_INSTANCE);
@@ -118,6 +157,15 @@ export class InstancedRenderer {
       const location = gl.getUniformLocation(this.program, "uViewProjection");
       if (!location) throw new Error("Instanced shader is missing uViewProjection");
       this.viewProjectionUniform = location;
+      const sunMatrix = gl.getUniformLocation(this.program, "uSunViewProjection");
+      const shadowEnabled = gl.getUniformLocation(this.program, "uShadowEnabled");
+      const shadowMap = gl.getUniformLocation(this.program, "uShadowMap");
+      if (sunMatrix === null || shadowEnabled === null || shadowMap === null) {
+        throw new Error("Diorama lighting uniforms were optimized out");
+      }
+      this.sunMatrixUniform = sunMatrix;
+      this.shadowEnabledUniform = shadowEnabled;
+      this.shadowMapUniform = shadowMap;
       this.stream = this.gpu.createBuffer(gl.ARRAY_BUFFER, this.scratch, gl.DYNAMIC_DRAW);
     } catch (error) {
       this.gpu.dispose();
@@ -125,6 +173,13 @@ export class InstancedRenderer {
     }
   }
 
+  /** Optional quality tier: one cached directional shadow depth pass per frame. */
+  enableSunShadows(): void {
+    this.ensureActive();
+    if (!this.shadow) this.shadow = new SunShadowPass(this.gl);
+  }
+
+  get sunShadowsEnabled(): boolean { return this.shadow !== null; }
   get meshCount(): number { return this.meshes.size; }
   get resourceCounts() { return this.gpu.counts; }
 
@@ -237,7 +292,8 @@ export class InstancedRenderer {
       gl.uniformMatrix4fv(
         this.viewProjectionUniform, false, new Float32Array(Array.from(camera.viewProjection)),
       );
-      const drawBatch = (batch: readonly Prepared[]): void => {
+      gl.uniformMatrix4fv(this.sunMatrixUniform, false, this.sunMatrix);
+      const drawBatch = (batch: readonly Prepared[], countForStats = true): void => {
         if (!batch.length) return;
         const mesh = this.meshes.get(batch[0]!.meshId)!;
         this.ensureCapacity(batch.length);
@@ -254,10 +310,33 @@ export class InstancedRenderer {
           this.scratch.subarray(0, batch.length * FLOATS_PER_INSTANCE));
         gl.bindVertexArray(mesh.vao);
         gl.drawElementsInstanced(gl.TRIANGLES, mesh.indexCount, mesh.indexType, 0, batch.length);
-        rendered += batch.length;
-        drawCalls++;
-        triangles += mesh.indexCount / 3 * batch.length;
+        if (countForStats) {
+          rendered += batch.length;
+          drawCalls++;
+          triangles += mesh.indexCount / 3 * batch.length;
+        }
       };
+      if (this.shadow) {
+        try {
+          this.shadow.begin();
+          for (const batch of opaque.values()) drawBatch(batch, false);
+        } finally {
+          this.shadow.end();
+        }
+        // The shadow pass changes viewport/program; the primary color/depth
+        // framebuffer was cleared above and still retains that state.
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        gl.useProgram(this.program);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.shadow.depthTexture);
+        gl.uniform1i(this.shadowMapUniform, 0);
+        gl.uniform1i(this.shadowEnabledUniform, 1);
+      } else {
+        // Unset int uniforms default to zero on a fresh linked program.
+        // Explicitly keep the fallback deterministic if lighting is toggled.
+        // WebGL mocks from F1.04 intentionally need no texture methods.
+        if (typeof gl.uniform1i === "function") gl.uniform1i(this.shadowEnabledUniform, 0);
+      }
       for (const batch of opaque.values()) {
         drawBatch(batch);
         opaqueDrawCalls++;
@@ -279,6 +358,11 @@ export class InstancedRenderer {
     } finally {
       gl.depthMask(true);
       gl.disable(gl.BLEND);
+      this.shadow?.end();
+      if (this.shadow) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+      }
       gl.bindVertexArray(null);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       gl.useProgram(null);
@@ -294,6 +378,8 @@ export class InstancedRenderer {
     if (this.disposed) return;
     this.disposed = true;
     this.meshes.clear();
+    this.shadow?.abandonOnContextLoss();
+    this.shadow = null;
     this.gpu.abandonOnContextLoss();
   }
 
@@ -301,6 +387,8 @@ export class InstancedRenderer {
     if (this.disposed) return;
     this.disposed = true;
     this.meshes.clear();
+    this.shadow?.dispose();
+    this.shadow = null;
     this.gpu.dispose();
   }
 
