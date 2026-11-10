@@ -8,10 +8,11 @@
  *
  * All meshes follow F1.03's flat CCW/typed indexed mesh contract and use only
  * canonical material slots. No Math.random, textures, GPU allocations or game
- * state mutations. Road, props, and river geometry belong to later F2 tasks.
+ * state mutations. Road and northern river carving share global coordinates; props remain later.
  */
 import { seedToUint32 } from "../../game/Random";
 import { distanceToRoadXZ, ROAD_SPEC } from "./RoadPath";
+import { riverCarveDepth } from "./RiverPath";
 import type { Geometry, Point3 } from "../mesh/Primitives";
 import { validateGeometry } from "../mesh/Primitives";
 import { MATERIAL_TOKENS, type MaterialToken } from "../../engine/render/Palette";
@@ -124,7 +125,9 @@ export function terrainHeight(seed: number | string, x: number, z: number): numb
   if (flatten === 0) return 0; // Canonical +0 in the road and staging corridor.
   const relief = 0.24 * valueNoise(s, x, z, 9)
     + 0.095 * valueNoise(s ^ 0xa5c31e2b, x, z, 3.5);
-  return Math.fround(relief * flatten);
+  // Carve the northern river bed *from the same global world coordinates*
+  // used by the standalone river mesh. This preserves every 8m tile seam.
+  return Math.fround(relief * flatten - riverCarveDepth(x, z));
 }
 
 /** Deterministic 1.6–3.5m cliff reveal, sampled at world coordinates. */
