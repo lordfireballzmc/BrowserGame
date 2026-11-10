@@ -464,14 +464,43 @@
         return status;
       });
       body.dataset.riggedArt="loading";
+      body.dataset.environmentArt="loading";
+      const environmentLoad=renderer.loadEnvironmentArt(
+        {x:31,y:terrainHeight(seed,31,2)+0.04,z:2},
+        PAD_SITES.map(site=>({
+          x:site.x,y:padGroundHeight(site,seed),z:site.z,
+          unlockWave:site.unlockWave,
+        })),
+      ).then(status=>{
+        if(status.sourceModels!==6||status.texturedModels!==6||
+           status.keepModules!==9||status.padModules!==30||
+           status.pads!==10||status.instances!==39) {
+          throw new Error("VQ.02 six artist-authored textured modules / "+
+            "nine keep pieces / ten three-piece pads are incomplete");
+        }
+        body.dataset.environmentArt="pass";
+        body.dataset.environmentSources=String(status.sourceModels);
+        body.dataset.environmentTextured=String(status.texturedModels);
+        body.dataset.environmentKeepModules=String(status.keepModules);
+        body.dataset.environmentPadModules=String(status.padModules);
+        body.dataset.environmentInstances=String(status.instances);
+        body.dataset.environmentVisuals="kenney-castle-kit-vq02";
+        return status;
+      });
       if (!movement || parameters.has("probeMovement")
         || parameters.has("probeEnemies") || parameters.has("probeCombat")
         || parameters.has("probeCharacters")) {
         // Static maps/cinematics have no animation loop: await the model so
         // the very first framebuffer includes this genuine textured prop.
         // Browser movement probes also require GLB completion to pass.
-        await Promise.all([modelLoad,artLoad]);
+        await Promise.all([modelLoad,artLoad,environmentLoad]);
       } else {
+        environmentLoad.catch(error=>{
+          // Preserve the old functional keep/pads if an optional art payload
+          // ever fails; never silently break player collision or input.
+          body.dataset.environmentArt="error";
+          body.dataset.environmentError=String(error);
+        });
         artLoad.catch(error=>{
           body.dataset.riggedArt="error";
           body.dataset.riggedError=String(error);
