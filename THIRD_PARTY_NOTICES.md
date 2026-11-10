@@ -1,5 +1,16 @@
 # Third-party dependency provenance and notices
 
+## VQ.02c — rounded organic Castle Kit boulder clusters (2026-11-11)
+
+**Original artist:** [Kenney](https://kenney.nl); licensed **CC0 1.0**, [Castle Kit](https://kenney.nl/assets/castle-kit). Original legally redistributable GLB sources at [Hidencod/tge-assets](https://github.com/Hidencod/tge-assets) exact commit `3ddcc695adbba9fb918cf31b7c139b3f95b76910` (same pinned repository already used for VQ.02a). The runtime packages two art-authored, textured **organic rock clusters** locally, **without a CDN**, instead of the mechanical-looking KayKit source rock geometries. Exact upstream blob and binary SHA-1 match tested using `tests/scenery-art.test.ts`:
+
+| Local file under `public/assets/scenery/` | Source path | Git blob SHA-1 | Bytes |
+|---|---|---|---:|
+| `kenney-organic-rocks-large.glb` | `packs/castle-kit/rocks-large.glb` | `c55e671c6c82f75d49eb7c2488bb23c514fbdee2` | 23,764 |
+| `kenney-organic-rocks-small.glb` | `packs/castle-kit/rocks-small.glb` | `ab1336c3801232dccfee6fab6059bae43cbe633b` | 22,752 |
+
+The **VQ.02b KayKit Forest Nature GLB remains bundled** because it continues to provide the five tree silhouettes and original atlas. Its two mechanical rock source node shapes are **not instantiated in VQ.02c**; the new source-pinned Castle Kit meshes render at the exact same 42 deterministic coordinates via two GPU-instanced groups. No exclusive intellectual-property claims: original Kenney CC0 source art is non-exclusive. New world-space meadow pigments/road verges (`GroundPigment.ts`) are **original deterministic code**, not downloaded imagery.
+
 ## VQ.02b — one original KayKit Forest Nature CC0 painted atlas (2026-11-10)
 
 **Original artist:** [Kay Lousberg (KayKit)](https://kaylousberg.itch.io/kaykit-forest), **Forest Nature Pack**, FREE tier, CC0 1.0 license. The model source was legally CC0 free content and **not** the paid EXTRA/SOURCE materials. Exact third-party repackager/source: [Station-Sciences/bot-crossing](https://github.com/Station-Sciences/bot-crossing), commit `9f7dc6536aacbce2203bb705e3f0cf1772ea3fb7`, `public/assets/forest.glb`, Git blob SHA-1 `386f990dfc5580dd6c6063a1ee4838bdf4df6742`, **396,480 bytes**. Bundled unchanged as `public/assets/scenery/kaykit-forest-cc0.glb`; `tests/scenery-art.test.ts` recomputes and checks exact Git blob identity, seven selected internal mesh node names, one original embedded PBR-compatible atlas and material. This repacked binary and original models are licensed CC0; source attribution voluntarily retained. **Do not call this exclusive or originally sculpted Bastionfall artwork.**
