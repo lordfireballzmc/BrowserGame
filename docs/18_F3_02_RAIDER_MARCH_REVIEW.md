@@ -1,0 +1,24 @@
+# F3.02 — deterministic road march and original Runner art review
+
+**Milestone:** early-wave, headless enemy world and rendered marching preview. **Not combat or a functioning wave controller.** This implementation is based on the authored Fenwall road, not an imitation of another game's proprietary level/art.
+
+## Simulation contract
+- `src/game/EnemyRoadWorld.ts` is a fixed **60Hz** world with no time-of-day, DOM, renderer or unseeded randomness. All enemy positions are computed from `roadPointAtDistance` in the existing 79.51m arc-length route. Runners use the inner 0.92m shoulder; Scrappers occupy three permanent narrow offsets; all are within the real 4.5m lane. Distinct holding slots (1.20m apart) prevent geometric pileups at the gate.
+- Wave 1's finite schedule contains exactly **10 Scrappers**. Wave 2 contains **14 Scrappers plus 5 Runners**; these are exact authored **spawn scripts only**, not phase transitions or a completed round. Scheduled tick IDs are stable and there are no more than 6 scheduled spawns in any one-second interval. No random ordering.
+- Every spawned entity has stable numeric ID, balance-consistent health and run speed, contact damage-per-second and 0.6-second strike cadence metadata. Movement stops visibly 6 meters before the route endpoint, near the keep, rather than intersecting solid masonry. There are **no actual attacks, damage, deaths, pickups, pathfinding to towers or health changes** yet; those are separate F3 milestones.
+- Authoritative snapshots and actors are immutable, sorted, and deterministic for equal seed/wave/input history. Render samples interpolate traveled arc-distance, recompute position/ground height on the fixed road, and interpolate yaw on the shortest angular arc. Pause and visibility use the F3.01 `EngineLoop`, which freezes both Warden and enemy simulation.
+
+## Art and integration
+- `src/art/models/RunnerStudy.ts` authors one reusable original 3D Runner with narrower forward-thrust physique, copper swept helmet, long split red scarf, boots and a short blade—distinct from the existing spear Scrapper without borrowing Kingshot assets. The model is uploaded once, then GPU-instanced.
+- `tests/terrain-preview.html?view=movement` now renders the **actual 19 advancing/holding actors**, not the previous twelve staged red figures and stationary Shieldbearer. Actor transforms and cloth-like bob derive from each authoritative distance sample, with the same sun-cast shadows and scene materials.
+- To let a user immediately inspect the detailed front in this **movement study only**, the wave-2 deterministic simulation is pre-advanced by 30 seconds before drawing. This is an explicit time-skipped **preview**, NOT a playable first wave or the actual first-spawn timeline. Its top/bottom HUD reports the number of moving/holding figures and explicitly **NO DAMAGE YET**.
+- The untouched full-map pad inspection, F2.06 cinematic 16:9/9:16 stills and Warden keyboard-follow camera remain available.
+
+## Evidence — actual tests and screenshots
+- [GitHub Actions run 42793655064](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42793655064) at code commit `1beb3d8121d36155a8061eba32b504b08d481eaa` passed **168 Vitest tests**, strict TypeScript, production Vite build, real Chrome/SwiftShader F1 gallery, F2 original scenery, full map and P01/P09 click tests, and both cinematic compositions.
+- Both real Chrome **landscape and portrait movement screenshots** passed browser-probed Warden keyboard/camera behavior plus a **120-fixed-tick** enemy movement check: 19 wave-two actors including five Runners moved according to the same headless world. No invented GPU timings or physical-device FPS.
+- The final 3D screenshot pair was downloaded from `f3-01-warden-movement-visual-review` artifact **13751782907** for the run above and inspected. It visibly contains a road-following red column with separate red Runner figures near the Warden, ground/road contact shadows and undistorted full-viewport 16:9 / portrait framing. The 1.20m gate-queue fix was visually checked: Runners no longer occupy one identical point at the gate.
+- **Honest art critique:** the scene is substantially less detailed than the provided Kingshot reference. Enemy head/face readability and scarf shape are currently crude, keep roof falls near the lower camera boundary, neutral terrain lacks decorative structure/material depth, and movement still uses minor whole-mesh bob/scale rather than articulated feet and fabric. F4.01 and later art passes must address these shortcomings. A still image proves only visual composition at that frame—not 60 FPS or animation smoothness on actual mobile hardware.
+
+## Next gate
+**F3.03:** real deterministic 7m hero targeting, firing interval, projectile travel and hit resolution against the now-simulated enemy world, with correct target ordering and no fake instant-hit effects. No claims of playable three-wave battle before F3.09.
