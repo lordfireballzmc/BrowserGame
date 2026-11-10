@@ -77,7 +77,8 @@ jobs:
             >/tmp/bastionfall-instancing.html 2>/tmp/bastionfall-instancing.log
           if ! grep -q 'data-result="pass"' /tmp/bastionfall-instancing.html \
             || ! grep -q 'data-draws="1"' /tmp/bastionfall-instancing.html \
-            || ! grep -q 'data-instances="500"' /tmp/bastionfall-instancing.html; then
+            || ! grep -q 'data-instances="500"' /tmp/bastionfall-instancing.html \
+            || ! grep -q 'data-culling="pass"' /tmp/bastionfall-instancing.html; then
             echo "F1.04 500-instance WebGL2 smoke failed"
             tail -c 5000 /tmp/bastionfall-instancing.html
             tail -c 1500 /tmp/bastionfall-instancing.log
@@ -163,7 +164,9 @@ jobs:
             || ! grep -q '"riverSegments":66' /tmp/bastionfall-island.html \
             || ! grep -q 'data-scenery="pass"' /tmp/bastionfall-island.html \
             || ! grep -q 'data-scenery-count="258"' /tmp/bastionfall-island.html \
-            || ! grep -q '"sceneryDraws":5' /tmp/bastionfall-island.html; then
+            || ! grep -q '"sceneryDraws":5' /tmp/bastionfall-island.html \
+            || ! grep -q '"staticTerrainBatches":2' /tmp/bastionfall-island.html \
+            || ! grep -q '"shadowDraws":' /tmp/bastionfall-island.html; then
             echo "F2.01 real WebGL2 terrain preview failed"
             tail -c 5500 /tmp/bastionfall-island.html
             tail -c 1800 /tmp/bastionfall-island.log
