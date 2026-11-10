@@ -276,7 +276,7 @@ try {
         combat:document.body.dataset.combatProbe};
     })()`);
     if(final.result!=="pass" || final.tier!=="sharp" ||
-       final.width!==restored.pixels/final.height || final.hero!=="true" ||
+       final.width*final.height!==restored.pixels || final.hero!=="true" ||
        final.combat!=="pass") {
       throw new Error("VQ.01 restore/playability gate failed: "+JSON.stringify(final));
     }
