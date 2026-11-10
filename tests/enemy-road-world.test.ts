@@ -106,7 +106,7 @@ describe("F3.02 deterministic real-path raiders", () => {
 
   it("stops at a staging point outside the keep without inflicting imaginary damage", () => {
     const world=new EnemyRoadWorld(2);
-    step(world,1500);
+    step(world,1700);
     const runner=world.snapshot.enemies.find(e=>e.kind==="runner")!;
     expect(runner.phase).toBe("holding-at-gate");
     expect(runner.distanceMeters).toBeCloseTo(GATE_STAGING_DISTANCE_METERS,8);
@@ -117,7 +117,7 @@ describe("F3.02 deterministic real-path raiders", () => {
     expect(runner.z).toBeCloseTo(atGate.z,8);
     expect(runner.hp).toBe(runner.maxHp);
     expect(world.snapshot.arrived).toBeGreaterThanOrEqual(1);
-    // By 25 seconds the first two runners have reached their own stops.
+    // By 28 seconds the first two runners have reached separate gate slots.
     // Distinct slots matter visually: overlapping agents at the keep would
     // look like a single flickering model instead of a marching column.
     const holdingRunners=world.snapshot.enemies.filter(e=>
