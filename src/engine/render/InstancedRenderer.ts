@@ -124,6 +124,10 @@ export const FRAGMENT_SHADER = [
   "  vec3 lit = vLinearColor * (ambient + direct + vec3(0.10, 0.09, 0.07) * bounce);",
   "  // Gentle highlight shoulder in linear light; no bloom, vignette or fog.",
   "  lit /= vec3(1.0) + 0.16 * lit;",
+  "  // Gentle chroma recovery counters the muted miniature palette after",
+  "  // HDR-style light accumulation without clipping bright material faces.",
+  "  float luminance = dot(lit, vec3(0.2126, 0.7152, 0.0722));",
+  "  lit = max(vec3(0.0), mix(vec3(luminance), lit, 1.20));",
   "  outColor = vec4(encodeSRGB(lit), vAlpha);",
   "}",
 ].join("\n");
