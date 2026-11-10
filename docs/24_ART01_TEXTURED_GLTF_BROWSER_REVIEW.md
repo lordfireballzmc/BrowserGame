@@ -1,6 +1,6 @@
 # ART.01 — Licensed textured glTF in the live Bastionfall world
 
-**Status:** technically integrated and checked in real Chromium/SwiftShader WebGL2; final repository-wide PR CI/merge still required. **Not production-grade art parity.**
+**Status:** ART.01 scoped technical acceptance **passed** in [PR CI #42822409551](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42822409551). Branch merge is tracked separately. **Not production-grade art parity.**
 
 ## Exact source and provenance
 - Original: [Khronos glTF Sample Assets — Lantern](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern), historical old wooden streetlight originally by Microsoft/sbtron. Model media is **CC0-1.0** as confirmed by upstream `Models/Lantern/LICENSE.md`; the metadata license is distinct and not copied. This is a source-verified external asset, **not ChatGPT-programmed primitive geometry**.
@@ -10,6 +10,8 @@
 - Three.js release: exact `0.184.0` + `@types/three 0.184.0`; `@types/node 22.15.30`, all in committed `package-lock.json`. Uses `GLTFLoader`, actual mesh/texture materials, neutral tone map, local light, and a responsive WebGL2 overlay registered to the existing `OrthoCamera` matrices. Other gameplay source/balance is unchanged.
 
 ## Browser-visible proof
+- **Final head PR CI run 42822409551** passed all **178 Vitest tests**, strict TS, locked production build, existing map/cinematic/interactive pads/raider/projectile Chrome WebGL2 checks and added local Three.js imported GLB checks in **landscape and portrait**. Artifact **13766912991** contains exact-revision screenshots, downloaded and manually inspected: the small imported lantern is rendered just left of the Warden; the keep, road, enemy path and HUD are intact, but terrain, characters and materials still look distinctly low-detail. The screenshots are only single-frame proof of rendering, not 30/60 FPS or shared-occlusion correctness.
+
 - **[GitHub Actions bootstrap run 42821402170](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42821402170)** passed **178 Vitest tests / 21 files**, strict TS and Vite production build.
 - Real Chrome/SwiftShader `tests/terrain-preview.html?view=movement&assetPilot=1` with **both 1500×950 landscape and 900×1200 portrait**: `data-asset-pilot=pass`, a nonzero authored-texture count, Warden alive/visible, existing raider route/camera and real combat active. The browser did not request an external asset CDN.
 - Actual screenshots stored as run artifact **13767766225**, downloaded and **visually inspected**. The original road, 19 red raiders, blue-gold Warden, keep, pads, river and UI remain framed. A small imported rustic lantern appears beside the protagonist by the road in both views. This is not a separate Three.js demo page: the model is rendered over **the actual running 3D Bastionfall world, with the same game camera**.
