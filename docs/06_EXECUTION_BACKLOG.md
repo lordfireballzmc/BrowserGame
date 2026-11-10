@@ -19,7 +19,7 @@ Every task includes ID, dependencies, deliverable, test gate, and asset/visual g
 - [x] **F1.06** initial *artistically intentional* hero, 2 enemy archetypes and core; compare actual browser screenshot against art bible.
 
 ## F2 — coherent procedural world
-- [ ] **F2.01** 72×48m deterministic heightfield mesh tiles with seam equality tests, clipped island rim and rock stratum.
+- [x] **F2.01** 72×48m deterministic heightfield mesh tiles with seam equality tests, clipped island rim and rock stratum.
 - [ ] **F2.02** authored spline road / road quad strip with consistent width; visual and collision lane checks.
 - [ ] **F2.03** build pad octagonal mesh, screen projection price tag, interaction region, 10 authored coordinates.
 - [ ] **F2.04** riverbank and cliff low-poly geometry, consistent palette, no water texture or visual fog.

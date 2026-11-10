@@ -144,11 +144,43 @@ jobs:
             >/tmp/bastionfall-gallery-capture.log 2>&1
           test -s /tmp/bastionfall-gallery-landscape.png
           echo "PASS: F1.06 authored geometry rendered; real Chrome screenshot captured"
+          # F2.01: render the terrain meshes in a standalone engineering scene
+          # and check that the actual WebGL framebuffer is nonempty.
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+            --window-size=1280,960 --virtual-time-budget=6500 \
+            --dump-dom 'http://127.0.0.1:4173/tests/terrain-preview.html' \
+            >/tmp/bastionfall-island.html 2>/tmp/bastionfall-island.log
+          if ! grep -q 'data-result="pass"' /tmp/bastionfall-island.html \
+            || ! grep -q 'data-tiles="54"' /tmp/bastionfall-island.html; then
+            echo "F2.01 real WebGL2 terrain preview failed"
+            tail -c 5500 /tmp/bastionfall-island.html
+            tail -c 1800 /tmp/bastionfall-island.log
+            exit 1
+          fi
+          grep -o '<pre id="trace">[^<]*' /tmp/bastionfall-island.html | head -1
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+            --window-size=1280,960 --virtual-time-budget=6500 \
+            --screenshot=/tmp/bastionfall-terrain-preview.png \
+            'http://127.0.0.1:4173/tests/terrain-preview.html' \
+            >/tmp/bastionfall-terrain-capture.log 2>&1
+          test -s /tmp/bastionfall-terrain-preview.png
+          echo "PASS: F2.01 54 terrain tiles and stratified cliffs rendered in real WebGL2"
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: f1-06-art-gallery-screenshot
           path: /tmp/bastionfall-gallery-landscape.png
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload F2.01 terrain screenshot for art inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f2-01-island-screenshot
+          path: /tmp/bastionfall-terrain-preview.png
           if-no-files-found: warn
           retention-days: 14
