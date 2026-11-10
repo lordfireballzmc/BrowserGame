@@ -1,7 +1,7 @@
 # Bastionfall — original browser tower-defense game
 
 **Private repository:** `lordfireballzmc/BrowserGame`  
-**Status:** F0/F1 foundations and F2.01–F2.06 world art foundations are implemented: island, winding road, ten pads, northern river, and 258 reproducibly seeded scenery props. The browser contains an original archetype gallery and a separate WebGL2 world inspection preview with projected pad prices and click selection, plus **staged** 3D heroes/raiders, an authored keep, optional cinematic compositions, and soft directional WebGL2 shadows. **None of this is playable gameplay.** No public deployment or live game URL.  
+**Status:** F0/F1 foundations and F2.01–F2.07 world/render foundations are implemented: island, winding road, ten pads, northern river, and 258 reproducibly seeded scenery props. The browser contains an original archetype gallery and a separate WebGL2 world inspection preview with projected pad prices and click selection, plus **staged** 3D heroes/raiders, an authored keep, optional cinematic compositions, and soft directional WebGL2 shadows. **None of this is playable gameplay.** No public deployment or live game URL.  
 **Goal:** an honest, satisfying playable interpretation of the *advertised* real-time defense/collect/build fantasy in Kingshot-style mobile promotions, built with original IP, procedural geometry and a custom WebGL2 engine.
 
 ## Where to start

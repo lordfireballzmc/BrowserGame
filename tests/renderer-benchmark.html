@@ -63,14 +63,34 @@
     if (changed < 100) throw new Error("Frame buffer appears empty or unchanged: " + changed);
     const cpuSamples = trace.slice(2).map(row => row.cpuMilliseconds).sort((a,b)=>a-b);
     const p95 = cpuSamples[Math.ceil(cpuSamples.length * 0.95) - 1];
+    // Exercise the real camera volume, not just unit-tested math.
+    // Retain the historical 500-object unculled instancing benchmark above.
+    renderer.enableFrustumCulling();
+    // The historical 500 objects all happen to fit this camera. Deliberately
+    // add a 501st object 100m outside to prove the *actual* GPU submit omits it.
+    const outOfView = {meshId:"test-box",material:"stone.base",
+      model:new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,100,0.5,0,1])};
+    const culledFrame = renderer.render(camera.matrices,[...instances,outOfView]);
+    if (culledFrame.submitted !== 501 || culledFrame.culled !== 1
+      || culledFrame.instances !== 500
+      || culledFrame.drawCalls !== 1
+      || culledFrame.instances + culledFrame.culled !== 501
+      || culledFrame.estimatedGpuBytes <= 0) {
+      throw new Error("Real WebGL2 frustum culling diagnostics failed: "+JSON.stringify(culledFrame));
+    }
     const summary = {
       type: "CPU-submission-only, no GPU timing", frames: trace.length,
       instances: last.instances, draws: last.drawCalls,
       triangles: last.triangles, framebufferChangedSamples: changed,
       cpuP95ms: Number(p95.toFixed(3)), capacity: last.instanceCapacity,
       meshCount: renderer.meshCount,
+      cameraVisible:culledFrame.instances, cameraCulled:culledFrame.culled,
+      estimatedGpuBytes:culledFrame.estimatedGpuBytes,
+      cullingCpuSubmitMs:Number(culledFrame.cpuMilliseconds.toFixed(2)),
     };
     body.dataset.result = "pass";
+    body.dataset.culling = "pass";
+    body.dataset.culledCount = String(culledFrame.culled);
     body.dataset.draws = String(last.drawCalls);
     body.dataset.instances = String(last.instances);
     body.dataset.changed = String(changed);

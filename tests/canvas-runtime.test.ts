@@ -7,7 +7,8 @@ import type { RenderStats } from "../src/engine/render/InstancedRenderer";
 const draw: RenderStats = {
   submitted: 1, instances: 1, drawCalls: 1, opaqueDrawCalls: 1,
   transparentDrawCalls: 0, triangles: 44, cpuMilliseconds: 2,
-  instanceCapacity: 8,
+  instanceCapacity: 8, culled: 0, shadowDrawCalls: 0, shadowInstances: 0,
+  shadowTriangles: 0, estimatedGpuBytes: 8192,
 };
 
 describe("F1.05 adaptive canvas resolution", () => {

@@ -62,6 +62,7 @@
 <script type="module">
   import { mat4, vec4 } from "gl-matrix";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
+  import { mergeStaticGeometries } from "/src/art/mesh/StaticBatch.ts";
   import { generateTerrain, terrainHeight } from "/src/art/terrain/Island.ts";
   import { getArchetype } from "/src/art/models/Archetypes.ts";
   import { createBoltSpireStudy } from "/src/art/models/BoltSpireStudy.ts";
@@ -91,21 +92,21 @@
     if (!gl) throw new Error("WebGL2 unavailable");
     renderer = new InstancedRenderer(gl);
     renderer.enableSunShadows();
+    renderer.enableFrustumCulling();
     const seed = "fenwall-crossing-v1";
     const terrain = generateTerrain(seed);
     validatePadSites();
     const model = mat4.create();
     const instances = [];
-    for (const tile of terrain.tiles) {
-      const name = "ground-" + tile.column + "-" + tile.row;
-      renderer.uploadMesh(name, tile.surface);
-      instances.push({meshId: name, material: "grass.primary", model});
-      if (tile.cliff) {
-        const cliff = "rock-" + tile.column + "-" + tile.row;
-        renderer.uploadMesh(cliff, tile.cliff);
-        instances.push({meshId: cliff, material: "stone.shadow", model});
-      }
-    }
+    // One immutable world-space surface and one cliff mesh replace dozens
+    // of independent per-tile draw submissions without changing vertices.
+    renderer.uploadMesh("island-static-ground",
+      mergeStaticGeometries(terrain.tiles.map(tile => tile.surface)));
+    renderer.uploadMesh("island-static-cliffs",
+      mergeStaticGeometries(terrain.tiles.filter(tile => tile.cliff !== null)
+        .map(tile => tile.cliff)));
+    instances.push({meshId: "island-static-ground", material: "grass.primary", model});
+    instances.push({meshId: "island-static-cliffs", material: "stone.shadow", model});
     const road = createAuthoredRoad();
     renderer.uploadMesh("authored-road", road.surface);
     instances.push({meshId: "authored-road", material: "road.primary", model});
@@ -225,11 +226,14 @@
         || Math.abs(pixels[i + 2] - 210) > 18) changedSamples++;
     }
     // Instanced geometry shares one mesh: all TEN pads must draw in ONE call.
-    const expectedDraws = terrain.tiles.length +
-      terrain.tiles.filter(tile => tile.cliff !== null).length + 5
-      + scenery.batches.length + 4 + (cinematic ? 1 : 0); // staged archetypes, optional spire
+    const maxColorDraws = 2 + 5 + scenery.batches.length + 4
+      + (cinematic ? 1 : 0); // two static world batches + river/road/pads + posed actors
     if (terrain.tiles.length !== 54 || terrain.coastSegments < 50
-      || stats.instances !== instances.length || stats.drawCalls !== expectedDraws
+      || stats.instances + stats.culled !== instances.length
+      || stats.instances < 1 || stats.drawCalls < 1 || stats.drawCalls > maxColorDraws
+      || stats.shadowDrawCalls < 1 || stats.shadowDrawCalls > maxColorDraws
+      || (cinematic && stats.culled < 1)
+      || stats.estimatedGpuBytes > 64 * 1024 * 1024
       || changedSamples < 500 || road.rutCount < 10 || road.sampleStepMaxMeters > 0.55 + 1e-6
       || PAD_SITES.length !== 10 || (!cinematic && labelLayer.childElementCount !== PAD_SITES.length)
       || northRiver.segments !== 66 || northRiver.bridgePositions.length !== 2
@@ -237,7 +241,9 @@
       || stats.drawCalls > 100) {
       throw new Error("Terrain/pad preview acceptance failed: " +
         JSON.stringify({instances:stats.instances, expectedInstances:instances.length,
-          draws:stats.drawCalls, expectedDraws, changedSamples,
+          draws:stats.drawCalls, maxColorDraws, culled:stats.culled,
+          shadowDraws:stats.shadowDrawCalls,
+          gpuEstimateBytes:stats.estimatedGpuBytes, changedSamples,
           labels:labelLayer.childElementCount, padCount:PAD_SITES.length}));
     }
     const trace = {
@@ -257,10 +263,15 @@
       rejectedSceneryCandidates:scenery.rejectedCandidates,
       cliffSections: terrain.coastSegments,
       meshes: renderer.meshCount, instances: stats.instances,
+      submitted:stats.submitted, culled:stats.culled,
+      staticTerrainBatches:2,
       draws: stats.drawCalls, triangles: stats.triangles,
+      shadowDraws:stats.shadowDrawCalls, shadowInstances:stats.shadowInstances,
+      shadowTriangles:stats.shadowTriangles,
+      estimatedGpuBytes:stats.estimatedGpuBytes,
       changedFramebufferSamples: changedSamples,
       cpuSubmissionMs: Number(stats.cpuMilliseconds.toFixed(2)),
-      note: "CPU JS submission only; not GPU frame time or FPS",
+      note: "CPU JS submission and driver allocation estimates only; NOT GPU time, VRAM usage or FPS",
     };
     body.dataset.result = "pass";
     body.dataset.shadows = renderer.sunShadowsEnabled ? "on" : "off";
