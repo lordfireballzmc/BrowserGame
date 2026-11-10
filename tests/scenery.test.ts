@@ -45,6 +45,13 @@ describe("F2.05 original deterministic stage decoration",()=>{
       expect(mesh.bounds.max[1]).toBeLessThanOrEqual(5.8);
       expect(mesh.bounds.max[0]!-mesh.bounds.min[0]!).toBeGreaterThan(1.4);
     }
+    // Enforce the *scaled world instance*, not only its unscaled mesh height.
+    for(const placement of scene.placements.filter(p=>p.kind==="pine"||p.kind==="broadleaf")){
+      const mesh=getPropMesh(placement.kind);
+      const tall=mesh.bounds.max[1]*placement.scale;
+      expect(tall).toBeGreaterThan(2.6);
+      expect(tall).toBeLessThanOrEqual(5.8);
+    }
     expect(getPropMesh("pine").positions).not.toEqual(getPropMesh("broadleaf").positions);
     const rock=getPropMesh("rock");
     expect(rock.bounds.max[1]).toBeLessThan(1);
