@@ -57,3 +57,16 @@ jobs:
             exit 1
           fi
           echo "PASS: app loaded and rendered an explicit WebGL2-unavailable fallback"
+          # Exercise the positive, *real* WebGL2 shader/link/upload path under
+          # Chrome's software renderer (no dedicated GPU required).
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+            --virtual-time-budget=4000 --dump-dom http://127.0.0.1:4173/ \
+            >/tmp/bastionfall-webgl-ready.html 2>/tmp/bastionfall-webgl-ready.log
+          if ! grep -q 'GPU resources checked' /tmp/bastionfall-webgl-ready.html; then
+            echo "WebGL2 shader/link/buffer smoke did not reach ready state."
+            tail -c 4000 /tmp/bastionfall-webgl-ready.html
+            tail -c 1500 /tmp/bastionfall-webgl-ready.log
+            exit 1
+          fi
+          echo "PASS: real software WebGL2 shader link, buffer upload and VAO cleanup"
