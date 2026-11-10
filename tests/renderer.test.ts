@@ -110,10 +110,11 @@ describe("F1.04 real draw batching contract (mock WebGL)", () => {
       instance("box", -3, 0.25), // middle transparent
     ]);
     expect(stats.opaqueDrawCalls).toBe(1);
-    expect(stats.transparentDrawCalls).toBe(3);
-    expect(stats.drawCalls).toBe(4);
-    // Each upload captures its own data at the point of GPU submission.
-    expect(uploads.map(bytes => bytes[14])).toEqual([0, -9, -3, -1]);
+    // The two adjacent 'box' transparent instances coalesce without breaking depth order.
+    expect(stats.transparentDrawCalls).toBe(2);
+    expect(stats.drawCalls).toBe(3);
+    expect(uploads.map(bytes => bytes[14])).toEqual([0, -9, -3]);
+    expect(uploads[2]?.[34]).toBe(-1); // second instance in same 20-float run
     expect(gl.depthMask).toHaveBeenLastCalledWith(true);
     expect(gl.disable).toHaveBeenLastCalledWith(gl.BLEND);
     expect(gl.blendFunc).toHaveBeenCalledWith(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
