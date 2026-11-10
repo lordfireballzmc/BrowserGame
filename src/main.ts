@@ -28,23 +28,24 @@ root.innerHTML = `
     <header class="masthead">
       <span class="brand-mark" aria-hidden="true">B</span>
       <span>BASTIONFALL</span>
-      <span class="build-label">ENGINEERING BUILD · F3.01</span>
+      <span class="build-label">ENGINEERING BUILD · ART.02 / F3.03</span>
     </header>
 
     <section class="splash panel" id="splash" aria-labelledby="splash-title">
       <p class="eyebrow">FENWALL CROSSING / FRONTIER DEFENSE</p>
       <h1 id="splash-title">Hold the line.<br />Build the frontier.</h1>
       <p class="lead">
-        A hero-action tower-defense game built on an original WebGL2 engine.
-        Step into our original 3D frontier. The Warden now responds to keyboard movement
-        with weight, grounded collision and a smoothly following camera. Combat is still in development.
+        An original illustrated 3D defense game under active development.
+        The new one-context Three.js battlefield renders terrain, shadows and a licensed
+        textured glTF model with real Warden movement, marching enemies, and physical bolts.
+        Full wave gameplay, animated characters and commercial visual polish remain unfinished.
       </p>
       <div class="actions">
         <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement">
-          Move the Warden · early prototype
+          Explore Fenwall · unified 3D combat preview
         </a>
-        <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement&amp;assetPilot=1">
-          Inspect the new textured 3D asset pipeline
+        <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement&amp;renderer=legacy">
+          Compare original renderer (fallback)
         </a>
         <a class="world-preview-link" href="/tests/terrain-preview.html?view=cinematic">
           View the new 3D world study
@@ -54,8 +55,8 @@ root.innerHTML = `
           Play unavailable
         </button>
       </div>
-      <p class="preview-note">Early movement preview: WASD or arrow keys to move, Esc to pause.
-        Real enemies, attacks, construction and touch controls are not available yet.</p>
+      <p class="preview-note">WASD/arrow keys move, Esc pauses and the Warden auto-fires genuine moving bolts.
+        Enemy counterattacks, crown rewards, construction and touch controls are not yet implemented.</p>
     </section>
 
     <section class="diagnostic-screen panel" id="diagnostic-screen" aria-labelledby="diagnostic-title" hidden>
