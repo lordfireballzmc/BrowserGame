@@ -1,5 +1,9 @@
 # Custom engine architecture — technical design and module contracts
 
+## Architecture decision update — user-directed asset-first migration (2026-11-10)
+
+The historical custom-engine contract below describes **currently deployed code**, not an unchangeable permanent restriction. The binding [master directive](00_MASTER_PRODUCTION_DIRECTIVE.md) and [ADR-023](23_ASSET_FIRST_THREE_MIGRATION_ADR.md) approve TypeScript + exact-locked Three.js, bundled license-verified glTF/GLB and appropriate PBR/animation, with WebGL2 retained as a baseline. The first pilot deliberately overlays one external-model canvas with the same camera, **without depth integration**, to prove local textured asset loading without breaking Warden simulation. This is explicitly temporary; final production must use **one unified renderer**, preserve the old tested behavior and delete the pilot bridge after migration. The older `No Three.js` line in the legacy stack description is superseded.
+
 ## Stack
 TypeScript strict, Vite, WebGL2, TWGL buffer/program helpers, gl-matrix, Vitest, Playwright. Other components introduced only in their milestone. Aim for Node 22 LTS or newer verified compatible; browser targets current desktop Chromium/Firefox/Safari with WebGL2; fallback is an explicit diagnostics screen, not an unrelated 2D game. No Three.js/Unity engine.
 
