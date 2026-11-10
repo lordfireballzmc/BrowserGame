@@ -1,0 +1,64 @@
+{
+  "title": "Bastionfall KayKit CC0 stylized-character integration ART.03a",
+  "upstream": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+  "sourceCommit": "672074b73ba276876a19e8816ecdc5241817ab47",
+  "characters": [
+    {
+      "role": "warden",
+      "artistModel": "Knight",
+      "sourceGitBlob": "717b56ca2b5ff5392679774725201ba03a3eefab",
+      "sourceCommit": "672074b73ba276876a19e8816ecdc5241817ab47",
+      "license": "CC0-1.0",
+      "bytes": 588336,
+      "sha256": "f30a9a231d813b9b0343c750c262b0b0bc43f8efaf183bd96e6344ff29f10d91",
+      "clips": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Death"
+      ],
+      "skins": 1,
+      "meshes": 15,
+      "textures": 1
+    },
+    {
+      "role": "scrapper",
+      "artistModel": "Barbarian",
+      "sourceGitBlob": "66d312ab6dc02b35fb648e7585bfdddb4e02eeef",
+      "sourceCommit": "672074b73ba276876a19e8816ecdc5241817ab47",
+      "license": "CC0-1.0",
+      "bytes": 542424,
+      "sha256": "a862452c391b621b59349f5b6e7e3a00d5bb6abfe827966e2ad72e3a41690335",
+      "clips": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Death"
+      ],
+      "skins": 1,
+      "meshes": 13,
+      "textures": 1
+    },
+    {
+      "role": "runner",
+      "artistModel": "Rogue_Hooded",
+      "sourceGitBlob": "5d2b1403240d5f9ffff12e02c007572038eca2a8",
+      "sourceCommit": "672074b73ba276876a19e8816ecdc5241817ab47",
+      "license": "CC0-1.0",
+      "bytes": 526992,
+      "sha256": "ba3bf9a08a4002a7a3669ed7c3d6147f188aefc99691facc309233ee1fdec636",
+      "clips": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Death"
+      ],
+      "skins": 1,
+      "meshes": 12,
+      "textures": 1
+    }
+  ]
+}
