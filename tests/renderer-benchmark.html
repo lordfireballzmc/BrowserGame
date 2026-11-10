@@ -18,7 +18,6 @@
   <pre id="trace">Starting renderer...</pre>
 </main>
 <script type="module">
-  import { mat4 } from "/node_modules/.vite/deps/gl-matrix.js";
   import { OrthoCamera } from "/src/engine/Camera.ts";
   import { bevelBox } from "/src/art/mesh/Primitives.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
@@ -36,7 +35,7 @@
     for (let i = 0; i < 500; i++) {
       const x = ((i % 25) - 12) * 1.25;
       const z = (Math.floor(i / 25) - 9.5) * 1.25;
-      const model = mat4.fromTranslation(mat4.create(), [x, 0.5, z]);
+      const model = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,0.5,z,1]);
       instances.push({meshId:"test-box", material:"stone.base", model});
     }
     const trace = [];
