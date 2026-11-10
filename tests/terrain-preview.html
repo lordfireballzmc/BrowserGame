@@ -136,6 +136,7 @@
             <option value="sharp">Sharp</option>
           </select>
           <output id="resolution-readout" aria-live="off">Checking display resolution...</output>
+          <output id="graphics-perf" aria-live="off">Frame interval: collecting · CPU submit: collecting</output>
         </label>
       </div>
       <a class="movement-exit" href="/" aria-label="Return to Bastionfall menu">MENU</a>
@@ -156,7 +157,7 @@
   import { createHeroBoltMesh, createBoltImpactMesh } from "/src/art/models/HeroBoltVisuals.ts";
   import { createRunnerStudy } from "/src/art/models/RunnerStudy.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
-  import { computeCanvasResolution, resizeCanvas } from "/src/engine/render/CanvasRuntime.ts";
+  import { computeCanvasResolution, resizeCanvas, RenderMetricWindow } from "/src/engine/render/CanvasRuntime.ts";
   import { mergeStaticGeometries } from "/src/art/mesh/StaticBatch.ts";
   import { generateTerrain, terrainHeight } from "/src/art/terrain/Island.ts";
   import { getArchetype } from "/src/art/models/Archetypes.ts";
@@ -650,6 +651,8 @@
         "arrowleft","arrowright"]);
       let gameLoop = null;
       let stopped = false, priorDrawTime = performance.now();
+      const frameMetrics=new RenderMetricWindow(120);
+      let measuredFrames=0;
       let combatFacing = playerWorld.snapshot.yaw;
       const onKeyDown = event => {
         const key=keyName(event.key);
@@ -692,7 +695,8 @@
         try {
           const hero=playerWorld.sample(alpha);
           const now=performance.now();
-          const frameDelta=Math.max(0,Math.min(0.05,(now-priorDrawTime)/1000));
+          const frameIntervalMs=Math.max(0,now-priorDrawTime);
+          const frameDelta=Math.min(0.05,frameIntervalMs/1000);
           priorDrawTime=now;
           // The camera remains grounded: no head-bob enters the camera target.
           movingCamera.follow([hero.x,0,hero.z],frameDelta,
@@ -721,7 +725,19 @@
           }
           const enemyFrame=syncRaiderModels(alpha);
           syncCombatVisuals(alpha);
-          renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
+          const frameStats=renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
+          frameMetrics.push(frameIntervalMs,frameStats);
+          if(++measuredFrames%30===0 && unifiedThree) {
+            const sample=frameMetrics.snapshot();
+            // rAF wall interval and CPU JS submission are NOT GPU frame time.
+            body.dataset.frameIntervalP95Ms=sample.frameP95Ms.toFixed(2);
+            body.dataset.cpuSubmitP95Ms=sample.cpuSubmitP95Ms.toFixed(2);
+            body.dataset.frameMetricSamples=String(sample.samples);
+            document.querySelector("#graphics-perf").textContent=
+              "Frame interval p95 "+sample.frameP95Ms.toFixed(1)+"ms"+
+              " · CPU submit p95 "+sample.cpuSubmitP95Ms.toFixed(1)+"ms"+
+              " (not GPU time)";
+          }
           if (unifiedThree) {
             body.dataset.unifiedFrame = String(playerWorld.snapshot.tick);
             body.dataset.riggedActors=String(renderer.riggedStatus?.animatedActors??0);
