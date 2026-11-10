@@ -25,6 +25,7 @@ import {
   type EnvironmentPlacement, type EnvironmentPadPlacement,
 } from "./EnvironmentArtLayer";
 import { SceneryArtLayer, type SceneryArtStats } from "./SceneryArtLayer";
+import { groundPigmentAt } from "../../art/terrain/GroundPigment";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
 /** Nonvisual provenance and validation returned by the locally loaded GLB. */
@@ -49,7 +50,9 @@ type MeshPool = {
 };
 
 /** Directly reuse existing validated vertices/normals, preserve authored token ramps. */
-export function toThreeGeometry(source: Geometry, fallback: MaterialToken): BufferGeometry {
+export function toThreeGeometry(
+  source: Geometry,fallback: MaterialToken,groundSeed?:number|string,
+): BufferGeometry {
   validateGeometry(source);
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(source.positions, 3));
@@ -58,7 +61,9 @@ export function toThreeGeometry(source: Geometry, fallback: MaterialToken): Buff
   const colors = new Float32Array(source.materialIds.length * 3);
   const inherited = linearColor(fallback);
   for (let i = 0; i < source.materialIds.length; i++) {
-    const color = vertexMaterialColor(source.materialIds[i]!) ?? inherited;
+    const color = groundSeed===undefined
+      ? (vertexMaterialColor(source.materialIds[i]!) ?? inherited)
+      : groundPigmentAt(groundSeed,source.positions[i*3]!,source.positions[i*3+2]!);
     colors[i * 3] = color[0];
     colors[i * 3 + 1] = color[1];
     colors[i * 3 + 2] = color[2];
@@ -82,6 +87,7 @@ export class UnifiedThreeRenderer {
   private readonly scene = new Scene();
   private readonly camera = new Camera();
   private readonly stored = new Map<string, Geometry>();
+  private groundPigmentSeed: number|string|undefined;
   private readonly variants = new Map<string, BufferGeometry>();
   private readonly pools = new Map<string, MeshPool>();
   private readonly matrix = new Matrix4();
@@ -212,6 +218,19 @@ export class UnifiedThreeRenderer {
     return true;
   }
 
+  /** The painted ground's RGB can be set only before any render variants.
+   * This does NOT change world height, navigation, physics or culling. */
+  enableGroundPigment(seed:number|string):void {
+    this.assertActive();
+    if(this.variants.size>0||this.groundPigmentSeed!==undefined)
+      throw new Error("Ground pigments must be configured before first render");
+    if((typeof seed==="number" && !Number.isFinite(seed)) ||
+        (typeof seed==="string" && !seed.length))
+      throw new RangeError("Invalid deterministic ground seed");
+    this.groundPigmentSeed=seed;
+  }
+  get paintedGroundEnabled():boolean{return this.groundPigmentSeed!==undefined;}
+
   uploadMesh(id: string, geometry: Geometry): void {
     this.assertActive();
     if (!id || this.stored.has(id)) throw new Error("Duplicate or invalid mesh: " + id);
@@ -341,7 +360,8 @@ export class UnifiedThreeRenderer {
       const geomKey = batch.meshId+"|"+batch.material;
       let geom=this.variants.get(geomKey);
       if (!geom) {
-        geom=toThreeGeometry(this.stored.get(batch.meshId)!,batch.material);
+        geom=toThreeGeometry(this.stored.get(batch.meshId)!,batch.material,
+          batch.meshId==="island-static-ground"?this.groundPigmentSeed:undefined);
         this.variants.set(geomKey,geom);
       }
       let pool=this.pools.get(key);

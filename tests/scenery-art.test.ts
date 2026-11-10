@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { generateScenery,sceneryClearance } from "../src/art/scenery/Scenery";
-import { SCENERY_ART_MODELS,SCENERY_ART_SOURCE,sceneryArtUrl } from "../src/art/assets/SceneryArtManifest";
+import { SCENERY_ART_MODELS,SCENERY_ART_SOURCE,SCENERY_ROCK_SOURCES,
+  SCENERY_ROCK_SOURCE_INFO,sceneryArtUrl,sceneryRockUrl } from "../src/art/assets/SceneryArtManifest";
 import { sceneryArtScale,sceneryModelForPlacement } from "../src/engine/render/SceneryArtLayer";
 
 const scenery=generateScenery("fenwall-crossing-v1");
@@ -35,9 +36,33 @@ describe("VQ.02b original KayKit CC0 forest and deterministic visual instancing"
     expect(SCENERY_ART_MODELS).toHaveLength(7);
     expect(new Set(SCENERY_ART_MODELS.map(x=>x.sourceNode)).size).toBe(7);
     for(const spec of SCENERY_ART_MODELS){
-      expect(nodes.has(spec.sourceNode)).toBe(true);
+      if(spec.kind!=="rock")expect(nodes.has(spec.sourceNode)).toBe(true);
       expect(spec.targetHeight).toBeGreaterThan(0.75);
     }
+  });
+
+  it("pins two rounded 3D stones to the exact approved Kenney CC0 Castle Kit files",()=>{
+    expect(SCENERY_ROCK_SOURCE_INFO.originalArtist).toBe("Kenney");
+    expect(SCENERY_ROCK_SOURCE_INFO.license).toBe("CC0-1.0");
+    expect(SCENERY_ROCK_SOURCE_INFO.sourceCommit).toMatch(/^[0-9a-f]{40}$/);
+    expect(SCENERY_ROCK_SOURCES).toHaveLength(2);
+    const ids=new Set(SCENERY_ART_MODELS.filter(x=>x.kind==="rock").map(x=>x.id));
+    for(const asset of SCENERY_ROCK_SOURCES){
+      expect(ids.has(asset.id)).toBe(true);
+      expect(asset.sourcePath).toMatch(/^packs\/castle-kit\/rocks-/);
+      expect(sceneryRockUrl(asset.file)).toContain("assets/scenery/");
+      const bytes=readFileSync(join(process.cwd(),"public/assets/scenery",asset.file));
+      expect(bytes.byteLength).toBe(asset.bytes);
+      expect(createHash("sha1").update(Buffer.from("blob "+bytes.length+"\0"))
+        .update(bytes).digest("hex")).toBe(asset.sourceGitBlob);
+      expect(bytes.readUInt32LE(0)).toBe(0x46546c67);
+      const j=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString("utf8"));
+      expect(j.nodes.some((n:{name?:string})=>n.name===asset.sourceNode)).toBe(true);
+      expect(j.materials.some((m:{pbrMetallicRoughness?:{baseColorTexture?:unknown}})=>
+        Boolean(m.pbrMetallicRoughness?.baseColorTexture))).toBe(true);
+    }
+    expect(SCENERY_ART_MODELS.filter(x=>x.kind==="rock")
+      .some(x=>x.sourceNode.startsWith("Rock_"))).toBe(false);
   });
 
   it("uses distinct modeled pine, canopy, and rock variants with canonical 82 sites",()=>{

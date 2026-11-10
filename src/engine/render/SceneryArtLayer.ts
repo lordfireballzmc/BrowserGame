@@ -15,7 +15,8 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
-  SCENERY_ART_MODELS, SCENERY_ART_SOURCE, sceneryArtUrl, type SceneryArtModel,
+  SCENERY_ART_MODELS, SCENERY_ART_SOURCE, SCENERY_ROCK_SOURCES,
+  sceneryArtUrl, sceneryRockUrl, type SceneryArtModel,
 } from "../../art/assets/SceneryArtManifest";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 
@@ -92,9 +93,10 @@ export class SceneryArtLayer {
     }
     this.loading=true;
     try {
-      // One 396KB bundled KayKit CC0 Forest Nature source contains all seven
-      // required artist meshes, each textured with the same shared atlas.
-      // Load/decode it ONCE rather than fetching seven almost identical GLBs.
+      // One 396KB bundled KayKit CC0 Forest Nature file provides the five
+      // illustrated trees, supplemented by two tiny source-pinned Kenney
+      // natural rock GLBs; each mesh retains its authored UV atlas.
+      // Load the tree atlas ONCE rather than duplicating it per tree shape.
       const source=SCENERY_ART_SOURCE;
       const response=await fetch(sceneryArtUrl(),{cache:"force-cache"});
       if(!response.ok)throw new Error("Forest CC0 HTTP "+response.status);
@@ -106,10 +108,35 @@ export class SceneryArtLayer {
       const gltf=await new GLTFLoader().parseAsync(raw,sceneryArtUrl());
       if(this.destroyed)throw new Error("Scenery layer disposed while loading");
       gltf.scene.updateMatrixWorld(true);
+      // Distinct artist-made, rounded Kenney CC0 boulders replace the two
+      // ring-stacked KayKit rock nodes that failed real screenshot review.
+      // Both new local GLBs carry original PBR-painted atlases.
+      const rockSources=await Promise.all(SCENERY_ROCK_SOURCES.map(async spec=>{
+        const url=sceneryRockUrl(spec.file);
+        const response=await fetch(url,{cache:"force-cache"});
+        if(!response.ok)throw new Error("Natural CC0 boulder HTTP "+response.status);
+        const raw=await response.arrayBuffer();
+        if(raw.byteLength!==spec.bytes||
+           new DataView(raw).getUint32(0,true)!==0x46546c67) {
+          throw new Error("Invalid bundled rounded-rock GLB: "+spec.id);
+        }
+        const source=await new GLTFLoader().parseAsync(raw,url);
+        if(this.destroyed)throw new Error("Disposed during rock import");
+        source.scene.updateMatrixWorld(true);
+        return [spec.id,source.scene] as const;
+      }));
+      const rockGroups=new Map<string,Group>(rockSources);
       const models=SCENERY_ART_MODELS.map(spec=>{
-        const original=gltf.scene.getObjectByName(spec.sourceNode);
+        const imported=spec.kind==="rock" ? rockGroups.get(spec.id) : gltf.scene;
+        if(!imported)throw new Error("Missing source-pinned rock scene "+spec.id);
+        // glTFLoader sanitizes hyphenated Kenney node names. Each pinned
+        // rounded-stone GLB contains exactly ONE actual source mesh; identify
+        // it by type rather than comparing a post-import sanitized name.
+        const original=spec.kind==="rock"
+          ? imported.getObjectByProperty("type","Mesh")
+          : imported.getObjectByName(spec.sourceNode);
         if(!(original instanceof Mesh)) {
-          throw new Error("Missing exact authored KayKit forest node "+spec.sourceNode);
+          throw new Error("Missing actual authored 3D "+spec.kind+" mesh: "+spec.sourceNode);
         }
         const mats=Array.isArray(original.material)
           ? original.material:[original.material];
@@ -137,7 +164,7 @@ export class SceneryArtLayer {
           (p.kind==="pine"||p.kind==="broadleaf"||p.kind==="rock") &&
           sceneryModelForPlacement(p).id===model.spec.id);
         if(!selected.length)throw new Error("Unused 3D scenery source "+model.spec.id);
-        atlases++; // all seven models use the one painted KayKit atlas
+        atlases++; // all seven authored meshes contain a painted PBR atlas
         if(model.spec.kind==="rock")rockInstances+=selected.length;
         else treeInstances+=selected.length;
         const dims=model.bounds.getSize(new Vector3());
@@ -149,12 +176,11 @@ export class SceneryArtLayer {
           const toned=original.map(m=>{
             const variant=m.clone();
             if(variant instanceof MeshStandardMaterial) {
-              // The source atlas is deliberately vibrant but too lime-neon
-              // for a meadow at real game zoom. A single stable PBR pigment
-              // multiplier keeps the artist's texture value/UV detail and
-              // warms foliage without adding a second full-screen pass.
+              // Retain source UV/paint/roughness. Trees get a restrained
+              // warm moss multiplier; natural stones stay gray and are not
+              // recolored into the old ring-like source rocks.
               variant.color.multiply(new Color(model.spec.kind==="rock"
-                ? "#c3c0b7" : "#88a98d"));
+                ? "#d8d7d2" : "#88a98d"));
               variant.roughness=0.92;
               variant.metalness=0;
             }
