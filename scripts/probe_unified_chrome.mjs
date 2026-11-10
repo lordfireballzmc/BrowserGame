@@ -266,19 +266,28 @@ try {
       width:originalWidth,height:originalHeight,
       deviceScaleFactor:requestedDpr,mobile:false,
     });
-    await pause(350);
-    const final=await evaluate(`(() => {
-      const c=document.querySelector("#terrain");
-      return {width:c.width,height:c.height,
-        tier:document.body.dataset.graphicsTier,result:document.body.dataset.result,
-        buffer:document.body.dataset.graphicsBuffer,
-        hero:document.body.dataset.heroVisible,
-        combat:document.body.dataset.combatProbe};
-    })()`);
+    // The browser may finish a heavy SwiftShader resize several frames
+    // after CDP acknowledges Emulation.setDeviceMetricsOverride. Observe the
+    // real WebGL buffer, never assume a fixed 350ms delay is sufficient.
+    let final=null;
+    for(let i=0;i<50;i++) {
+      final=await evaluate(`(() => {
+        const c=document.querySelector("#terrain");
+        return {width:c.width,height:c.height,
+          tier:document.body.dataset.graphicsTier,result:document.body.dataset.result,
+          buffer:document.body.dataset.graphicsBuffer,
+          hero:document.body.dataset.heroVisible,
+          combat:document.body.dataset.combatProbe};
+      })()`);
+      if(final.result==="pass" && final.tier==="sharp" &&
+         final.width*final.height===restored.pixels)break;
+      await pause(150);
+    }
     if(final.result!=="pass" || final.tier!=="sharp" ||
        final.width*final.height!==restored.pixels || final.hero!=="true" ||
        final.combat!=="pass") {
-      throw new Error("VQ.01 restore/playability gate failed: "+JSON.stringify(final));
+      throw new Error("VQ.01 restore/playability gate failed after readiness polling: "+
+        JSON.stringify({restored,final}));
     }
     lastState.qualityRoundTrip="pass";
     lastState.resizeRoundTrip="pass";
