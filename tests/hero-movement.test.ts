@@ -17,7 +17,7 @@ describe("F3.01 deterministic Warden locomotion", () => {
     step(ahead, 0, 1, 90);
     step(diagonal, 1, 1, 90);
     step(strafing, 1, 0, 90);
-    const traveled = world => Math.hypot(world.snapshot.x-23,world.snapshot.z+3.8);
+    const traveled = (world: HeroMovementWorld) => Math.hypot(world.snapshot.x-23,world.snapshot.z+3.8);
     expect(traveled(diagonal)).toBeCloseTo(traveled(ahead), 4);
     expect(traveled(strafing)).toBeCloseTo(traveled(ahead), 4);
     expect(ahead.snapshot.x).toBeLessThan(23);
