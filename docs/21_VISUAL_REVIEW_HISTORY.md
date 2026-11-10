@@ -67,7 +67,7 @@ This document records the user's **actual taste judgments and acceptance criteri
 
 **Next:** visual gate on corrected screenshot, then ART.03c original stylized keep, sculpted tower pads, foliage, richer road edges and native mobile performance. See `docs/28_ART03B_CHARACTER_IDENTITY_REVIEW.md`.
 
-## 2026-11-10 — explicit high-resolution, professional polish and fluid-motion mandate
+## 2026-11-10 — pre-implementation resolution/visual mandate (historical; superseded by later VQ.01 verified review)
 
 **New user requirement:** implement the real technical and artistic improvements needed so that Bastionfall is sharp rather than blurry, deliberately sculpted rather than primitive, and alive with professional animation rather than stiff movement. Highest-quality achievable original illustrated 3D remains the style, with no glossy strategy-realism. [New binding directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) centralizes future execution/acceptance and updates agent prompt, backlog, architecture, source-policy and README.
 
