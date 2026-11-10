@@ -3,7 +3,7 @@
 Every task includes ID, dependencies, deliverable, test gate, and asset/visual gate. The agent must implement **one bounded incomplete task at a time**, commit, update status, then continue. Status: [ ] not started, [~] in progress, [x] completed with verification. Never check off without evidence. Ordering may be changed only with written rationale. **F0 is first.** F3 finish provides true playable loop; no fake demo presented as full product.
 
 ## F0 — bootstrap (required before visual code)
-- [ ] **F0.01** Initialize Vite strict TS, package manager lockfile, Node version, scripts dev/build/typecheck/test; output `package.json, tsconfig.json, index.html`; gate install/typecheck/build.
+- [x] **F0.01** Initialize Vite strict TS, package manager lockfile, Node version, scripts dev/build/typecheck/test; output `package.json, tsconfig.json, index.html`; gate install/typecheck/build.
 - [ ] **F0.02** CI GitHub Actions for typecheck/unit/build with caches, least privileges; gate documented green workflow.
 - [ ] **F0.03** deterministic PRNG + test vectors, balance data schema; gate same seed returns same numbers and no Math.random in state.
 - [ ] **F0.04** fixed-step Loop with pause/visibility handling, test fake clock; gate exact number of steps, cap catch-up, no async reentrant loops.
