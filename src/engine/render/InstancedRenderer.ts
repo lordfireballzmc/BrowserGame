@@ -8,7 +8,8 @@ import { validateGeometry } from "../../art/mesh/Primitives";
 import type { MaterialToken, LinearRgb } from "./Palette";
 import { linearColor, vertexMaterialColor } from "./Palette";
 import { GpuResources } from "./GpuResources";
-import { SunShadowPass, createSunViewProjection } from "./SunShadowPass";
+import { SunShadowPass, SHADOW_MAP_SIZE, createSunViewProjection } from "./SunShadowPass";
+import { aabbIntersectsFrustum } from "./Frustum";
 
 export interface RenderInstance {
   readonly meshId: string;
@@ -23,8 +24,16 @@ export interface CameraMatrices {
 }
 export interface RenderStats {
   readonly submitted: number;
+  /** Color-pass instances, excluding zero-opacity and camera-culled objects. */
   readonly instances: number;
+  readonly culled: number;
   readonly drawCalls: number;
+  /** Shadow-depth work is separate from color draw calls and not GPU frame time. */
+  readonly shadowDrawCalls: number;
+  readonly shadowInstances: number;
+  readonly shadowTriangles: number;
+  /** GPU allocation estimate, NOT driver memory usage or VRAM profiling. */
+  readonly estimatedGpuBytes: number;
   readonly opaqueDrawCalls: number;
   readonly transparentDrawCalls: number;
   readonly triangles: number;
@@ -36,6 +45,7 @@ interface GpuMesh {
   readonly vao: WebGLVertexArrayObject;
   readonly indexCount: number;
   readonly indexType: number;
+  readonly bounds: Geometry["bounds"];
 }
 interface Prepared {
   readonly meshId: string;
@@ -149,6 +159,8 @@ export class InstancedRenderer {
   private readonly shadowMapUniform: WebGLUniformLocation;
   private readonly sunMatrix = createSunViewProjection();
   private shadow: SunShadowPass | null = null;
+  private frustumCulling = false;
+  private uploadedMeshBytes = 0;
   private readonly stream: WebGLBuffer;
   private capacity = INITIAL_INSTANCE_CAPACITY;
   private scratch = new Float32Array(INITIAL_INSTANCE_CAPACITY * FLOATS_PER_INSTANCE);
@@ -183,8 +195,21 @@ export class InstancedRenderer {
     if (!this.shadow) this.shadow = new SunShadowPass(this.gl);
   }
 
+  /** Opt in for scenes that benefit from precise mesh-AABB camera culling. */
+  enableFrustumCulling(): void {
+    this.ensureActive();
+    this.frustumCulling = true;
+  }
+
+  get frustumCullingEnabled(): boolean { return this.frustumCulling; }
   get sunShadowsEnabled(): boolean { return this.shadow !== null; }
   get meshCount(): number { return this.meshes.size; }
+  get estimatedGpuBytes(): number {
+    // DEPTH_COMPONENT24 may be padded to 32 bits. This is an allocation
+    // estimate, not actual driver VRAM use or a GPU timer query.
+    return this.uploadedMeshBytes + this.scratch.byteLength
+      + (this.shadow ? SHADOW_MAP_SIZE * SHADOW_MAP_SIZE * 4 : 0);
+  }
   get resourceCounts() { return this.gpu.counts; }
 
   /** Register and upload static mesh geometry exactly once per key. */
@@ -238,7 +263,10 @@ export class InstancedRenderer {
         vao,
         indexCount: geometry.indices.length,
         indexType: geometry.indices instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT,
+        bounds: geometry.bounds,
       });
+      this.uploadedMeshBytes += geometry.positions.byteLength + geometry.normals.byteLength
+        + paletteData.byteLength + geometry.indices.byteLength;
     } catch (error) {
       // Keep partially uploaded resources from surviving a failed registration.
       this.dispose();
@@ -253,16 +281,32 @@ export class InstancedRenderer {
     ensureMatrix(camera.viewProjection, "View-projection");
     const gl = this.gl, start = performance.now();
     const opaque = new Map<string, Prepared[]>();
+    const shadowOpaque = new Map<string, Prepared[]>();
     const transparent: Prepared[] = [];
+    let culled = 0;
+    const appendBatch = (batches: Map<string, Prepared[]>, entry: Prepared) => {
+      const key = entry.meshId + "\u0000" + entry.material;
+      let batch = batches.get(key);
+      if (!batch) { batch = []; batches.set(key, batch); }
+      batch.push(entry);
+    };
     for (let i = 0; i < instances.length; i++) {
       const source = instances[i]!;
       ensureMatrix(source.model, "Model");
-      if (!this.meshes.has(source.meshId)) throw new Error("Unknown mesh: " + source.meshId);
+      const mesh = this.meshes.get(source.meshId);
+      if (!mesh) throw new Error("Unknown mesh: " + source.meshId);
       const opacity = source.opacity ?? 1;
       if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) {
         throw new RangeError("Opacity must be in [0,1]");
       }
       if (opacity === 0) continue;
+      const visible = !this.frustumCulling
+        || aabbIntersectsFrustum(mesh.bounds, source.model, camera.viewProjection);
+      const castsSunShadow = this.shadow !== null && opacity === 1
+        && (!this.frustumCulling
+          || aabbIntersectsFrustum(mesh.bounds, source.model, this.sunMatrix));
+      if (!visible) culled++;
+      if (!visible && !castsSunShadow) continue;
       const v = camera.view, m = source.model;
       const prepared: Prepared = {
         meshId: source.meshId, material: source.material, model: source.model,
@@ -270,17 +314,19 @@ export class InstancedRenderer {
         // Eye-space Z: more negative is farther from the camera.
         viewZ: v[2]! * m[12]! + v[6]! * m[13]! + v[10]! * m[14]! + v[14]!,
       };
-      if (opacity < 1) transparent.push(prepared);
-      else {
-        const key = source.meshId + "\u0000" + source.material;
-        let batch = opaque.get(key);
-        if (!batch) { batch = []; opaque.set(key, batch); }
-        batch.push(prepared);
+      if (opacity < 1) {
+        if (visible) transparent.push(prepared);
+      } else {
+        // A caster may be outside the camera while still shadowing something
+        // visible, so the sun pass must use an independent visibility test.
+        if (visible) appendBatch(opaque, prepared);
+        if (castsSunShadow) appendBatch(shadowOpaque, prepared);
       }
     }
     transparent.sort((a, b) => a.viewZ - b.viewZ || a.sequence - b.sequence);
     let drawCalls = 0, opaqueDrawCalls = 0, transparentDrawCalls = 0;
     let triangles = 0, rendered = 0;
+    let shadowDrawCalls = 0, shadowInstances = 0, shadowTriangles = 0;
     try {
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.enable(gl.DEPTH_TEST);
@@ -318,12 +364,16 @@ export class InstancedRenderer {
           rendered += batch.length;
           drawCalls++;
           triangles += mesh.indexCount / 3 * batch.length;
+        } else {
+          shadowDrawCalls++;
+          shadowInstances += batch.length;
+          shadowTriangles += mesh.indexCount / 3 * batch.length;
         }
       };
       if (this.shadow) {
         try {
           this.shadow.begin();
-          for (const batch of opaque.values()) drawBatch(batch, false);
+          for (const batch of shadowOpaque.values()) drawBatch(batch, false);
         } finally {
           this.shadow.end();
         }
@@ -372,8 +422,10 @@ export class InstancedRenderer {
       gl.useProgram(null);
     }
     return {
-      submitted: instances.length, instances: rendered, drawCalls,
+      submitted: instances.length, instances: rendered, culled, drawCalls,
+      shadowDrawCalls, shadowInstances, shadowTriangles,
       opaqueDrawCalls, transparentDrawCalls, triangles,
+      estimatedGpuBytes: this.estimatedGpuBytes,
       cpuMilliseconds: performance.now() - start, instanceCapacity: this.capacity,
     };
   }
@@ -382,6 +434,7 @@ export class InstancedRenderer {
     if (this.disposed) return;
     this.disposed = true;
     this.meshes.clear();
+    this.uploadedMeshBytes = 0;
     this.shadow?.abandonOnContextLoss();
     this.shadow = null;
     this.gpu.abandonOnContextLoss();
@@ -391,6 +444,7 @@ export class InstancedRenderer {
     if (this.disposed) return;
     this.disposed = true;
     this.meshes.clear();
+    this.uploadedMeshBytes = 0;
     this.shadow?.dispose();
     this.shadow = null;
     this.gpu.dispose();
