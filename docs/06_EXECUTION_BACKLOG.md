@@ -22,7 +22,7 @@ Every task includes ID, dependencies, deliverable, test gate, and asset/visual g
 - [x] **F2.01** 72×48m deterministic heightfield mesh tiles with seam equality tests, clipped island rim and rock stratum.
 - [x] **F2.02** authored spline road / road quad strip with consistent width; visual and collision lane checks.
 - [x] **F2.03** build pad octagonal mesh, screen projection price tag, interaction region, 10 authored coordinates.
-- [ ] **F2.04** riverbank and cliff low-poly geometry, consistent palette, no water texture or visual fog.
+- [x] **F2.04** riverbank and cliff low-poly geometry, consistent palette, no water texture or visual fog.
 - [ ] **F2.05** seed-based grass/tree/rock/flower distribution with no-build zones, Poisson strategy and caching.
 - [ ] **F2.06** lighting/contact-shadow flat material treatment; screenshot composition 1080p and 9:16.
 - [ ] **F2.07** render culling, static batching, geometry memory budget diagnostics; benchmark and log.
