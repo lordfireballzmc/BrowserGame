@@ -41,17 +41,19 @@ root.innerHTML = `
         Full wave gameplay, animated characters and commercial visual polish remain unfinished.
       </p>
       <div class="actions">
-        <a class="world-preview-link" href="${import.meta.env.BASE_URL}tests/terrain-preview.html?view=movement&quality=sharp">
-          PLAY / TEST CURRENT BUILD · Warden combat
+        <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement">
+          Explore Fenwall · unified 3D combat preview
         </a>
-        <a class="world-preview-link" href="${import.meta.env.BASE_URL}tests/terrain-preview.html?view=movement&amp;renderer=legacy">
+        <a class="world-preview-link" href="/tests/terrain-preview.html?view=movement&amp;renderer=legacy">
           Compare original renderer (fallback)
         </a>
-        <a class="world-preview-link" href="${import.meta.env.BASE_URL}tests/terrain-preview.html?view=cinematic">
+        <a class="world-preview-link" href="/tests/terrain-preview.html?view=cinematic">
           View the new 3D world study
         </a>
         <button type="button" id="show-diagnostic" disabled>Inspect WebGL2 diagnostic</button>
-        <span class="preview-note">Prototype only · full tower defense gameplay is not yet complete</span>
+        <button type="button" class="secondary" disabled aria-label="Play unavailable during engineering preview">
+          Play unavailable
+        </button>
       </div>
       <p class="preview-note">WASD/arrow keys move, Esc pauses and the Warden auto-fires genuine moving bolts.
         Enemy counterattacks, crown rewards, construction and touch controls are not yet implemented.</p>

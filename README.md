@@ -1,8 +1,18 @@
 # Bastionfall — original browser tower-defense game
 
 **Private repository:** `lordfireballzmc/BrowserGame`  
-**Status:** F0/F1 foundations and F2.01–F2.07 world/render foundations are implemented: island, winding road, ten pads, northern river, and 258 reproducibly seeded scenery props. The browser contains an original archetype gallery and a separate WebGL2 world inspection preview with projected pad prices and click selection, plus **staged** 3D heroes/raiders, an authored keep, optional cinematic compositions, and soft directional WebGL2 shadows. **F3.03 adds genuine 7m Warden auto-fire: original 3D copper bolts travel at 15m/s and can physically hit the marching Scrappers/Runners, permanently lowering their HP. Enemy attacks, coin payouts, tower purchases and full waves are still not playable.** No public deployment or live game URL.  
+**Status:** F0/F1 foundations and F2.01–F2.07 world/render foundations are implemented: island, winding road, ten pads, northern river, and 258 reproducibly seeded scenery props. The browser contains an original archetype gallery and a separate WebGL2 world inspection preview with projected pad prices and click selection, plus **staged** 3D heroes/raiders, an authored keep, optional cinematic compositions, and soft directional WebGL2 shadows. **F3.03 adds genuine 7m Warden auto-fire: original 3D copper bolts travel at 15m/s and can physically hit the marching Scrappers/Runners, permanently lowering their HP. Enemy attacks, coin payouts, tower purchases and full waves are still not playable.** Deployment workflow is being added; the public playable URL must be verified before it is announced.  
 **Goal:** a real playable original illustrated 3D fantasy-defense game with sharp high-density rendering, professionally authored coherent 3D assets, expressive animation and fluid combat. The primary current renderer is Three.js/WebGL2 with deterministic TypeScript gameplay; promotional screenshots are historic craft references, **not** the chosen art style.
+
+## Play the latest build online — deployment setup
+
+**Intended stable project URL:** `https://lordfireballzmc.github.io/BrowserGame/` — **do not describe as live until Pages deployment succeeds and HTTP/browser checks confirm it**.
+
+**Playable test scene:** `https://lordfireballzmc.github.io/BrowserGame/tests/terrain-preview.html?view=movement&quality=sharp` (Warden movement + raiders + bolts, **not** finished tower defense). The website gets rebuilt on every push to `main` through `.github/workflows/publish-playable.yml`, with a production-build browser smoke gate before publishing. PRs validate the production bundle but do not deploy.
+
+**One-time GitHub account setup may be necessary:** [Repository Settings → Pages](https://github.com/lordfireballzmc/BrowserGame/settings/pages) → Build and deployment → Source → **GitHub Actions**. The source repo remains PRIVATE; GitHub Pages on a private repository requires GitHub Pro/Team/Enterprise. GitHub Pages **publishes a publicly viewable site** even if code remains private. If GitHub Pages is not available on the account, do not change repository visibility without the owner's explicit approval; use a private-repo-compatible alternative hosting provider after connecting the appropriate credentials.
+
+Deployment setup, restrictions, exact links and validation: [docs/31_PERMANENT_PLAYABLE_SITE.md](docs/31_PERMANENT_PLAYABLE_SITE.md). A green build is not proof of a live URL; confirm the Pages deployment **and HTTP 200 + actual game in the browser**.
 
 ## Binding sharpness, fluidity and production-quality mandate (2026-11-10)
 

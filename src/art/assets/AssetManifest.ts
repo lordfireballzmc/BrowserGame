@@ -2,7 +2,7 @@
 export const TERRAIN_ASSETS = {
   pilotLantern: {
     id: "khronos-lantern-cc0-pilot",
-    url: `${import.meta.env.BASE_URL}assets/lantern-cc0.glb`,
+    url: "/assets/lantern-cc0.glb",
     // Original model is a CC0 3D PBR-textured old wooden lamp; production
     // selection will undergo coherence review against Bastionfall's 3D style.
     sourceRepository: "KhronosGroup/glTF-Sample-Assets",
