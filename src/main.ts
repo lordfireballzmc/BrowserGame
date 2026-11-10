@@ -1,5 +1,5 @@
 import "./style.css";
-import { bevelBox } from "./art/mesh/Primitives";
+import { createArtGallery, type ArtGallery } from "./art/models/Showcase";
 import { OrthoCamera } from "./engine/Camera";
 import {
   computeCanvasResolution, resizeCanvas, RenderMetricWindow,
@@ -28,7 +28,7 @@ root.innerHTML = `
     <header class="masthead">
       <span class="brand-mark" aria-hidden="true">B</span>
       <span>BASTIONFALL</span>
-      <span class="build-label">ENGINEERING BUILD · F1.05</span>
+      <span class="build-label">ENGINEERING BUILD · F1.06</span>
     </header>
 
     <section class="splash panel" id="splash" aria-labelledby="splash-title">
@@ -64,7 +64,7 @@ root.innerHTML = `
         </select>
       </div>
       <div class="viewport">
-        <canvas id="game" aria-label="WebGL2 engineering calibration cube, not a playable level"></canvas>
+        <canvas id="game" aria-label="WebGL2 gallery: warden, scrapper, shieldbearer and frontier keep; not gameplay"></canvas>
         <div class="render-error" id="render-error" role="alert" hidden>
           <strong>Rendering interrupted</strong>
           <p id="render-error-detail">The renderer encountered an error.</p>
@@ -73,7 +73,13 @@ root.innerHTML = `
       </div>
       <output id="canvas-details" class="diagnostic-output" aria-live="off">Waiting for canvas size...</output>
       <output id="render-metrics" class="diagnostic-output" aria-live="off">Waiting for first frame...</output>
-      <p class="preview-note">This displays one calibrated test box to verify canvas sizing and real draw metrics. It is not an authored game world or gameplay. Reported frame intervals and CPU submission timings are <strong>not GPU timings</strong>.</p>
+      <div class="archetype-legend" aria-label="Authored model showcase">
+        <span><b>WARDEN</b> · golden mantle / blue hood</span>
+        <span><b>SCRAPPER</b> · wedge hood / spear</span>
+        <span><b>SHIELDBEARER</b> · broad dark shield</span>
+        <span><b>FRONTIER KEEP</b> · gabled roof / stone gate</span>
+      </div>
+      <p class="preview-note">Four original procedurally assembled archetypes in a neutral <strong>art-review gallery</strong>. No terrain, combat, collision, animation or playable game exists yet. Frame intervals and CPU submission are <strong>not GPU timings</strong>.</p>
     </section>
 
     <section class="fatal-screen panel" id="fatal-screen" aria-labelledby="fatal-title" hidden>
@@ -93,7 +99,7 @@ root.innerHTML = `
     <footer class="footer">
       <span>Original game · Original procedural art</span>
       <span>Custom WebGL2 / TypeScript</span>
-      <span>Development milestone F1.05</span>
+      <span>Development milestone F1.06</span>
     </footer>
   </main>
 `;
@@ -120,13 +126,8 @@ let graphics: WebGL2RenderingContext | null = null;
 let gpu: GpuResources | null = null;
 let renderer: InstancedRenderer | null = null;
 let camera: OrthoCamera | null = null;
+let gallery: ArtGallery | null = null;
 const metrics = new RenderMetricWindow();
-const calibrationModel = new Float32Array([
-  1, 0, 0, 0,
-  0, 1, 0, 0,
-  0, 0, 1, 0,
-  0, 0.75, 0, 1,
-]);
 let frameHandle: number | null = null;
 let priorFrameMs = 0;
 let lastDisplayMs = 0;
@@ -145,6 +146,7 @@ function releaseGpu(contextLost = false): void {
   renderer = null;
   gpu = null;
   camera = null;
+  gallery = null;
   if (previousRenderer) {
     if (contextLost) previousRenderer.abandonOnContextLoss();
     else previousRenderer.dispose();
@@ -195,10 +197,10 @@ function paintIfVisible(nowMs = performance.now()): void {
     resizeCanvas(canvas, resolution);
     if (!camera) camera = new OrthoCamera(bounds.width, bounds.height);
     else camera.resize(bounds.width, bounds.height);
+    camera.snapTo([0, 1.6, 0]);
+    if (!gallery) throw new Error("Authored gallery has not initialized");
 
-    const frame = renderer.render(camera.matrices, [{
-      meshId: "calibration", material: "stone.base", model: calibrationModel,
-    }]);
+    const frame = renderer.render(camera.matrices, gallery.instances);
     // Dev-only negative-path test: exercise the exact UI exception boundary.
     if (import.meta.env.DEV
       && new URLSearchParams(location.search).get("failRender") === "1") {
@@ -277,7 +279,7 @@ function probeGraphics(): void {
 
   try {
     renderer = new InstancedRenderer(result.gl);
-    renderer.uploadMesh("calibration", bevelBox(1.5, 1.5, 1.5, 0.12));
+    gallery = createArtGallery(renderer);
   } catch (error) {
     renderer?.dispose();
     renderer = null;

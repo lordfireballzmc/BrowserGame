@@ -225,3 +225,33 @@ button:disabled {
   .diagnostic-controls select { width: 100%; }
   .diagnostic-screen { padding: 16px; }
 }
+
+/* F1.06: understated authored-asset gallery legend; not a gameplay HUD. */
+.archetype-legend {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.archetype-legend span {
+  padding: 9px 10px;
+  background: #e9ebe3;
+  border: 1px solid #a8aeac;
+  border-top: 3px solid #57656b;
+  color: #57656b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.archetype-legend span:first-child { border-top-color: #d8b459; }
+.archetype-legend span:nth-child(2),
+.archetype-legend span:nth-child(3) { border-top-color: #aa473a; }
+.archetype-legend span:last-child { border-top-color: #466d88; }
+.archetype-legend b {
+  display: block;
+  color: #243338;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+@media (max-width: 650px) {
+  .archetype-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
