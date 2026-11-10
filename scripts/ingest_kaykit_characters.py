@@ -26,7 +26,7 @@ PATH = "addons/kaykit_character_pack_adventures/Characters/gltf/"
 ACTORS = (
     ("warden", "Knight", "717b56ca2b5ff5392679774725201ba03a3eefab"),
     ("scrapper", "Barbarian", "66d312ab6dc02b35fb648e7585bfdddb4e02eeef"),
-    ("runner", "Rogue_Hooded", "e5769ed9da59a51dbc2f70f1b18b3e2c017572038eca2a8"),
+    ("runner", "Rogue_Hooded", "5d2b1403240d5f9ffff12e02c007572038eca2a8"),
 )
 MAGIC, JSON_TAG, BIN_TAG = 0x46546c67, 0x4e4f534a, 0x004e4942
 
