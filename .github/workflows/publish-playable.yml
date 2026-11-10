@@ -1,0 +1,105 @@
+name: Publish Playable Bastionfall
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: bastionfall-site-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  production-site:
+    name: Build and actually play-test production site
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      BASTIONFALL_PUBLIC_BASE: /BrowserGame/
+    steps:
+      - name: Checkout private game source
+        uses: actions/checkout@v4
+      - name: Node 22 with locked npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Compile BOTH homepage and actual Three movement preview
+        run: npm run build
+      - name: Inspect production artifact and all local GLB URLs
+        run: node scripts/check-pages-build.mjs dist /BrowserGame/
+      - name: Serve compiled website and run REAL production Chrome play test
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run preview -- --host 127.0.0.1 --port 4174 --strictPort >/tmp/bastionfall-static-preview.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl -fsSL http://127.0.0.1:4174/BrowserGame/ -o /tmp/bastionfall-site-index.html 2>/dev/null \
+                && curl -fsSL http://127.0.0.1:4174/BrowserGame/tests/terrain-preview.html -o /tmp/bastionfall-site-game.html 2>/dev/null; then
+              ready=1; break
+            fi
+            sleep 0.25
+          done
+          if [ "$ready" != 1 ]; then cat /tmp/bastionfall-static-preview.log; exit 1; fi
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              path='tests/terrain-preview.html?view=movement&aspect=portrait&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='540,960'
+            else
+              path='tests/terrain-preview.html?view=movement&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='960,600'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "http://127.0.0.1:4174/BrowserGame/$path" "$dimensions" "$orientation" movement 1 \
+              | tee "/tmp/bastionfall-published-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-dpr1.png"
+            test -s "/tmp/bastionfall-unified-$orientation-dpr1.json"
+          done
+          echo 'PASS: built /BrowserGame/ site runs actual single-Three Warden, enemy actors, 3D GLBs and combat in two orientations'
+      - name: Upload real production website browser screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bastionfall-pages-production-browser-proof
+          path: |
+            /tmp/bastionfall-unified-landscape-dpr1.png
+            /tmp/bastionfall-unified-portrait-dpr1.png
+            /tmp/bastionfall-unified-landscape-dpr1.json
+            /tmp/bastionfall-unified-portrait-dpr1.json
+            /tmp/bastionfall-published-landscape.log
+            /tmp/bastionfall-published-portrait.log
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Upload ONLY compiled site as GitHub Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy stable publicly accessible play URL
+    needs: [production-site]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Read the repository Pages configuration
+        uses: actions/configure-pages@v5
+      - name: Deploy verified build to stable HTTPS address
+        id: deployment
+        uses: actions/deploy-pages@v4
