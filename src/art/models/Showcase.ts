@@ -35,7 +35,7 @@ export interface ArtGallery {
 export function createArtGallery(renderer: InstancedRenderer): ArtGallery {
   const instances: RenderInstance[] = [];
   renderer.uploadMesh("gallery-actor-slab", bevelBox(3.75, 0.14, 3.75, 0.06));
-  renderer.uploadMesh("gallery-core-slab", bevelBox(8.1, 0.16, 8.1, 0.08));
+  renderer.uploadMesh("gallery-core-slab", bevelBox(8.1, 0.16, 8.1, 0.055));
   for (const id of ARCHETYPE_IDS) {
     const archetype = getArchetype(id);
     renderer.uploadMesh("archetype-" + id, archetype.mesh);
