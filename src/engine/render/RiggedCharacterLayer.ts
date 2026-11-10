@@ -32,9 +32,9 @@ export interface RiggedCharacterStats {
   readonly activeWalkCycles: number;
 }
 const SOURCES: readonly {role:Role; url:string; height:number}[]=[
-  {role:"warden",url:"/assets/characters/warden-kaykit.glb",height:2.22},
-  {role:"scrapper",url:"/assets/characters/scrapper-kaykit.glb",height:1.93},
-  {role:"runner",url:"/assets/characters/runner-kaykit.glb",height:1.85},
+  {role:"warden",url:`${import.meta.env.BASE_URL}assets/characters/warden-kaykit.glb`,height:2.22},
+  {role:"scrapper",url:`${import.meta.env.BASE_URL}assets/characters/scrapper-kaykit.glb`,height:1.93},
+  {role:"runner",url:`${import.meta.env.BASE_URL}assets/characters/runner-kaykit.glb`,height:1.85},
 ];
 const OLD_MESH_TO_ROLE: Readonly<Record<string,Role>>={
   "staged-warden":"warden",
@@ -227,7 +227,7 @@ export class RiggedCharacterLayer {
       if(bytes.byteLength<15000 || bytes.byteLength>=1_650_000 ||
          new DataView(bytes).getUint32(0,true)!==0x46546c67)
         throw new Error("Invalid or oversized bundled skeletal GLB "+spec.role);
-      const gltf=await loader.parseAsync(bytes,"/assets/characters/");
+      const gltf=await loader.parseAsync(bytes,`${import.meta.env.BASE_URL}assets/characters/`);
       if(this.disposed)throw new Error("Rigged scene disposed during loading");
       const clips=new Map<Motion,AnimationClip>();
       for(const motion of MOTIONS){
