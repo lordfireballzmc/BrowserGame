@@ -126,7 +126,7 @@ export function locateRoadEnemy(
 }
 function makeEnemy(
   spawn: EnemySpawn, distance: number, seed: string | number,
-  hp = BALANCE.enemies[spawn.kind].health,
+  hp: number = BALANCE.enemies[spawn.kind].health,
   hitTick: number | null = null,
 ): RoadEnemy {
   const config = BALANCE.enemies[spawn.kind];
