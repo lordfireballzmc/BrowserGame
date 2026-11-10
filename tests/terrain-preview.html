@@ -469,6 +469,29 @@
       // while rendering the prior procedural keep/pads for fair comparison.
       const environmentEnabled=parameters.get("environment")!=="legacy";
       body.dataset.environmentArt=environmentEnabled?"loading":"disabled";
+      // VQ.02b A/B art review: `?scenery=legacy` keeps the exact same
+      // deterministic seed, simulation, camera and Three renderer but renders
+      // procedural pine/broadleaf/rock fallback for actual visual comparison.
+      const sceneryEnabled=parameters.get("scenery")!=="legacy";
+      body.dataset.sceneryArt=sceneryEnabled?"loading":"disabled";
+      const sceneryArtLoad=sceneryEnabled ? renderer.loadSceneryArt(
+        scenery.placements,
+      ).then(result=>{
+        if(result.sourceModels!==7||result.importedAtlasModels!==2||
+           result.treeInstances!==40||result.rockInstances!==42||
+           result.artInstances!==82||result.instancedMeshes<7 ||
+           result.instancedMeshes>40){
+          throw new Error("VQ.02b CC0 artist mesh and GPU batch proof failed");
+        }
+        body.dataset.sceneryArt="pass";
+        body.dataset.sceneryArtSources=String(result.sourceModels);
+        body.dataset.sceneryArtAtlases=String(result.importedAtlasModels);
+        body.dataset.sceneryArtTrees=String(result.treeInstances);
+        body.dataset.sceneryArtRocks=String(result.rockInstances);
+        body.dataset.sceneryArtBatches=String(result.instancedMeshes);
+        body.dataset.sceneryArtInstances=String(result.artInstances);
+        return result;
+      }):Promise.resolve(null);
       const environmentLoad=environmentEnabled ? renderer.loadEnvironmentArt(
         {x:31,y:terrainHeight(seed,31,2)+0.04,z:2},
         PAD_SITES.map(site=>({
@@ -497,8 +520,14 @@
         // Static maps/cinematics have no animation loop: await the model so
         // the very first framebuffer includes this genuine textured prop.
         // Browser movement probes also require GLB completion to pass.
-        await Promise.all([modelLoad,artLoad,environmentLoad]);
+        await Promise.all([modelLoad,artLoad,environmentLoad,sceneryArtLoad]);
       } else {
+        sceneryArtLoad.catch(error=>{
+          // Never replace gameplay/world clearance or core renderer if an
+          // optional decorative GLB network/parse step fails.
+          body.dataset.sceneryArt="error";
+          body.dataset.sceneryArtError=String(error);
+        });
         environmentLoad.catch(error=>{
           // Preserve the old functional keep/pads if an optional art payload
           // ever fails; never silently break player collision or input.
