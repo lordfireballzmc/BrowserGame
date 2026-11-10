@@ -348,16 +348,32 @@
     const viewProjection = camera.viewProjection;
     if (unifiedThree) {
       const { TERRAIN_ASSETS } = await import("/src/art/assets/AssetManifest.ts");
-      const imported = await renderer.loadPilotLantern(terrainHeight(seed,
-        TERRAIN_ASSETS.pilotLantern.position[0],TERRAIN_ASSETS.pilotLantern.position[2]));
-      if (imported.meshCount<1 || imported.texturedMaterials<1)
-        throw new Error("Unified Three scene lost its authored textured GLB");
+      // The battlefield can initialize and accept input even when a texture
+      // is still decoding; don't block the real game behind optional art.
+      // Only the explicit browser verification route awaits import completion
+      // so its GLB assertion always reflects an actual parsed material.
       body.dataset.unifiedRenderer = "three";
       body.dataset.sharedDepth = "true";
-      body.dataset.assetSource = imported.sourceId;
-      body.dataset.assetTextured = String(imported.texturedMaterials);
-      body.dataset.assetPilot = "pass";
+      body.dataset.assetPilot = "loading";
       body.dataset.unifiedCanvases = String(document.querySelectorAll(".stage canvas").length);
+      const modelLoad = renderer.loadPilotLantern(terrainHeight(seed,
+        TERRAIN_ASSETS.pilotLantern.position[0],
+        TERRAIN_ASSETS.pilotLantern.position[2])).then(imported=>{
+        if (imported.meshCount<1 || imported.texturedMaterials<1)
+          throw new Error("Unified Three scene lost its authored textured GLB");
+        body.dataset.assetSource = imported.sourceId;
+        body.dataset.assetTextured = String(imported.texturedMaterials);
+        body.dataset.assetPilot = "pass";
+        return imported;
+      });
+      if (parameters.has("probeMovement") || parameters.has("probeEnemies")
+        || parameters.has("probeCombat")) {
+        await modelLoad; // browser acceptance requires the real GLB
+      } else modelLoad.catch(error=>{
+        // Fail the optional asset independently, not the entire Warden world.
+        body.dataset.assetPilot = "error";
+        body.dataset.assetError = String(error);
+      });
     }
     const stats = renderer.render(camera, instances);
     // ART.01 dual-canvas overlay is retired; all imported art now shares
