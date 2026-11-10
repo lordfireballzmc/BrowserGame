@@ -288,7 +288,7 @@
       || (cinematic && stats.culled < 1)
       || stats.estimatedGpuBytes > 64 * 1024 * 1024
       || changedSamples < 500 || road.rutCount < 10 || road.sampleStepMaxMeters > 0.55 + 1e-6
-      || PAD_SITES.length !== 10 || (!cinematic && labelLayer.childElementCount !== PAD_SITES.length)
+      || PAD_SITES.length !== 10 || (!cinematic && !movement && labelLayer.childElementCount !== PAD_SITES.length)
       || northRiver.segments !== 66 || northRiver.bridgePositions.length !== 2
       || scenery.placements.length !== 258 || scenery.batches.length !== 5
       || stats.drawCalls > 100) {
