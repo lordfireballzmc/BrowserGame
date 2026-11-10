@@ -21,7 +21,62 @@
     }
     body[data-view="cinematic"] canvas { border:0; }
     body[data-view="cinematic"][data-aspect="portrait"] .stage { max-width:540px; margin:auto; }
-    body[data-view="cinematic"] .pad-labels { display:none; }
+    body[data-view="cinematic"] .pad-labels,
+    body[data-view="movement"] .pad-labels { display:none; }
+    body[data-view="movement"] { background:#1c3029; min-height:100dvh; overflow:hidden; }
+    body[data-view="movement"] main {
+      max-width:none; padding:0; margin:0; width:100%;
+      min-height:100dvh; display:flex; align-items:center; justify-content:center;
+    }
+    body[data-view="movement"] main > h1,
+    body[data-view="movement"] main > p,
+    body[data-view="movement"] main > nav,
+    body[data-view="movement"] main > output,
+    body[data-view="movement"] main > pre { display:none; }
+    /* The ID-based pad status rule below otherwise wins the CSS cascade and
+       shrinks the intended fullscreen flex viewport. Keep it map-only. */
+    body[data-view="movement"] #pad-selection,
+    body[data-view="movement"] #trace { display:none; }
+    body[data-view="movement"][data-result="fail"] #trace {
+      display:block; position:fixed; z-index:10; left:12px; right:12px; bottom:12px;
+      max-height:50vh; overflow:auto; padding:12px; background:#fff4e0;
+      color:#682d22; border:2px solid #b34e3a; border-radius:8px;
+    }
+    body[data-view="movement"] .stage {
+      width:min(100vw,177.7778dvh); max-width:none;
+      border:0; border-radius:0; overflow:hidden; box-shadow:none;
+    }
+    body[data-view="movement"] canvas { border:0; width:100%; height:auto; display:block; }
+    body[data-view="movement"][data-aspect="portrait"] .stage {
+      width:min(100vw,56.25dvh); max-width:none;
+    }
+    .movement-hud { pointer-events:none; position:absolute; inset:0; z-index:2;
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:clamp(10px,2.5vw,30px); color:#fff4dc; }
+    .movement-hud[hidden] { display:none; }
+    .movement-hud .hud-top { display:flex; justify-content:space-between;
+      align-items:flex-start; gap:10px; flex-wrap:wrap; padding-right:100px; }
+    .movement-hud .hud-chip { border:1px solid #ecdeb44d; border-radius:8px;
+      background:#1c3930da; padding:8px 12px; font-weight:800; font-size:12px;
+      letter-spacing:0.09em; box-shadow:0 3px 10px #071e173b; }
+    .movement-hud .hud-chip strong { color:#f3d582; }
+    .movement-hud .hud-bottom { display:flex; justify-content:space-between; gap:12px;
+      flex-wrap:wrap; font-size:12px; letter-spacing:0.035em; }
+    .movement-hud .hud-bottom span { background:#20392bc9; border-radius:7px;
+      padding:7px 10px; }
+    .movement-hud .hud-bottom b { color:#f2d37d; font-variant-numeric:tabular-nums; }
+    .movement-exit { pointer-events:auto; position:absolute; top:clamp(10px,2.5vw,30px);
+      right:clamp(10px,2.5vw,30px); z-index:3;
+      background:#1b3934e8; color:#ffe9b4; text-decoration:none;
+      border:1px solid #ffebb071; border-radius:7px; padding:7px 13px;
+      font:800 11px/1.5 system-ui; letter-spacing:0.09em; }
+    .movement-exit:hover, .movement-exit:focus-visible {
+      background:#2d6555; outline:2px solid #f1d886; outline-offset:2px;
+    }
+    body[data-view="movement"][data-aspect="portrait"] .hud-top {
+      flex-direction:column; padding-right:65px;
+    }
+    body[data-view="movement"][data-aspect="portrait"] .hud-bottom { flex-direction:column; align-items:flex-start; }
     .scene-stamp { display:none; position:absolute; z-index:1; left:3%; top:3%;
       padding:10px 13px; border-radius:8px; color:#f3e8ce; background:#253b35d9;
       font:700 14px/1.3 system-ui; letter-spacing:0.07em; pointer-events:none; }
@@ -51,16 +106,30 @@
     <a href="/tests/terrain-preview.html">Full island / inspect pads</a>
     <a href="?view=cinematic">Cinematic · 1920 × 1080</a>
     <a href="?view=cinematic&amp;aspect=portrait">Cinematic · 1080 × 1920</a>
+    <a href="?view=movement">Move the Warden · keyboard</a>
+    <a href="?view=movement&amp;aspect=portrait">Movement · portrait</a>
   </nav>
   <div class="stage"><div class="scene-stamp">BASTIONFALL / FENWALL
       <small>3D SCENE STUDY · NOT LIVE GAMEPLAY</small></div>
     <canvas id="terrain" width="1200" height="760" aria-label="3D miniature terrain, keep, defenses and authored posed actors"></canvas>
-    <div class="pad-labels" id="pad-labels" aria-hidden="true"></div></div>
+    <div class="pad-labels" id="pad-labels" aria-hidden="true"></div>
+    <div class="movement-hud" id="movement-hud" hidden aria-hidden="true">
+      <div class="hud-top">
+        <div class="hud-chip">BASTIONFALL <strong>/ FENWALL CROSSING</strong></div>
+        <div class="hud-chip">WARDEN <strong>· MOVEMENT ONLY</strong></div>
+      </div>
+      <a class="movement-exit" href="/" aria-label="Return to Bastionfall menu">MENU</a>
+      <div class="hud-bottom"><span>WASD / ARROWS TO MOVE · ESC TO PAUSE</span>
+        <span id="move-readout">READY · 0.0 m/s</span></div>
+    </div></div>
   <output id="pad-selection" aria-live="polite">Wave 1: two available pads. Click a pad to inspect its build region.</output>
   <pre id="trace">Generating terrain meshes...</pre>
 </main>
 <script type="module">
   import { mat4, vec4 } from "gl-matrix";
+  import { OrthoCamera } from "/src/engine/Camera.ts";
+  import { createBrowserLoop, FIXED_STEP_SECONDS } from "/src/engine/Loop.ts";
+  import { HeroMovementWorld } from "/src/game/HeroMovement.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
   import { mergeStaticGeometries } from "/src/art/mesh/StaticBatch.ts";
   import { generateTerrain, terrainHeight } from "/src/art/terrain/Island.ts";
@@ -73,18 +142,24 @@
   const body = document.body;
   const parameters = new URLSearchParams(location.search);
   const cinematic = parameters.get("view") === "cinematic";
-  const portrait = cinematic && parameters.get("aspect") === "portrait";
-  body.dataset.view = cinematic ? "cinematic" : "map";
+  const movement = parameters.get("view") === "movement";
+  const portrait = (cinematic || movement) && parameters.get("aspect") === "portrait";
+  body.dataset.view = movement ? "movement" : cinematic ? "cinematic" : "map";
   body.dataset.aspect = portrait ? "portrait" : "landscape";
   let renderer;
   try {
     const canvas = document.querySelector("#terrain");
-    if (cinematic) {
-      canvas.width = portrait ? 1080 : 1920;
-      canvas.height = portrait ? 1920 : 1080;
+    if (cinematic || movement) {
+      canvas.width = cinematic ? (portrait ? 1080 : 1920) : (portrait ? 720 : 1280);
+      canvas.height = cinematic ? (portrait ? 1920 : 1080) : (portrait ? 1280 : 720);
       canvas.style.aspectRatio = canvas.width + " / " + canvas.height;
-      document.querySelector("#pad-selection").textContent =
-        "This is a composed visual scene, not an active wave or purchasable towers.";
+      document.querySelector("#pad-selection").textContent = movement
+        ? "WASD / arrow keys move the Warden. Esc pauses. No enemies attack or tower purchases yet."
+        : "This is a composed visual scene, not an active wave or purchasable towers.";
+      document.querySelector("#movement-hud").hidden = !movement;
+      if (movement) {
+        canvas.setAttribute("aria-label","Interactive Warden movement through the original 3D Fenwall Crossing scene");
+      }
     }
     const gl = canvas.getContext("webgl2", {
       alpha: false, antialias: true, preserveDrawingBuffer: true,
@@ -94,6 +169,7 @@
     renderer.enableSunShadows();
     renderer.enableFrustumCulling();
     const seed = "fenwall-crossing-v1";
+    const playerWorld = movement ? new HeroMovementWorld(seed) : null;
     const terrain = generateTerrain(seed);
     validatePadSites();
     const model = mat4.create();
@@ -143,7 +219,13 @@
       instances.push({meshId:"staged-"+id, material:"stone.base", model:m});
     };
     stageActor("core",31,2);
-    stageActor("warden",24,-4,Math.PI*0.70);
+    const wardenModel = mat4.create();
+    if (movement) {
+      instances.push({meshId:"staged-warden",material:"stone.base",model:wardenModel});
+      const hero = playerWorld.snapshot;
+      mat4.fromTranslation(wardenModel,[hero.x,hero.groundY+0.04,hero.z]);
+      mat4.rotateY(wardenModel,wardenModel,hero.yaw);
+    } else stageActor("warden",24,-4,Math.PI*0.70);
     for (const [x,z] of [[9,-4.1],[11,-5.3],[13,-6.5],[15,-7],[17,-7.2],
                           [19,-6.9],[20,-5.2],[21,-7],[22,-5.8],
                           [15,-5.4],[18,-5.4],[20.5,-7.5]]) {
@@ -166,8 +248,13 @@
     const halfWidth = cinematic ? halfHeight*canvas.width/canvas.height : 60;
     const projection = mat4.ortho(mat4.create(),
       -halfWidth,halfWidth,-halfHeight,halfHeight,0.1,300);
-    const viewProjection = mat4.multiply(mat4.create(), projection, view);
-    const camera = {view, viewProjection};
+    const viewProjectionStatic = mat4.multiply(mat4.create(), projection, view);
+    const movingCamera = movement ? new OrthoCamera(canvas.width,canvas.height,[
+      playerWorld.snapshot.x,0,playerWorld.snapshot.z,
+    ]) : null;
+    if (movingCamera) movingCamera.setZoom(1.06);
+    const camera = movingCamera ? movingCamera.matrices : {view, viewProjection:viewProjectionStatic};
+    const viewProjection = camera.viewProjection;
     const stats = renderer.render(camera, instances);
     const labelLayer = document.querySelector("#pad-labels");
     const projector = {project: (world) => {
@@ -180,7 +267,7 @@
     function redrawLabels() {
       labelLayer.replaceChildren();
       for(const site of PAD_SITES){
-        if (cinematic) break; // A clean image study; full-island mode keeps interactive labels.
+        if (cinematic || movement) break; // Focused views keep labels off the battlefield.
         const price = projectPadPrice(site,projector,1,25,seed);
         if(!price.visible)continue;
         const element=document.createElement("span");
@@ -193,7 +280,7 @@
       }
     }
     redrawLabels();
-    canvas.addEventListener("click",event=>{
+    if (!movement) canvas.addEventListener("click",event=>{
       const bounds=canvas.getBoundingClientRect();
       const x=(event.clientX-bounds.left)*canvas.width/bounds.width;
       const y=(event.clientY-bounds.top)*canvas.height/bounds.height;
@@ -235,7 +322,7 @@
       || (cinematic && stats.culled < 1)
       || stats.estimatedGpuBytes > 64 * 1024 * 1024
       || changedSamples < 500 || road.rutCount < 10 || road.sampleStepMaxMeters > 0.55 + 1e-6
-      || PAD_SITES.length !== 10 || (!cinematic && labelLayer.childElementCount !== PAD_SITES.length)
+      || PAD_SITES.length !== 10 || (!cinematic && !movement && labelLayer.childElementCount !== PAD_SITES.length)
       || northRiver.segments !== 66 || northRiver.bridgePositions.length !== 2
       || scenery.placements.length !== 258 || scenery.batches.length !== 5
       || stats.drawCalls > 100) {
@@ -247,10 +334,12 @@
           labels:labelLayer.childElementCount, padCount:PAD_SITES.length}));
     }
     const trace = {
-      mode: cinematic ? "CINEMATIC ART STUDY (not gameplay)" : "ENGINEERING WORLD PREVIEW (not a game)",
+      mode: movement ? "F3.01 CONTROLLABLE WARDEN (no combat yet)"
+        : cinematic ? "CINEMATIC ART STUDY (not gameplay)" : "ENGINEERING WORLD PREVIEW (not a game)",
       sunShadows:renderer.sunShadowsEnabled,
       targetResolution:[canvas.width,canvas.height],
-      stagedActors:15, stagedBoltSpires:cinematic?2:0,
+      stagedActors:movement?14:15, movingWarden:movement?1:0,
+      stagedBoltSpires:cinematic?2:0,
       seed: terrain.seed, tiles: terrain.tiles.length,
       roadWidthMeters: 4.5, roadLengthMeters: Number(road.lengthMeters.toFixed(2)),
       roadSampleStepMaxMeters: Number(road.sampleStepMaxMeters.toFixed(3)),
@@ -275,7 +364,22 @@
     };
     body.dataset.result = "pass";
     body.dataset.shadows = renderer.sunShadowsEnabled ? "on" : "off";
-    body.dataset.composition = cinematic ? (portrait ? "9:16" : "16:9") : "full-island";
+    body.dataset.composition = movement ? (portrait ? "movement-9:16" : "movement-16:9")
+      : cinematic ? (portrait ? "9:16" : "16:9") : "full-island";
+    if (movement) {
+      // A UI gate, not a visual similarity score: ensure the movement scene
+      // occupies the maximum correctly proportioned viewport and the old
+      // engineering status output does not squeeze it to one side.
+      const bounds=document.querySelector(".stage").getBoundingClientRect();
+      const expectedWidth=Math.min(window.innerWidth,
+        window.innerHeight * canvas.width / canvas.height);
+      if (Math.abs(bounds.width-expectedWidth)>3 ||
+          document.querySelector("#pad-selection").getClientRects().length!==0) {
+        throw new Error("Movement viewport layout regression: "+
+          JSON.stringify({width:bounds.width,expectedWidth}));
+      }
+      body.dataset.immersive="pass";
+    }
     body.dataset.tiles = String(terrain.tiles.length);
     body.dataset.road = "pass";
     body.dataset.padCount = String(PAD_SITES.length);
@@ -287,6 +391,138 @@
     body.dataset.coast = String(terrain.coastSegments);
     body.dataset.changed = String(changedSamples);
     document.querySelector("#trace").textContent = JSON.stringify(trace);
+    // F3.01: keep the authored world/render pipeline, replace only the Warden's
+    // staged transform with deterministic 60Hz locomotion and a damped camera.
+    if (movement) {
+      const pressed = new Set();
+      const keyName = key => key.toLowerCase();
+      const mapped = new Set(["w","a","s","d","arrowup","arrowdown",
+        "arrowleft","arrowright"]);
+      let gameLoop = null;
+      let stopped = false, priorDrawTime = performance.now();
+      const onKeyDown = event => {
+        const key=keyName(event.key);
+        if (mapped.has(key)) { event.preventDefault(); pressed.add(key); }
+        if (key==="escape" && gameLoop) {
+          event.preventDefault();
+          if (event.repeat) return;
+          gameLoop.setPaused(!gameLoop.isPaused);
+          if (gameLoop.isPaused) pressed.clear();
+          body.dataset.paused = gameLoop.isPaused ? "true" : "false";
+          document.querySelector("#move-readout").textContent=gameLoop.isPaused
+            ? "PAUSED · PRESS ESC TO RESUME" : "RESUMED";
+        }
+      };
+      const onKeyUp = event => {
+        const key=keyName(event.key);
+        if (mapped.has(key)) { event.preventDefault(); pressed.delete(key); }
+      };
+      const clearKeys = () => pressed.clear();
+      const onBlur = () => {
+        clearKeys();
+        if (gameLoop?.isRunning && !gameLoop.isPaused) {
+          gameLoop.pause();
+          body.dataset.paused="true";
+          document.querySelector("#move-readout").textContent="PAUSED · PRESS ESC TO RESUME";
+        }
+      };
+      window.addEventListener("keydown",onKeyDown);
+      window.addEventListener("keyup",onKeyUp);
+      window.addEventListener("blur",onBlur);
+      document.addEventListener("visibilitychange",clearKeys);
+      const movementInput = () => ({
+        right:Number(pressed.has("d")||pressed.has("arrowright"))
+          -Number(pressed.has("a")||pressed.has("arrowleft")),
+        forward:Number(pressed.has("w")||pressed.has("arrowup"))
+          -Number(pressed.has("s")||pressed.has("arrowdown")),
+      });
+      const renderMovement = alpha => {
+        if (stopped) return;
+        try {
+          const hero=playerWorld.sample(alpha);
+          const now=performance.now();
+          const frameDelta=Math.max(0,Math.min(0.05,(now-priorDrawTime)/1000));
+          priorDrawTime=now;
+          // The camera remains grounded: no head-bob enters the camera target.
+          movingCamera.follow([hero.x,0,hero.z],frameDelta,
+            [hero.vx*0.17,hero.vz*0.17]);
+          const intensity=Math.min(1,hero.speedMetersPerSecond/4.2);
+          const gait=Math.sin(hero.distanceMeters*11.0);
+          mat4.fromTranslation(wardenModel,[hero.x,
+            hero.groundY+0.04+gait*0.025*intensity,hero.z]);
+          mat4.rotateY(wardenModel,wardenModel,hero.yaw);
+          // Subtle breathing/weight shift now; actual articulated steps F4.01.
+          mat4.scale(wardenModel,wardenModel,
+            [1-0.012*gait*intensity,1+0.018*gait*intensity,1-0.012*gait*intensity]);
+          renderer.render(movingCamera.matrices,instances);
+          const status=document.querySelector("#move-readout");
+          status.textContent=playerWorld.snapshot.tick+" TICKS · "
+            +hero.speedMetersPerSecond.toFixed(1)+" M/S";
+          body.dataset.heroX=hero.x.toFixed(3);
+          body.dataset.heroZ=hero.z.toFixed(3);
+          body.dataset.heroTick=String(playerWorld.snapshot.tick);
+          body.dataset.heroVisible="true";
+        } catch (error) {
+          stopped=true;
+          gameLoop?.stop();
+          body.dataset.result="fail";
+          document.querySelector("#trace").textContent=String(error.stack??error);
+        }
+      };
+      gameLoop=createBrowserLoop({
+        fixedUpdate(dt){ playerWorld.step(movementInput(),dt); },
+        render(alpha){ renderMovement(alpha); },
+      });
+      // Real browser-integrated DOM-keyboard probe: send an actual keydown,
+      // run exactly 90 authored fixed steps, then sample the visible scene.
+      // This is not a substitute for manual feel tests or GPU FPS profiling.
+      if (parameters.get("probeMovement")==="forward") {
+        const before=playerWorld.snapshot;
+        window.dispatchEvent(new KeyboardEvent("keydown",{key:"w",bubbles:true}));
+        for(let i=0;i<90;i++) {
+          const current=playerWorld.step(movementInput(),FIXED_STEP_SECONDS);
+          movingCamera.follow([current.x,0,current.z],FIXED_STEP_SECONDS,
+            [current.vx*0.17,current.vz*0.17]);
+        }
+        window.dispatchEvent(new KeyboardEvent("keyup",{key:"w",bubbles:true}));
+        const after=playerWorld.snapshot;
+        const moved=Math.hypot(after.x-before.x,after.z-before.z);
+        const focus=movingCamera.focusWorld;
+        const followError=Math.hypot(focus[0]-after.x,focus[2]-after.z);
+        if(moved<3.0 || moved>6.35 || after.tick!==90 ||
+          followError>1.3 || !playerWorld.canOccupy(after.x,after.z)) {
+          throw new Error("F3.01 keyboard/camera/collision probe: "
+            +JSON.stringify({moved,followError,after}));
+        }
+        renderMovement(1);
+        body.dataset.movementProbe="pass";
+        document.querySelector("#trace").textContent=JSON.stringify({
+          mode:"F3.01 VERIFIED KEYBOARD MOVEMENT",ticks:after.tick,
+          displacementMeters:Number(moved.toFixed(3)),
+          cameraFollowErrorMeters:Number(followError.toFixed(3)),
+          wardenX:Number(after.x.toFixed(3)),wardenZ:Number(after.z.toFixed(3)),
+          movingWarden:1,draws:stats.drawCalls,
+          note:"Browser DOM keyboard -> deterministic 60Hz simulation -> actual WebGL2 Warden and camera",
+        });
+      }
+      if (!stopped) {
+        gameLoop.start();
+        body.dataset.paused="false";
+        window.addEventListener("pagehide",()=>{
+          stopped=true;gameLoop.stop();
+          window.removeEventListener("keydown",onKeyDown);
+          window.removeEventListener("keyup",onKeyUp);
+          window.removeEventListener("blur",onBlur);
+          document.removeEventListener("visibilitychange",clearKeys);
+        },{once:true});
+        canvas.addEventListener("webglcontextlost",event=>{
+          event.preventDefault();
+          stopped=true;gameLoop.stop();renderer?.abandonOnContextLoss();
+          body.dataset.result="fail";
+          document.querySelector("#trace").textContent="WebGL2 context lost; reload to rebuild the scene.";
+        });
+      }
+    }
     // Dev-only Chrome acceptance: dispatch an actual pixel-space canvas click
     // through the registered pointer handler. Locked pads must not select.
     const probeId = new URLSearchParams(location.search).get("probePadClick");

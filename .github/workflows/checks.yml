@@ -233,6 +233,43 @@ jobs:
             test -s "/tmp/bastionfall-cinematic-$orientation.png"
             echo "PASS: actual $orientation WebGL2 shadowed scene, screenshot captured"
           done
+          # F3.01: actual software WebGL2 movement scene, keyboard event route,
+          # deterministic 90-step displacement, shadowed terrain and camera.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward'
+              dimensions='900,1200'
+              composition='movement-9:16'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward'
+              dimensions='1500,950'
+              composition='movement-16:9'
+            fi
+            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+              --window-size="$dimensions" --virtual-time-budget=11000 \
+              --dump-dom "$url" \
+              >"/tmp/bastionfall-movement-$orientation.html" \
+              2>"/tmp/bastionfall-movement-$orientation.log"
+            if ! grep -q 'data-result="pass"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -q 'data-movement-probe="pass"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -q 'data-hero-visible="true"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -q 'data-immersive="pass"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -q 'data-shadows="on"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -q "data-composition=\"$composition\"" "/tmp/bastionfall-movement-$orientation.html"; then
+              echo "F3.01 real Chrome $orientation Warden movement scene failed"
+              tail -c 6500 "/tmp/bastionfall-movement-$orientation.html"
+              tail -c 2000 "/tmp/bastionfall-movement-$orientation.log"
+              exit 1
+            fi
+            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+              --window-size="$dimensions" --virtual-time-budget=11000 \
+              --screenshot="/tmp/bastionfall-movement-$orientation.png" "$url" \
+              >"/tmp/bastionfall-movement-$orientation-capture.log" 2>&1
+            test -s "/tmp/bastionfall-movement-$orientation.png"
+            echo "PASS: keyboard-dispatched $orientation 3D Warden move and follow camera"
+          done
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
         uses: actions/upload-artifact@v4
@@ -259,5 +296,16 @@ jobs:
           path: |
             /tmp/bastionfall-cinematic-landscape.png
             /tmp/bastionfall-cinematic-portrait.png
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload F3.01 real Warden movement screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f3-01-warden-movement-visual-review
+          path: |
+            /tmp/bastionfall-movement-landscape.png
+            /tmp/bastionfall-movement-portrait.png
           if-no-files-found: warn
           retention-days: 14
