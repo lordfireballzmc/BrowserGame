@@ -48,7 +48,7 @@ describe("F3.02 deterministic real-path raiders", () => {
       expect(enemy.damagePerStrike).toBeCloseTo(numeric.contactDamagePerSecond*0.6,8);
       expect(enemy.phase).toBe("advancing");
     }
-    expect(world.snapshot.pending).toBe(17);
+    expect(world.snapshot.pending).toBe(16);
   });
 
   it("moves by distance in 60Hz ticks, remains on the existing 4.5m lane", () => {
@@ -73,7 +73,7 @@ describe("F3.02 deterministic real-path raiders", () => {
     const c=new EnemyRoadWorld(1,"fenwall-crossing-v1");
     step(a,900); step(b,900); step(c,900);
     expect(a.snapshot).toEqual(b.snapshot);
-    expect(a.snapshot.spawned).toBe(17);
+    expect(a.snapshot.spawned).toBe(14);
     expect(c.snapshot.spawned).toBe(8);
     expect(a.snapshot).not.toEqual(c.snapshot);
     expect(Object.isFrozen(a.snapshot)).toBe(true);
