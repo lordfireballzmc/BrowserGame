@@ -297,6 +297,25 @@ jobs:
             test -s "/tmp/bastionfall-unified-$orientation.png"
             test -s "/tmp/bastionfall-unified-$orientation.json"
           done
+          # VQ.01: real DPR=2 Three gameplay (not just unit math). Run
+          # economy/sharp selection, live CSS viewport resize + restore, and
+          # verify the same Warden/19-raider/copper-bolt gameplay stays active.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions="540,960"
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions="960,600"
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" movement 2 \
+              2>&1 | tee "/tmp/bastionfall-vq01-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-dpr2.png"
+            test -s "/tmp/bastionfall-unified-$orientation-dpr2.json"
+            grep -q '"qualityRoundTrip": "pass"' "/tmp/bastionfall-unified-$orientation-dpr2.json"
+            grep -q '"resizeRoundTrip": "pass"' "/tmp/bastionfall-unified-$orientation-dpr2.json"
+            echo "PASS: VQ.01 real $orientation DPR=2 crisp resized Three gameplay"
+          done
           # ART.02b: SAME single-Three scene must now display full island,
           # preserve real P01 selection / locked P09, and both cinematic
           # compositions with a source-verified textured GLB. CDP waits for
@@ -380,5 +399,19 @@ jobs:
             /tmp/bastionfall-unified-cinematic-portrait.png
             /tmp/bastionfall-unified-cinematic-landscape.json
             /tmp/bastionfall-unified-cinematic-portrait.json
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Upload VQ.01 high-DPI gameplay quality and resize evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vq01-retina-gameplay-landscape-portrait
+          path: |
+            /tmp/bastionfall-unified-landscape-dpr2.png
+            /tmp/bastionfall-unified-portrait-dpr2.png
+            /tmp/bastionfall-unified-landscape-dpr2.json
+            /tmp/bastionfall-unified-portrait-dpr2.json
+            /tmp/bastionfall-vq01-landscape.log
+            /tmp/bastionfall-vq01-portrait.log
           if-no-files-found: warn
           retention-days: 21
