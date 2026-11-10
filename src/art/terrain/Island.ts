@@ -11,6 +11,7 @@
  * state mutations. Road, props, and river geometry belong to later F2 tasks.
  */
 import { seedToUint32 } from "../../game/Random";
+import { distanceToRoadXZ, ROAD_SPEC } from "./RoadPath";
 import type { Geometry, Point3 } from "../mesh/Primitives";
 import { validateGeometry } from "../mesh/Primitives";
 import { MATERIAL_TOKENS, type MaterialToken } from "../../engine/render/Palette";
@@ -64,7 +65,6 @@ const COAST_EPS = 1e-9;
 const SLOT = (name: MaterialToken): number => MATERIAL_TOKENS.indexOf(name) + 1;
 const SLOTS = {
   grass: SLOT("grass.primary"),
-  shade: SLOT("grass.shadow"),
   earth: SLOT("earth.cut"),
   stone: SLOT("stone.shadow"),
 };
@@ -112,8 +112,16 @@ export function terrainHeight(seed: number | string, x: number, z: number): numb
   }
   const s = seedToUint32(seed);
   const distanceToAnchor = Math.min(Math.hypot(x - 31, z - 2), Math.hypot(x + 34, z + 5));
-  const flatten = smooth(clamp01((distanceToAnchor - 2.5) / 3.5));
-  if (flatten === 0) return 0; // Canonical +0 at fixed spawn/core staging zones.
+  const anchorFlat = smooth(clamp01((distanceToAnchor - 2.5) / 3.5));
+  // Carve an unobstructed 4.5m road with a feathered outer shoulder.
+  // At least 1.1m outside each road edge is flat, so 1m terrain cells
+  // cannot poke through the nominal y=+0.02m road quad surface.
+  const roadDistance = distanceToRoadXZ(x, z);
+  const roadFlat = smooth(clamp01(
+    (roadDistance - ROAD_SPEC.flatTerrainHalfWidthMeters) / ROAD_SPEC.terrainFeatherMeters,
+  ));
+  const flatten = Math.min(anchorFlat, roadFlat);
+  if (flatten === 0) return 0; // Canonical +0 in the road and staging corridor.
   const relief = 0.24 * valueNoise(s, x, z, 9)
     + 0.095 * valueNoise(s ^ 0xa5c31e2b, x, z, 3.5);
   return Math.fround(relief * flatten);
@@ -270,13 +278,11 @@ function buildTile(seed: number, column: number, row: number): TerrainTile {
         if (polygon.length < 3) continue;
         for (let p = 1; p < polygon.length - 1; p++) {
           const aa = polygon[0]!, bb = polygon[p]!, cc = polygon[p + 1]!;
-          const steepness = Math.max(
-            Math.abs(aa.y - bb.y), Math.abs(bb.y - cc.y), Math.abs(cc.y - aa.y),
-          );
-          // Avoid triangle-by-triangle coastline tinting: it produces a
-          // high-frequency sawtooth band in the actual orthographic screenshot.
-          // Authored road/shoulder coloration is reserved for F2.02.
-          const slot = steepness > 0.16 ? SLOTS.shade : SLOTS.grass;
+          // Per-triangle slope-threshold tinting caused two isolated dark-green
+          // zigzag artifacts beside the new road in the F2.02 Chrome screenshot.
+          // Smooth grass shading comes from the GPU's directional normals;
+          // authored ground-color transitions belong to later prop/art passes.
+          const slot = SLOTS.grass;
           ground.add(
             [aa.x, aa.y, aa.z], [bb.x, bb.y, bb.z], [cc.x, cc.y, cc.z],
             [0, 1, 0], slot,

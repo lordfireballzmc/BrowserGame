@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bastionfall F2.01 — terrain engineering preview (not gameplay)</title>
+  <title>Bastionfall F2.02 — road and terrain engineering preview (not gameplay)</title>
   <style>
     * { box-sizing: border-box }
     body { margin: 0; background: #e9ebe3; color: #243338; font: 14px system-ui; }
@@ -16,9 +16,9 @@
 </head>
 <body data-result="pending">
 <main>
-  <h1>Fenwall Crossing · F2.01 island heightfield</h1>
-  <p>Seeded 72 × 48m island with 54 seam-matched tiles and an exposed layered rock coast.
-     This is a WebGL2 mesh-inspection scene; there is no road, river, gameplay, or authored vegetation yet.</p>
+  <h1>Fenwall Crossing · F2.02 winding approach road</h1>
+  <p>Seeded 72 × 48m island and a handcrafted 4.5-meter ochre spline road from the western enemy entrance to the keep.
+     This WebGL2 mesh inspection is not gameplay; vegetation, pads, river and enemy simulation are not implemented.</p>
   <canvas id="terrain" width="1200" height="760" aria-label="Procedurally generated island and cliff terrain"></canvas>
   <pre id="trace">Generating terrain meshes...</pre>
 </main>
@@ -26,6 +26,7 @@
   import { mat4 } from "gl-matrix";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
   import { generateTerrain } from "/src/art/terrain/Island.ts";
+  import { createAuthoredRoad } from "/src/art/terrain/Road.ts";
   const body = document.body;
   let renderer;
   try {
@@ -48,6 +49,9 @@
         instances.push({meshId: cliff, material: "stone.shadow", model});
       }
     }
+    const road = createAuthoredRoad();
+    renderer.uploadMesh("authored-road", road.surface);
+    instances.push({meshId: "authored-road", material: "road.primary", model});
     const view = mat4.lookAt(mat4.create(), [73, 94, 83], [0, -0.8, 0], [0, 1, 0]);
     const projection = mat4.ortho(mat4.create(), -60, 60, -38, 38, 0.1, 300);
     const viewProjection = mat4.multiply(mat4.create(), projection, view);
@@ -63,12 +67,15 @@
     }
     if (terrain.tiles.length !== 54 || terrain.coastSegments < 50
       || stats.instances !== instances.length || stats.drawCalls !== instances.length
-      || changedSamples < 500) {
+      || changedSamples < 500 || road.rutCount < 10 || road.sampleStepMaxMeters > 0.55 + 1e-6) {
       throw new Error("Terrain preview acceptance failed; coastline or framebuffer missing");
     }
     const trace = {
       mode: "ENGINEERING PREVIEW (not a game)",
       seed: terrain.seed, tiles: terrain.tiles.length,
+      roadWidthMeters: 4.5, roadLengthMeters: Number(road.lengthMeters.toFixed(2)),
+      roadSampleStepMaxMeters: Number(road.sampleStepMaxMeters.toFixed(3)),
+      rutCount: road.rutCount,
       cliffSections: terrain.coastSegments,
       meshes: renderer.meshCount, instances: stats.instances,
       draws: stats.drawCalls, triangles: stats.triangles,
@@ -78,6 +85,7 @@
     };
     body.dataset.result = "pass";
     body.dataset.tiles = String(terrain.tiles.length);
+    body.dataset.road = "pass";
     body.dataset.coast = String(terrain.coastSegments);
     body.dataset.changed = String(changedSamples);
     document.querySelector("#trace").textContent = JSON.stringify(trace);
