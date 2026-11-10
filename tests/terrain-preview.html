@@ -23,14 +23,29 @@
     body[data-view="cinematic"][data-aspect="portrait"] .stage { max-width:540px; margin:auto; }
     body[data-view="cinematic"] .pad-labels,
     body[data-view="movement"] .pad-labels { display:none; }
-    body[data-view="movement"] { background:#dbe8da; }
-    body[data-view="movement"] main { max-width:1400px; }
-    body[data-view="movement"] .stage {
-      border:6px solid #304a42; border-radius:14px; overflow:hidden;
-      box-shadow:0 16px 50px #193e3438,0 3px 0 #1b342b;
+    body[data-view="movement"] { background:#1c3029; min-height:100dvh; overflow:hidden; }
+    body[data-view="movement"] main {
+      max-width:none; padding:0; margin:0; width:100%;
+      min-height:100dvh; display:flex; align-items:center; justify-content:center;
     }
-    body[data-view="movement"] canvas { border:0; }
-    body[data-view="movement"][data-aspect="portrait"] .stage { max-width:640px; margin:auto; }
+    body[data-view="movement"] main > h1,
+    body[data-view="movement"] main > p,
+    body[data-view="movement"] main > nav,
+    body[data-view="movement"] main > output,
+    body[data-view="movement"] main > pre { display:none; }
+    body[data-view="movement"][data-result="fail"] main > pre {
+      display:block; position:fixed; z-index:10; left:12px; right:12px; bottom:12px;
+      max-height:50vh; overflow:auto; padding:12px; background:#fff4e0;
+      color:#682d22; border:2px solid #b34e3a; border-radius:8px;
+    }
+    body[data-view="movement"] .stage {
+      width:min(100vw,177.7778dvh); max-width:none;
+      border:0; border-radius:0; overflow:hidden; box-shadow:none;
+    }
+    body[data-view="movement"] canvas { border:0; width:100%; height:auto; display:block; }
+    body[data-view="movement"][data-aspect="portrait"] .stage {
+      width:min(100vw,56.25dvh); max-width:none;
+    }
     .movement-hud { pointer-events:none; position:absolute; inset:0; z-index:2;
       display:flex; flex-direction:column; justify-content:space-between;
       padding:clamp(10px,2.5vw,30px); color:#fff4dc; }
@@ -46,7 +61,17 @@
     .movement-hud .hud-bottom span { background:#20392bc9; border-radius:7px;
       padding:7px 10px; }
     .movement-hud .hud-bottom b { color:#f2d37d; font-variant-numeric:tabular-nums; }
-    body[data-view="movement"][data-aspect="portrait"] .hud-top { flex-direction:column; }
+    .movement-exit { pointer-events:auto; position:absolute; top:clamp(10px,2.5vw,30px);
+      right:clamp(10px,2.5vw,30px); z-index:3;
+      background:#1b3934e8; color:#ffe9b4; text-decoration:none;
+      border:1px solid #ffebb071; border-radius:7px; padding:7px 13px;
+      font:800 11px/1.5 system-ui; letter-spacing:0.09em; }
+    .movement-exit:hover, .movement-exit:focus-visible {
+      background:#2d6555; outline:2px solid #f1d886; outline-offset:2px;
+    }
+    body[data-view="movement"][data-aspect="portrait"] .hud-top {
+      flex-direction:column; padding-right:65px;
+    }
     body[data-view="movement"][data-aspect="portrait"] .hud-bottom { flex-direction:column; align-items:flex-start; }
     .scene-stamp { display:none; position:absolute; z-index:1; left:3%; top:3%;
       padding:10px 13px; border-radius:8px; color:#f3e8ce; background:#253b35d9;
@@ -87,8 +112,9 @@
     <div class="movement-hud" id="movement-hud" hidden aria-hidden="true">
       <div class="hud-top">
         <div class="hud-chip">BASTIONFALL <strong>/ FENWALL CROSSING</strong></div>
-        <div class="hud-chip">WARDEN <strong>100 HP</strong> · MOVEMENT STUDY</div>
+        <div class="hud-chip">WARDEN <strong>· MOVEMENT ONLY</strong></div>
       </div>
+      <a class="movement-exit" href="/" aria-label="Return to Bastionfall menu">MENU</a>
       <div class="hud-bottom"><span>WASD / ARROWS TO MOVE · ESC TO PAUSE</span>
         <span id="move-readout">READY · 0.0 m/s</span></div>
     </div></div>
@@ -127,6 +153,9 @@
         ? "WASD / arrow keys move the Warden. Esc pauses. No enemies attack or tower purchases yet."
         : "This is a composed visual scene, not an active wave or purchasable towers.";
       document.querySelector("#movement-hud").hidden = !movement;
+      if (movement) {
+        canvas.setAttribute("aria-label","Interactive Warden movement through the original 3D Fenwall Crossing scene");
+      }
     }
     const gl = canvas.getContext("webgl2", {
       alpha: false, antialias: true, preserveDrawingBuffer: true,
@@ -219,6 +248,7 @@
     const movingCamera = movement ? new OrthoCamera(canvas.width,canvas.height,[
       playerWorld.snapshot.x,0,playerWorld.snapshot.z,
     ]) : null;
+    if (movingCamera) movingCamera.setZoom(1.06);
     const camera = movingCamera ? movingCamera.matrices : {view, viewProjection:viewProjectionStatic};
     const viewProjection = camera.viewProjection;
     const stats = renderer.render(camera, instances);
@@ -357,9 +387,12 @@
         if (mapped.has(key)) { event.preventDefault(); pressed.add(key); }
         if (key==="escape" && gameLoop) {
           event.preventDefault();
+          if (event.repeat) return;
           gameLoop.setPaused(!gameLoop.isPaused);
           if (gameLoop.isPaused) pressed.clear();
           body.dataset.paused = gameLoop.isPaused ? "true" : "false";
+          document.querySelector("#move-readout").textContent=gameLoop.isPaused
+            ? "PAUSED · PRESS ESC TO RESUME" : "RESUMED";
         }
       };
       const onKeyUp = event => {
@@ -367,9 +400,17 @@
         if (mapped.has(key)) { event.preventDefault(); pressed.delete(key); }
       };
       const clearKeys = () => pressed.clear();
+      const onBlur = () => {
+        clearKeys();
+        if (gameLoop?.isRunning && !gameLoop.isPaused) {
+          gameLoop.pause();
+          body.dataset.paused="true";
+          document.querySelector("#move-readout").textContent="PAUSED · PRESS ESC TO RESUME";
+        }
+      };
       window.addEventListener("keydown",onKeyDown);
       window.addEventListener("keyup",onKeyUp);
-      window.addEventListener("blur",clearKeys);
+      window.addEventListener("blur",onBlur);
       document.addEventListener("visibilitychange",clearKeys);
       const movementInput = () => ({
         right:Number(pressed.has("d")||pressed.has("arrowright"))
@@ -420,19 +461,27 @@
       if (parameters.get("probeMovement")==="forward") {
         const before=playerWorld.snapshot;
         window.dispatchEvent(new KeyboardEvent("keydown",{key:"w",bubbles:true}));
-        for(let i=0;i<90;i++) playerWorld.step(movementInput(),FIXED_STEP_SECONDS);
+        for(let i=0;i<90;i++) {
+          const current=playerWorld.step(movementInput(),FIXED_STEP_SECONDS);
+          movingCamera.follow([current.x,0,current.z],FIXED_STEP_SECONDS,
+            [current.vx*0.17,current.vz*0.17]);
+        }
         window.dispatchEvent(new KeyboardEvent("keyup",{key:"w",bubbles:true}));
         const after=playerWorld.snapshot;
         const moved=Math.hypot(after.x-before.x,after.z-before.z);
+        const focus=movingCamera.focusWorld;
+        const followError=Math.hypot(focus[0]-after.x,focus[2]-after.z);
         if(moved<3.0 || moved>6.35 || after.tick!==90 ||
-          !playerWorld.canOccupy(after.x,after.z)) {
-          throw new Error("F3.01 keyboard/terrain collision probe: "+JSON.stringify({moved,after}));
+          followError>1.3 || !playerWorld.canOccupy(after.x,after.z)) {
+          throw new Error("F3.01 keyboard/camera/collision probe: "
+            +JSON.stringify({moved,followError,after}));
         }
         renderMovement(1);
         body.dataset.movementProbe="pass";
         document.querySelector("#trace").textContent=JSON.stringify({
           mode:"F3.01 VERIFIED KEYBOARD MOVEMENT",ticks:after.tick,
           displacementMeters:Number(moved.toFixed(3)),
+          cameraFollowErrorMeters:Number(followError.toFixed(3)),
           wardenX:Number(after.x.toFixed(3)),wardenZ:Number(after.z.toFixed(3)),
           movingWarden:1,draws:stats.drawCalls,
           note:"Browser DOM keyboard -> deterministic 60Hz simulation -> actual WebGL2 Warden and camera",
@@ -440,11 +489,12 @@
       }
       if (!stopped) {
         gameLoop.start();
+        body.dataset.paused="false";
         window.addEventListener("pagehide",()=>{
           stopped=true;gameLoop.stop();
           window.removeEventListener("keydown",onKeyDown);
           window.removeEventListener("keyup",onKeyUp);
-          window.removeEventListener("blur",clearKeys);
+          window.removeEventListener("blur",onBlur);
           document.removeEventListener("visibilitychange",clearKeys);
         },{once:true});
         canvas.addEventListener("webglcontextlost",event=>{
