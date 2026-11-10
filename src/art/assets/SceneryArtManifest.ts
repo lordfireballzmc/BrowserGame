@@ -26,7 +26,7 @@ export const SCENERY_ART_MODELS = [
   { id:"oak-wide",kind:"broadleaf",sourceNode:"Tree_3_A_Color1",targetHeight:4.40 },
   { id:"oak-branched",kind:"broadleaf",sourceNode:"Tree_3_C_Color1",targetHeight:4.55 },
   { id:"mossy-boulders",kind:"rock",sourceNode:"rocks-large",targetHeight:0.86 },
-  { id:"stacked-boulders",kind:"rock",sourceNode:"rocks-small",targetHeight:0.71 },
+  { id:"rounded-boulders",kind:"rock",sourceNode:"rocks-small",targetHeight:0.71 },
 ] as const;
 export type SceneryArtModel = (typeof SCENERY_ART_MODELS)[number];
 export type SceneryArtKind = SceneryArtModel["kind"];
@@ -44,7 +44,7 @@ export const SCENERY_ROCK_SOURCES = [
     sourcePath:"packs/castle-kit/rocks-large.glb",
   },
   {
-    id:"stacked-boulders",file:"kenney-organic-rocks-small.glb",bytes:22752,
+    id:"rounded-boulders",file:"kenney-organic-rocks-small.glb",bytes:22752,
     sourceNode:"rocks-small",sourceGitBlob:"ab1336c3801232dccfee6fab6059bae43cbe633b",
     sourcePath:"packs/castle-kit/rocks-small.glb",
   },
