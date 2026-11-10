@@ -286,10 +286,10 @@ jobs:
           # registration and the one shared Three/WebGL2 context are proven.
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
               dimensions='900,1200'
             else
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
               dimensions='1500,950'
             fi
             node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" \
@@ -311,10 +311,10 @@ jobs:
           done
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&aspect=portrait'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&aspect=portrait&probeCharacters=rigged'
               dimensions="900,1200"
             else
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&probeCharacters=rigged'
               dimensions="1500,950"
             fi
             node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" cinematic \
