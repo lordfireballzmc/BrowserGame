@@ -165,6 +165,26 @@
     body.dataset.coast = String(terrain.coastSegments);
     body.dataset.changed = String(changedSamples);
     document.querySelector("#trace").textContent = JSON.stringify(trace);
+    // Dev-only Chrome acceptance: dispatch an actual pixel-space canvas click
+    // through the registered pointer handler. Locked pads must not select.
+    const probeId = new URLSearchParams(location.search).get("probePadClick");
+    if (probeId) {
+      const target = PAD_SITES.find(site => site.id === probeId);
+      if (!target) throw new Error("Unknown pad interaction probe " + probeId);
+      const point = projector.project([target.x,0,target.z]);
+      const bounds = canvas.getBoundingClientRect();
+      canvas.dispatchEvent(new MouseEvent("click", {
+        bubbles:true,
+        clientX:bounds.left + point.x * bounds.width / canvas.width,
+        clientY:bounds.top + point.y * bounds.height / canvas.height,
+      }));
+      const expected = target.unlockWave === 1 ? target.id : "none";
+      if (body.dataset.selectedPad !== expected) {
+        throw new Error("Pad pointer interaction regression: expected " + expected +
+          ", found " + body.dataset.selectedPad);
+      }
+      body.dataset.padClickProbe = "pass";
+    }
   } catch (error) {
     body.dataset.result = "fail";
     document.querySelector("#trace").textContent =
