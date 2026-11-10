@@ -33,7 +33,11 @@
     body[data-view="movement"] main > nav,
     body[data-view="movement"] main > output,
     body[data-view="movement"] main > pre { display:none; }
-    body[data-view="movement"][data-result="fail"] main > pre {
+    /* The ID-based pad status rule below otherwise wins the CSS cascade and
+       shrinks the intended fullscreen flex viewport. Keep it map-only. */
+    body[data-view="movement"] #pad-selection,
+    body[data-view="movement"] #trace { display:none; }
+    body[data-view="movement"][data-result="fail"] #trace {
       display:block; position:fixed; z-index:10; left:12px; right:12px; bottom:12px;
       max-height:50vh; overflow:auto; padding:12px; background:#fff4e0;
       color:#682d22; border:2px solid #b34e3a; border-radius:8px;
@@ -51,7 +55,7 @@
       padding:clamp(10px,2.5vw,30px); color:#fff4dc; }
     .movement-hud[hidden] { display:none; }
     .movement-hud .hud-top { display:flex; justify-content:space-between;
-      align-items:flex-start; gap:10px; flex-wrap:wrap; }
+      align-items:flex-start; gap:10px; flex-wrap:wrap; padding-right:100px; }
     .movement-hud .hud-chip { border:1px solid #ecdeb44d; border-radius:8px;
       background:#1c3930da; padding:8px 12px; font-weight:800; font-size:12px;
       letter-spacing:0.09em; box-shadow:0 3px 10px #071e173b; }
