@@ -1,0 +1,39 @@
+name: Bootstrap and commit npm lockfile (one-time)
+on:
+  push:
+    branches: [bootstrap/f0-01-verified-lockfile]
+permissions:
+  contents: write
+jobs:
+  bootstrap:
+    if: github.repository == 'lordfireballzmc/BrowserGame'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve lockfile without running dependency scripts
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify reproducible dependency install
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Commit lockfile on this exact bootstrap branch
+        run: |
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile already committed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "build: pin verified npm dependency graph"
+          git push origin "HEAD:bootstrap/f0-01-verified-lockfile"
