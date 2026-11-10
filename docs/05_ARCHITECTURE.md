@@ -57,3 +57,22 @@ ADR-002: deterministic pure simulation with time-step separation.
 ADR-003: procedural **authored** geometric model library, no image generation.
 ADR-004: fixed-route wave maps first, A* only once roads branch.
 ADR-005: no backend for single-player MVP; save locally.
+
+## ADR-006: resolved build dependencies, provenance and attribution (2026-11-10)
+**Status:** accepted as the reproducible F0 baseline. This is an architecture-dependency record, not evidence of completed 3D rendering or third-party asset integration.
+
+The manifest's caret version ranges resolve through committed npm lockfile v3; production/developer installs should use `npm ci` with Node 22 (as in `.github/workflows/checks.yml`). At this checkpoint the exact locked direct versions and roles are:
+
+| Boundary | Locked library and version | License | Integration status |
+| --- | --- | --- | --- |
+| Linear algebra | gl-matrix **3.4.4** | MIT | Installed, **not yet imported**. Camera in F1.02 will adopt documented `mat4` / `vec3` interfaces after an integration test. |
+| WebGL helpers | twgl.js **7.0.0** | MIT | Installed, **not yet imported**. F1.01/F1.04 will use limited buffer/program helpers; the game still owns WebGL resources, lifecycle, and draw policy. |
+| Compiler | TypeScript **5.9.3** | Apache-2.0 | Used by strict `tsc --noEmit` scripts, verified on CI. |
+| Bundler | Vite **7.3.8** | MIT | Used to build the application and run the dev server, verified on CI. |
+| Tests | Vitest **3.2.7** | MIT | Used for deterministic simulation and startup tests, verified on CI. |
+
+**Architecture decisions carried forward:** retain a purpose-built WebGL2 renderer (ADR-001) and fixed-step headless simulation (ADR-002); no Three.js/large game engine. `src/platform/Startup.ts` owns WebGL2 capability/fatal handling; `src/engine/Loop.ts` owns fixed-step timing; `src/game/Random.ts` and `src/game/Balance.ts` own deterministic RNG and numeric rules. None of the F1 render/geometry imports are implemented yet.
+
+**Dependency change protocol:** check exact upstream version/tag and license, update manifest and lockfile together, `npm ci`/typecheck/test/build, re-check runtime imports and transitive licenses, update `THIRD_PARTY_NOTICES.md`, and record browser/test evidence separately. Do not infer library API usage, security audit, screenshots or deployed gameplay from package installation alone.
+
+**Attribution source:** [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) records the five direct locked packages, exact tagged license links, full notices for both currently declared runtime libraries, and the limits of transitive license metadata. A release-ready SBOM, full transitive verification and distribution notices remain explicitly assigned to F8.03.

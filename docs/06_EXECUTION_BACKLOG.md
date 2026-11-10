@@ -8,7 +8,7 @@ Every task includes ID, dependencies, deliverable, test gate, and asset/visual g
 - [x] **F0.03** deterministic PRNG + test vectors, balance data schema; gate same seed returns same numbers and no Math.random in state.
 - [x] **F0.04** fixed-step Loop with pause/visibility handling, test fake clock; gate exact number of steps, cap catch-up, no async reentrant loops.
 - [x] **F0.05** app state, splash, WebGL2 detector and fatal fallback; gate HTML loads; fails gracefully without context.
-- [ ] **F0.06** architecture ADR docs updated for actual pinned dependency versions, attribution.
+- [x] **F0.06** architecture ADR docs updated for actual pinned dependency versions, attribution.
 
 ## F1 — graphics engine
 - [ ] **F1.01** shader compile/error reporting, GPU resource manager, context loss, cleanup; gate no leaked buffers on reset.
