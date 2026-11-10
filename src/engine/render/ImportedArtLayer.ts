@@ -6,9 +6,9 @@
  * claim, nor a permanent two-renderer architecture.
  */
 import {
-  AmbientLight, Box3, Camera, DirectionalLight, Group, Matrix4,
+  AmbientLight, Box3, Camera, DirectionalLight, Group,
   NeutralToneMapping, PointLight, Scene, SRGBColorSpace, Vector3,
-  WebGLRenderer, type Object3D,
+  WebGLRenderer, type Mesh, type MeshStandardMaterial,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { mat4 } from "gl-matrix";
@@ -82,7 +82,7 @@ export class ImportedArtLayer {
     if (this.disposed) {
       gltf.scene.traverse(node => {
         if (node.type === "Mesh") {
-          const mesh = node as import("three").Mesh;
+          const mesh = node as Mesh;
           mesh.geometry?.dispose();
         }
       });
@@ -106,10 +106,10 @@ export class ImportedArtLayer {
     gltf.scene.traverse(node => {
       if (node.type !== "Mesh") return;
       meshCount++;
-      const mesh = node as import("three").Mesh;
+      const mesh = node as Mesh;
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const material of materials) {
-        if ("map" in material && material.map) texturedMaterials++;
+        if ((material as MeshStandardMaterial).map) texturedMaterials++;
       }
     });
     if (meshCount < 1 || texturedMaterials < 1) {
@@ -151,7 +151,8 @@ export class ImportedArtLayer {
       mesh.geometry?.dispose();
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const material of materials) {
-        if ("map" in material && material.map) material.map.dispose();
+        const texture = (material as MeshStandardMaterial).map;
+        if (texture) texture.dispose();
         material.dispose();
       }
     });
