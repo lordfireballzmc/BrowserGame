@@ -96,7 +96,7 @@ describe("F2.02 fixed 4.5m authored collision lane", () => {
     expect(left.distance).toBeGreaterThan(0);
   });
 
-  it("makes every lane path surface canonical y=0 and meshes road 0.04m above it", () => {
+  it("makes every lane path surface canonical y=0 and meshes road 0.02m above it", () => {
     const seed = "fenwall-crossing-v1";
     for (let i = 1; i < ROAD_SAMPLES.length - 1; i += 5) {
       const point = ROAD_SAMPLES[i]!;
@@ -107,9 +107,9 @@ describe("F2.02 fixed 4.5m authored collision lane", () => {
     }
     const road = createAuthoredRoad();
     for (const section of road.crossSections) {
-      expect(section.center[1]).toBeCloseTo(0.04, 9);
-      expect(section.left[1]).toBeCloseTo(0.04, 9);
-      expect(section.right[1]).toBeCloseTo(0.04, 9);
+      expect(section.center[1]).toBeCloseTo(0.02, 9);
+      expect(section.left[1]).toBeCloseTo(0.02, 9);
+      expect(section.right[1]).toBeCloseTo(0.02, 9);
     }
   });
 
@@ -131,8 +131,8 @@ describe("F2.02 fixed 4.5m authored collision lane", () => {
     const road = createAuthoredRoad();
     expect(() => validateGeometry(road.surface)).not.toThrow();
     expect(road.surface.indices.length / 3).toBeGreaterThan(ROAD_SAMPLES.length * 2);
-    expect(road.surface.bounds.min[1]).toBeCloseTo(0.04, 5);
-    expect(road.surface.bounds.max[1]).toBeCloseTo(0.052, 5);
+    expect(road.surface.bounds.min[1]).toBeCloseTo(0.02, 5);
+    expect(road.surface.bounds.max[1]).toBeCloseTo(0.032, 5);
     const primary = MATERIAL_TOKENS.indexOf("road.primary") + 1;
     const rut = MATERIAL_TOKENS.indexOf("road.rut") + 1;
     expect(new Set(road.surface.materialIds)).toEqual(new Set([primary, rut]));
