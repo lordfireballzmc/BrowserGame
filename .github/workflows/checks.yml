@@ -105,3 +105,17 @@ jobs:
             fi
             echo "PASS: $orientation responsive canvas and true instanced-renderer metrics"
           done
+          # Exercise actual diagnostic exception UI, not just shader startup.
+          "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+            --window-size=1200,720 --virtual-time-budget=4500 \
+            --dump-dom 'http://127.0.0.1:4173/?diagnostic=1&failRender=1' \
+            >/tmp/bastionfall-diagnostic-error.html 2>/tmp/bastionfall-diagnostic-error.log
+          if ! grep -q 'data-render-state="error"' /tmp/bastionfall-diagnostic-error.html \
+            || ! grep -q 'Simulated diagnostic render failure' /tmp/bastionfall-diagnostic-error.html \
+            || ! grep -q 'id="retry-renderer"' /tmp/bastionfall-diagnostic-error.html; then
+            echo "F1.05 explicit render error overlay failed"
+            tail -c 4500 /tmp/bastionfall-diagnostic-error.html
+            exit 1
+          fi
+          echo "PASS: renderer exception shows the retryable error overlay"
