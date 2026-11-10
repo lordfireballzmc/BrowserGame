@@ -25,7 +25,7 @@ Every task includes ID, dependencies, deliverable, test gate, and asset/visual g
 - [x] **F2.04** riverbank and cliff low-poly geometry, consistent palette, no water texture or visual fog.
 - [x] **F2.05** seed-based grass/tree/rock/flower distribution with no-build zones, Poisson strategy and caching.
 - [x] **F2.06** lighting/contact-shadow flat material treatment; screenshot composition 1080p and 9:16. CI 42778571669 (149 tests, typecheck, build, real WebGL2 16:9/9:16 frames) and actual screenshot inspection documented in docs/15_F2_06_LIGHTING_REVIEW.md. **Does not imply equivalence to Kingshot art or playable combat.**
-- [ ] **F2.07** render culling, static batching, geometry memory budget diagnostics; benchmark and log.
+- [x] **F2.07** render culling, static batching, geometry memory budget diagnostics; benchmark and log. CI 42781681067: 154 tests, typecheck/build, real Chrome/WebGL2 501st-object camera rejection, unchanged pad clicks, world and cinematic screenshots. World study: 2 static terrain meshes, 16 color draws + 16 sun-depth draws, ~5.87 MB estimated allocations. See docs/16_F2_07_RENDER_BUDGET_REVIEW.md. NOT an FPS, VRAM or art-parity claim.
 
 ## F3 — first fully playable 3-wave loop
 - [ ] **F3.01** keyboard movement/collision, state snapshot, camera follow; tests diagonal speed and pause.
