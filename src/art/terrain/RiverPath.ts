@@ -11,8 +11,8 @@ export const RIVER_SPEC = Object.freeze({
   bankFeatherMeters: 2.05,
   waterHalfWidthMeters: 1.5,
   carveMarginMeters: 0.15,
-  maximumCarveMeters: 0.72,
-  waterHeightMeters: -0.32,
+  maximumCarveMeters: 0.58,
+  waterHeightMeters: -0.20,
   sampleStepMeters: 1,
   bridgeXs: [-16, 16] as readonly number[],
 });
