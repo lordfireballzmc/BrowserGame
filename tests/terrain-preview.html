@@ -106,9 +106,10 @@
     <a href="/tests/terrain-preview.html">Full island / inspect pads</a>
     <a href="?view=cinematic">Cinematic · 1920 × 1080</a>
     <a href="?view=cinematic&amp;aspect=portrait">Cinematic · 1080 × 1920</a>
-    <a href="?view=movement">Move the Warden · keyboard</a>
+    <a href="?view=movement">Move the Warden · unified Three.js</a>
+    <a href="?view=movement&amp;renderer=legacy">Legacy renderer fallback</a>
     <a href="?view=movement&amp;aspect=portrait">Movement · portrait</a>
-    <a href="?view=movement&amp;renderer=three">Unified 3D world + textured GLB (single WebGL2 canvas)</a>
+    <a href="?view=cinematic&amp;renderer=three">Unified 3D cinematic study</a>
     <a href="?view=movement&amp;assetPilot=1">Textured GLB art-pipeline pilot</a>
   </nav>
   <div class="stage"><div class="scene-stamp">BASTIONFALL / FENWALL
@@ -151,7 +152,9 @@
   const cinematic = parameters.get("view") === "cinematic";
   const movement = parameters.get("view") === "movement";
   const portrait = (cinematic || movement) && parameters.get("aspect") === "portrait";
-  const unifiedThree = movement && parameters.get("renderer") === "three";
+  // Default interactive scene: one native Three/WebGL2 context. Legacy is an
+  // explicit regression fallback; map/cinematic still use the old renderer.
+  const unifiedThree = movement && parameters.get("renderer") !== "legacy";
   body.dataset.view = movement ? "movement" : cinematic ? "cinematic" : "map";
   body.dataset.aspect = portrait ? "portrait" : "landscape";
   let renderer;
@@ -359,26 +362,8 @@
       body.dataset.unifiedCanvases = String(document.querySelectorAll(".stage canvas").length);
     }
     const stats = renderer.render(camera, instances);
-    // Opt-in, bounded Three.js/GLB migration pilot within the SAME active
-    // movement world and exact camera. The original renderer remains the
-    // production fallback, never demolished to prove a texture demo.
-    let importedArt = null;
-    if (movement && !unifiedThree && parameters.get("assetPilot") === "1") {
-      const { ImportedArtLayer } = await import("/src/engine/render/ImportedArtLayer.ts");
-      importedArt = new ImportedArtLayer(document.querySelector(".stage"),
-        canvas.width,canvas.height);
-      const details = await importedArt.load();
-      importedArt.render(movingCamera.matrices);
-      if (details.meshCount<1 || details.texturedMaterials<1)
-        throw new Error("Imported PBR glTF contains no textured 3D geometry");
-      body.dataset.assetPilot = "pass";
-      body.dataset.assetSource = details.sourceId;
-      body.dataset.assetTextured = String(details.texturedMaterials);
-      body.dataset.assetMeshes = String(details.meshCount);
-      // No claim of integrated depth or one-renderer scene: separate contexts
-      // are a single temporary proof, not the target architecture.
-      document.querySelector("#raider-readout").textContent = "IMPORTED CC0 TEXTURED GLB · RENDERER PILOT";
-    }
+    // ART.01 dual-canvas overlay is retired; all imported art now shares
+    // one WebGL2 context and terrain depth in the actual playable preview.
     const labelLayer = document.querySelector("#pad-labels");
     const projector = {project: (world) => {
       const v = vec4.transformMat4(vec4.create(), [world[0],world[1],world[2],1], viewProjection);
@@ -594,7 +579,6 @@
           const enemyFrame=syncRaiderModels(alpha);
           syncCombatVisuals(alpha);
           renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
-          importedArt?.render(movingCamera.matrices);
           if (unifiedThree) body.dataset.unifiedFrame = String(playerWorld.snapshot.tick);
           const enemyText=document.querySelector("#raider-readout");
           enemyText.textContent="RED COLUMN · "+enemyFrame.spawned+" DEPLOYED · "
@@ -725,7 +709,6 @@
         body.dataset.paused="false";
         window.addEventListener("pagehide",()=>{
           stopped=true;gameLoop.stop();
-          importedArt?.dispose();
           window.removeEventListener("keydown",onKeyDown);
           window.removeEventListener("keyup",onKeyUp);
           window.removeEventListener("blur",onBlur);
