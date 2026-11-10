@@ -59,7 +59,10 @@ export function generateGroundcover(
   const grass=placements.filter(p=>p.kind==="grass");
   const flowers=placements.filter(p=>p.kind==="flower");
   const rocks=placements.filter(p=>p.kind==="rock");
-  if(grass.length!==GROUNDCOVER_BUDGET.canonicalGrassSites ||
+  if(placements.length!==258||
+     placements.filter(p=>p.kind==="pine").length!==24||
+     placements.filter(p=>p.kind==="broadleaf").length!==16||
+     grass.length!==GROUNDCOVER_BUDGET.canonicalGrassSites ||
      flowers.length!==GROUNDCOVER_BUDGET.canonicalFlowerSites ||
      rocks.length!==42)
     throw new RangeError("F2.05 seed source is not the canonical 258-place world");
