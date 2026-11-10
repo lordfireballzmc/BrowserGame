@@ -129,9 +129,14 @@ export class SceneryArtLayer {
       const models=SCENERY_ART_MODELS.map(spec=>{
         const imported=spec.kind==="rock" ? rockGroups.get(spec.id) : gltf.scene;
         if(!imported)throw new Error("Missing source-pinned rock scene "+spec.id);
-        const original=imported.getObjectByName(spec.sourceNode);
+        // glTFLoader sanitizes hyphenated Kenney node names. Each pinned
+        // rounded-stone GLB contains exactly ONE actual source mesh; identify
+        // it by type rather than comparing a post-import sanitized name.
+        const original=spec.kind==="rock"
+          ? imported.getObjectByProperty("type","Mesh")
+          : imported.getObjectByName(spec.sourceNode);
         if(!(original instanceof Mesh)) {
-          throw new Error("Missing exact authored KayKit forest node "+spec.sourceNode);
+          throw new Error("Missing actual authored 3D "+spec.kind+" mesh: "+spec.sourceNode);
         }
         const mats=Array.isArray(original.material)
           ? original.material:[original.material];
