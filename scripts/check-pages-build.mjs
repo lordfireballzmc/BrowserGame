@@ -48,6 +48,16 @@ for(const [file,minBytes] of [
 const nature=join(dist,"assets/scenery/kaykit-forest-cc0.glb");
 assert.ok(existsSync(nature)&&statSync(nature).size===396480,
   "Published game missing exact KayKit Forest Nature CC0 artist atlas");
+// VQ.02c — natural 3D rocks must ship with the production game and retain
+// exact binary identity/size. No remote CDN downloads at play time.
+for(const [file,size] of [
+  ["kenney-organic-rocks-large.glb",23764],
+  ["kenney-organic-rocks-small.glb",22752],
+]){
+  const full=join(dist,"assets/scenery",file);
+  assert.ok(existsSync(full)&&statSync(full).size===size,
+    "Missing bundled source-verified organic rock GLB "+file);
+}
 const bundles = readdirSync(join(dist,"assets")).filter(f=>f.endsWith(".js"));
 assert.ok(bundles.length>0, "Missing production JS bundles");
 const scripts = bundles.map(f=>readFileSync(join(dist,"assets",f),"utf8")).join("\n");
