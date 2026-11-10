@@ -39,6 +39,9 @@ root.innerHTML = `
         The engine foundations are being assembled. Gameplay is not available yet.
       </p>
       <div class="actions">
+        <a class="world-preview-link" href="/tests/terrain-preview.html?view=cinematic">
+          View the new 3D world study
+        </a>
         <button type="button" id="show-diagnostic" disabled>Inspect WebGL2 diagnostic</button>
         <button type="button" class="secondary" disabled aria-label="Play unavailable during engineering preview">
           Play unavailable
