@@ -7,8 +7,8 @@
  * This module never changes positions, HP, collision or projectile timing.
  */
 import {
-  AnimationAction, AnimationClip, AnimationMixer, Box3, Group,
-  LoopOnce, Matrix4, Mesh, Quaternion,
+  AnimationAction, AnimationClip, AnimationMixer, Box3, Color, Group,
+  LoopOnce, Matrix4, Mesh, MeshStandardMaterial, Quaternion,
   Scene, SkinnedMesh, Texture, Vector3,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -42,6 +42,20 @@ const OLD_MESH_TO_ROLE: Readonly<Record<string,Role>>={
   "route-runner":"runner",
 };
 const MOTIONS:readonly Motion[]=["Idle","Walk","Run","Attack","Death"];
+/** Persistent faction read at 30px on 9:16 gameplay; not HDR advertising chrome. */
+export const ACTOR_TINTS:Readonly<Record<Role,number>>={
+  warden:0x4b90de, scrapper:0xe54949, runner:0xd32d50,
+} as const;
+export function stylizeActorMaterial(material:MeshStandardMaterial, role:Role):MeshStandardMaterial {
+  // Clone once per SOURCE material so multiple SkinnedMesh clones share GPU
+  // material resources. Tint the existing KayKit atlas, never flatten UVs.
+  const styled=material.clone();
+  styled.color.lerp(new Color(ACTOR_TINTS[role]),0.65);
+  styled.roughness=0.89;
+  styled.metalness=Math.min(0.14,styled.metalness);
+  styled.needsUpdate=true;
+  return styled;
+}
 interface Source {
   readonly role: Role;
   readonly template: Group;
@@ -121,6 +135,26 @@ export class RiggedCharacterLayer {
           throw new Error(spec.role+" is missing authentic "+motion+" bone animation");
         clips.set(motion,found);
       }
+      // Original assets have attractive sculpted silhouettes but neutral /
+      // green faction colors. The original Bastionfall defense-vs-raider read
+      // requires blue Warden and unmistakably crimson hostile silhouettes.
+      // Clone source materials by reference before tinting; don't recolor the
+      // shared texture files or mutate animation/skeleton content.
+      const byMaterial=new Map<MeshStandardMaterial,MeshStandardMaterial>();
+      gltf.scene.traverse(node=>{
+        if(!(node instanceof Mesh))return;
+        const recolor=(m:import("three").Material)=>{
+          if(!(m instanceof MeshStandardMaterial))return m;
+          let adjusted=byMaterial.get(m);
+          if(!adjusted) {
+            adjusted=stylizeActorMaterial(m,spec.role);
+            byMaterial.set(m,adjusted);
+          }
+          return adjusted;
+        };
+        node.material=Array.isArray(node.material)
+          ?node.material.map(recolor):recolor(node.material);
+      });
       let skinned=0,bones=0,mapped=0;
       gltf.scene.traverse(node=>{
         if(node instanceof SkinnedMesh) {
