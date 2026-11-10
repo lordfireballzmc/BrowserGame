@@ -19,7 +19,7 @@ Deployment setup, restrictions, exact links and validation: [docs/31_PERMANENT_P
 
 ## Binding sharpness, fluidity and production-quality mandate (2026-11-10)
 
-**Read first:** [VQ directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) and [art north star](docs/20_VISUAL_NORTH_STAR.md). **VQ.01 high-DPI rendering is verified; VQ.02a visual environment slice is now merged:** [PR #31](https://github.com/lordfireballzmc/BrowserGame/pull/31) added six source-pinned Kenney CC0 textured GLB models forming an illustrated blue-roof keep with twin windowed turrets and ten gold/azure architectural tower pads in the **actual gameplay scene**. [CI #42898990215](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42898990215) passed 196 tests, Chrome real combat, and landscape/portrait before/after captures. [See actual screenshot comparison and critical review](docs/32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md). **NEXT VQ.02b** original higher-fidelity environmental/foliage/keep art and **F3.04** crown/gameplay; source assets remain non-exclusive, visual target not yet met.
+**Read first:** [VQ directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [visual north star](docs/20_VISUAL_NORTH_STAR.md), [VQ.02b actual Chrome screenshots and critique](docs/33_VQ02B_KAYKIT_FOREST_ART_REVIEW.md). **VQ.01 native DPI, VQ.02a castle/pad art and VQ.02b KayKit forest art are technically merged/verified**. VQ.02b replaces 40 trees and 42 rocks with seven GPU-instanced original artist-modeled KayKit CC0 forest silhouettes in one 396KB source-pinned atlas GLB while preserving all road/pad/gameplay. [Exact CI #42919159127](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42919159127) passed 199 tests and real two-orientation gameplay A/B; [production browser run #42919159021](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42919159021) passed. **NEXT: VQ.02c fix unnatural mechanical-looking rocks/flat grass and keep portrait framing, plus F3.04 real crown economy and tower purchases.** All imported CC0 art remains nonexclusive; premium commercial polish not yet achieved.
 
 ## Production mandate and asset-first pilot (2026-11-10)
 
@@ -51,6 +51,7 @@ Every new chat and visible task must read [the visual north star](docs/20_VISUAL
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Mandatory per-turn developer protocol |
 | [VQ visual-fidelity and fluidity directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) | Binding quality policy and remaining VQ.02b/VQ.03/VQ.04 priorities |
+| [VQ.02b verified forest/rock art review](docs/33_VQ02B_KAYKIT_FOREST_ART_REVIEW.md) | KayKit CC0 source SHA, instanced meshes, actual Chrome A/B screenshots, deficiencies and VQ.02c next |
 | [VQ.02a real castle/pad screenshot review](docs/32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md) | Source-pinned CC0 art integration, exact Chrome before/after frames, shortcomings and further work |
 | [docs/20_VISUAL_NORTH_STAR.md](docs/20_VISUAL_NORTH_STAR.md) | Latest authoritative visual taste decision: illustrated expressive 3D cartoon, not glossy strategy realism |
 | [docs/visual-references/README.md](docs/visual-references/README.md) | Version-controlled original visual composition and concept generation recipes |

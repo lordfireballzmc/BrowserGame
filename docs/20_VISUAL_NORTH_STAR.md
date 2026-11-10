@@ -3,7 +3,7 @@
 **Audience:** every new ChatGPT development session, artists, technical artists, UI and animation engineers.  
 **This document describes a TARGET, not the appearance of today's runtime.**
 
-**The old fixed-resolution movement buffer was fixed in VQ.01. VQ.02a now replaces the gray octagonal pad visuals with blue/gold layered Kenney CC0 textured models and improves the blue-roof keep with two authored turrets, verified in actual game screenshots** ([source-exact review](32_VQ02A_KENNEY_CASTLE_ART_REVIEW.md)). This is a meaningful intermediate asset import, NOT the finished sculptural **exclusive** Bastionfall visual identity. **VQ.02b next:** unique keep/foliage/ground/road edges, better composition; VQ.03/04 painterly light and truly fluid skeletal motion, and F3.04 playable currency.
+**The old fixed-resolution movement buffer is resolved (VQ.01). The ten gray pads and basic keep were upgraded with CC0 architecturally modeled Kenney pieces (VQ.02a). The old repetitive trees/rocks were upgraded to seven varied artist-authored KayKit Forest Nature source meshes from ONE painted atlas, GPU instanced at 82 original sites (VQ.02b), verified with [real game screenshots](33_VQ02B_KAYKIT_FOREST_ART_REVIEW.md).** The visual target is STILL NOT ACHIEVED: unnatural mechanical-looking rocks, flat grass field, lack of shrubs/road edges, cropped portrait keep, engineering UI and limited animation are unfinished. **VQ.02c next**, plus F3.04 economy, then VQ.03/04. No exclusive art nor user visual approval claimed.
 
 
 ## Executive art mandate
