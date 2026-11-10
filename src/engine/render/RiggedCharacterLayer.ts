@@ -7,9 +7,9 @@
  * This module never changes positions, HP, collision or projectile timing.
  */
 import {
-  AnimationAction, AnimationClip, AnimationMixer, Box3, Color, Group,
-  LoopOnce, Matrix4, Mesh, MeshBasicMaterial, Object3D, Quaternion,
-  Scene, SkinnedMesh, TorusGeometry, Vector3,
+  AnimationAction, AnimationClip, AnimationMixer, Box3, Group,
+  LoopOnce, Matrix4, Mesh, Quaternion,
+  Scene, SkinnedMesh, Vector3,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
