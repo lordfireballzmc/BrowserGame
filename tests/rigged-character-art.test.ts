@@ -71,10 +71,10 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
     const matrix=new Float32Array(16);
     expect(()=>rig.setTime(-1)).toThrow(RangeError);
     expect(()=>rig.setTime(NaN)).toThrow(RangeError);
-    expect(()=>rig.setActorMotion(matrix,"Run",Infinity)).toThrow(RangeError);
-    expect(()=>rig.setActorMotion(matrix,"Fly" as "Idle",0)).toThrow(RangeError);
+    expect(()=>rig.setMotion(matrix,"Run",Infinity)).toThrow(RangeError);
+    expect(()=>rig.setMotion(matrix,"Fly" as "Idle",0)).toThrow(RangeError);
     rig.setTime(45/60);
-    rig.setActorMotion(matrix,"Walk",3.2);
+    rig.setMotion(matrix,"Walk",3.2);
     expect(rig.ready).toBe(false); // never claim a source asset loaded based on manifest only
     expect(rig.sync([]).size).toBe(0);
     rig.dispose();
