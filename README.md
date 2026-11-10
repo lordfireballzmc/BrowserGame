@@ -1,7 +1,7 @@
 # Bastionfall — original browser tower-defense game
 
 **Private repository:** `lordfireballzmc/BrowserGame`  
-**Status:** F0.01–F0.05 implemented and CI-verified; F0.06 dependency documentation in progress. The browser shows a startup/graphics diagnostic, **not playable gameplay**. No public deployment or live game URL.  
+**Status:** F0.01–F0.06 implemented and CI-verified. All F0 foundational tasks are complete; F1 rendering work is next. The browser shows a startup/graphics diagnostic, **not playable gameplay**. No public deployment or live game URL.  
 **Goal:** an honest, satisfying playable interpretation of the *advertised* real-time defense/collect/build fantasy in Kingshot-style mobile promotions, built with original IP, procedural geometry and a custom WebGL2 engine.
 
 ## Where to start
