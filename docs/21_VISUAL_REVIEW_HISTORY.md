@@ -1,0 +1,43 @@
+# Bastionfall visual-review history — cross-chat art memory
+
+This document records the user's **actual taste judgments and acceptance criteria**. A new session must not infer quality merely from the latest code, a passing CI check, or a pleasing but misleading generated concept.
+
+## 2026-11-10 — original screenshot comparison: rejection of flatness
+**Input:** user compared the current F2.05 muted/flat seeded-island screenshot with a much richer promotional 3D tower-defense screenshot.  
+**Observation:** the repo scene was largely flat and schematic, with weak depth, featureless land, sparse scenery and no readable animated attack. Target reference had close framing, more sculpted buildings/towers, bold faction identities, layered vegetation, pronounced grounding, readable attacks and professional composition.
+**Decision then:** increase dimensionality, cast shadows, world/detail richness, visual hierarchy and in-game polish in every iteration. This was the *general visual-quality challenge*, not permission to use the source image/artwork in the game.
+
+## 2026-11-10 — first generated original mockup round: rejected as wrong genre taste
+**Input:** three original AI-generated Bastionfall landscape/portrait promo-style mockup experiments, with a large shiny blue-and-gold fortress and lavish polished mobile UI. These are concept experiments, not runtime outputs.
+**User correction (explicit and binding):**
+> “these graphics are siding too much on the direction of Rise of Kingdoms but i prefer inspiration from Kingdom Rush art style though 3D”
+
+**Why rejected:** despite greater surface detail, the visual impression tilted into realistic miniature-castle strategy advertising: tiny armies, grand scenic kingdom vista, glossy ornate crest/gold HUD and cinematic rather than playful/comic staging. More graphical complexity was **not the same as the right art style**.
+
+## 2026-11-10 — corrected north star: playful 3D illustrated tower defense
+**Decision:** preserve Bastionfall's own setting, factions, keep, original enemy types and game systems, but change **shape language, lighting, animation and UI** toward friendly expressive, punchy **illustrated cartoon-like 3D**. Use Kingdom Rush only as a shorthand for recognizable cartoon silhouettes, high-density legibility, readable tower combat, charming asymmetry and comic animation timing; never clone its art. Do not imitate Rise of Kingdoms' luxurious realistic strategy-ad look either.
+
+**Positive traits from original concept iteration:** exaggerated hoods and rounded helmets, compact sympathetic Warden, red raiders with visibly different speeds, rich stylized trees and carved keep, approachable clean cliff/water/bridge forms, visible copper arrows and impact stars, smaller parchment/stone/wood UI, warm playful saturated colors and clean outlines over genuine 3D volumes.
+
+**New persistent repository assets (awaiting explicit approval of this particular rendering):**
+- `docs/visual-references/target-illustrated-3d-composition.svg` — original version-controlled vector composition guide (art-direction document, **not** actual engine output)
+- `docs/20_VISUAL_NORTH_STAR.md` — binding positive and negative visual decisions and screenshot quality gates
+- `docs/visual-references/GENERATIVE_MOCKUP_PROMPTS.md` — reproducible recipes for original future AI visuals
+
+**Copyright/source caution:** third-party promo screenshot was discussed for analysis but deliberately not embedded here. The ChatGPT-generated PNG concept sheets from the discussion have not yet been checked in as binary assets; do not claim they are. The vector composition file and generation recipes **are** checked in.
+
+## 2026-11-10 — current engine reality (baseline)
+**Code:** as of F3.03 on main, live 3D WebGL2 island, bridge and road, real sun shadow map, two world/scenery batches, Warden keyboard movement, actual deterministic raiders and traveling copper Warden bolts with real hit/damage.
+**Evidence:** [GitHub Actions F3.03 run 42798030716](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42798030716): 176 tests, TS, build and real Chrome 16:9/9:16 movement+projectile screenshots. See `docs/19_F3_03_PROJECTILES_REVIEW.md`.
+**Still unacceptable visually:** architecture lacks playful sculptural richness, surfaces are too sparse, enemy/warden silhouettes feel simplistic, character movement is mostly whole-body transforms, projectiles are not clearly dramatic at normal gameplay scale, UI retains engineering-test qualities, and the framing needs better attention to approach/keep. This remains **far below** the new illustrated 3D reference, even though the code works.
+
+## Repeatable future review entries
+Append one entry per visually meaningful change:
+- **Milestone / commit / CI run and screenshot artifact:** exact links; flag unavailable material.
+- **View tested:** landscape and portrait size, approximate zoom, camera, actual gameplay state.
+- **Positive difference:** specifically what is better and visible in real output.
+- **Deficiencies:** at least one honest issue unless visual parity is truly justified.
+- **Next art fix:** one bounded actionable task, not a vague wish to “polish.”
+- **Approval:** user accepted, user rejected, or not yet reviewed. Do not infer approval from silence.
+
+Do not erase previous rejected visuals or users' negative guidance. This log is the cross-chat record of **what the user means by excellent graphics**.

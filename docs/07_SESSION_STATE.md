@@ -3,6 +3,13 @@ Date: 2026-11-10
 Project: Bastionfall
 Canonical repository: lordfireballzmc/BrowserGame
 
+
+## Binding new visual decision — 2026-11-10
+- The user corrected the previous AI promo/mockups as **too Rise-of-Kingdoms-like** and explicitly prefers **Kingdom Rush's playful, illustrated tower-defense visual readability, translated into original true 3D**. This supersedes older glossy, realistic kingdom-advertising visual assumptions.
+- The style must use *original Bastionfall IP*, not copied Kingdom Rush/Kingshot art, characters, icons, layouts or promotional stills. Target chunky expressive silhouettes, cartoon material ramps, colorful scene depth, tight action clarity and genuinely articulated animations. Do not confuse AI aspirational concepts with implemented graphics.
+- **MANDATORY visual entry points for every new chat:** `docs/20_VISUAL_NORTH_STAR.md`, `docs/visual-references/README.md`, `docs/visual-references/target-illustrated-3d-composition.svg`, `docs/21_VISUAL_REVIEW_HISTORY.md`; `AGENTS.md` read order updated accordingly and existing `docs/03_ART_AND_ANIMATION_BIBLE.md` updated to reflect the newer preference.
+- This is a docs/art reference handoff milestone; no in-engine material, mesh or shader was changed here. F3.03 remains the last verified gameplay milestone and F3.04 remains next.
+
 ## Current milestone
 - F0.01 — **COMPLETE**, with GitHub Actions evidence. Strict TS/Vite/WebGL2 diagnostic scaffold, `package-lock.json` version 3, Node 22 workflow, npm scripts, and test harness are present.
 - F0.02 — **COMPLETE**. Normal read-only cached npm CI passed on PR #1 at run 42738621062 (job 129573896738) and identical workflow content was merged into `main`; an independent post-merge push run was not retrieved.
@@ -46,6 +53,8 @@ Canonical repository: lordfireballzmc/BrowserGame
 - GitHub is long-term memory. Read `AGENTS.md` at each iteration.
 
 ## Journal
+
+- 2026-11-10: Visual-continuity correction after rejected glossy AI mockups. User explicitly wants cartoon-friendly `Kingdom Rush`-like **general expressive clarity** rendered as own 3D Bastionfall content, not `Rise of Kingdoms` realistic glossy strategy direction. Added binding `docs/20_VISUAL_NORTH_STAR.md`, original authored SVG art composition, original concept-regeneration prompts, repository art reference index and `docs/21_VISUAL_REVIEW_HISTORY.md`. Changed `AGENTS.md`, art bible and README to ensure all future chats inherit the taste decision. No runtime code changes or unsupported claim of art parity; F3.04 remains next.
 - 2026-11-10: F3.03 added actual 7m auto-target, 33-tick cooldown, 15m/s real arrow mesh and swept moving-target 3D hit detection; enemy HP persists, downed figures stop, no rewards yet. Unit test caught fire off-by-one and was corrected. CI 42797369454 passed 176 tests, typecheck, build, real Chrome landscape and portrait physical in-flight projectile and HP damage, while retaining prior pad and graphics checks. Reviewed screenshots artifact 13754247320 and reinforced bolt silhouette/HUD; still not equivalent to reference art and no articulated firing. Next F3.04 physical coins.
 - 2026-11-10: F3.02 deterministic early raiders: wave-1 ten Scrappers, wave-2 fourteen Scrappers and five new original scarfed 3D Runners, stable tick queue and immutable road-progress snapshots, interpolated yaw plus separate gate slots. Actual browser demo replaced twelve static figures with moving column; 30s time-skipped start for visible approach, **no actual attacks**. CI 42793655064 passed 168 tests, strict TS/build, both Chrome/SwiftShader movement scenes, all legacy art/pad tests. Downloaded screenshots and compared 16:9 / portrait: improved road-follower direction, still basic model richness, mesh gait and keep camera crop. Next F3.03 hero bolt combat.
 - 2026-11-10: F3.01 keyboard-controllable Warden built inside existing 3D Fenwall world; deterministic 60Hz movement, island/keep/river collision, immutable motion snapshot, camera follow, HUD/pause/16:9 and 9:16 frame. PR #19 CI 42790695145 passed 161 tests/TypeScript/build/Chrome; original screenshot review caught technical page chrome and unintended CSS flex shrink, both corrected with real screenshot review and viewport assertion. New AGENTS mandate requires professional art/animation review each visual iteration. Next F3.02; real articulated animation later F4.01.

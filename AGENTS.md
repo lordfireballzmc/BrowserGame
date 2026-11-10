@@ -3,11 +3,14 @@
 Read in this order at start of **every** conversation turn:
 1. `AGENTS.md`
 2. `docs/02_GAME_DESIGN_BIBLE.md`
-3. `docs/03_ART_AND_ANIMATION_BIBLE.md`
-4. `docs/05_ARCHITECTURE.md`
-5. `docs/06_EXECUTION_BACKLOG.md`
-6. `docs/04_OPEN_SOURCE_COMPONENTS.md` when adding dependencies
-7. `docs/07_SESSION_STATE.md`
+3. **`docs/20_VISUAL_NORTH_STAR.md` (most recent user-approved art direction)**
+4. `docs/visual-references/README.md` (original in-repo SVG and visual evidence)
+5. `docs/03_ART_AND_ANIMATION_BIBLE.md`
+6. `docs/05_ARCHITECTURE.md`
+7. `docs/06_EXECUTION_BACKLOG.md`
+8. `docs/04_OPEN_SOURCE_COMPONENTS.md` when adding dependencies
+9. `docs/21_VISUAL_REVIEW_HISTORY.md` for any visible task
+10. `docs/07_SESSION_STATE.md`
 
 ## Standing operating instruction
 You are implementing the original browser game **Bastionfall**, based on the *advertised defense fantasy*, not copying Kingshot. Game runs on a purpose-built 3D WebGL2 engine written in strict TypeScript; use small permissive upstream libraries at explicit interfaces, not a bundled full game engine.
@@ -40,11 +43,27 @@ entire rigid mesh for a completed articulated run/fire animation.
 Before marking a visible task complete, run real WebGL2 browser checks and inspect
 both landscape and portrait captures for camera framing, clipping, depth,
 unintended empty areas, legibility and focus. Record what still looks unfinished,
-including comparisons with the Kingshot-style reference's *qualities*, never
-copying its artwork. Test controls, pause, collision and performance honestly:
+using the **new user-selected illustrated, playful, chunky 3D cartoon** target
+in `docs/20_VISUAL_NORTH_STAR.md`, never reproducing third-party art. The user
+explicitly rejected a Rise-of-Kingdoms-like glossy realistic aesthetic and
+prefers the readable personality and movement energy generally associated with
+Kingdom Rush, translated into **original fully three-dimensional content**. Test controls, pause, collision and performance honestly:
 CPU-submit timing isn't GPU frame time; a Chrome software render is not mobile
 hardware testing. Never claim a studio-quality polish gate without evidence.
 Keep graphics and interaction regressions covered as gameplay systems expand.
+
+## Persistent art-direction decision (2026-11-10)
+**Non-negotiable:** our original game should look like a polished illustrated
+storybook tower-defense world **in 3D**: rounded/chunky readable architecture,
+expressive Warden/raider silhouettes, bold friendly color ramps and purpose-built
+animations. **NOT** photorealistic or ornate Rise-of-Kingdoms style, and
+**NOT** merely flat unshaded low-poly engineering graphics. Consult the
+version-controlled `docs/visual-references/target-illustrated-3d-composition.svg`
+and art direction README before any character, environment, shader, animation,
+UI or camera work. Do not mistake AI mockups/illustrations for implemented
+WebGL2 graphics; no direct copying of Kingdom Rush or Kingshot art/assets.
+When a requested development continuation would otherwise prioritize another
+implementation task, preserve this target as a binding quality gate.
 
 ## Stop conditions
 Stop and ask for user decision if:
