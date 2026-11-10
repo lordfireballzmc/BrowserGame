@@ -108,6 +108,7 @@
     <a href="?view=cinematic&amp;aspect=portrait">Cinematic · 1080 × 1920</a>
     <a href="?view=movement">Move the Warden · keyboard</a>
     <a href="?view=movement&amp;aspect=portrait">Movement · portrait</a>
+    <a href="?view=movement&amp;assetPilot=1">Textured GLB art-pipeline pilot</a>
   </nav>
   <div class="stage"><div class="scene-stamp">BASTIONFALL / FENWALL
       <small>3D SCENE STUDY · NOT LIVE GAMEPLAY</small></div>
@@ -339,6 +340,26 @@
     const camera = movingCamera ? movingCamera.matrices : {view, viewProjection:viewProjectionStatic};
     const viewProjection = camera.viewProjection;
     const stats = renderer.render(camera, instances);
+    // Opt-in, bounded Three.js/GLB migration pilot within the SAME active
+    // movement world and exact camera. The original renderer remains the
+    // production fallback, never demolished to prove a texture demo.
+    let importedArt = null;
+    if (movement && parameters.get("assetPilot") === "1") {
+      const { ImportedArtLayer } = await import("/src/engine/render/ImportedArtLayer.ts");
+      importedArt = new ImportedArtLayer(document.querySelector(".stage"),
+        canvas.width,canvas.height);
+      const details = await importedArt.load();
+      importedArt.render(movingCamera.matrices);
+      if (details.meshCount<1 || details.texturedMaterials<1)
+        throw new Error("Imported PBR glTF contains no textured 3D geometry");
+      body.dataset.assetPilot = "pass";
+      body.dataset.assetSource = details.sourceId;
+      body.dataset.assetTextured = String(details.texturedMaterials);
+      body.dataset.assetMeshes = String(details.meshCount);
+      // No claim of integrated depth or one-renderer scene: separate contexts
+      // are a single temporary proof, not the target architecture.
+      document.querySelector("#raider-readout").textContent = "IMPORTED CC0 TEXTURED GLB · RENDERER PILOT";
+    }
     const labelLayer = document.querySelector("#pad-labels");
     const projector = {project: (world) => {
       const v = vec4.transformMat4(vec4.create(), [world[0],world[1],world[2],1], viewProjection);
@@ -546,6 +567,7 @@
           const enemyFrame=syncRaiderModels(alpha);
           syncCombatVisuals(alpha);
           renderer.render(movingCamera.matrices,[...instances,...combatVisuals]);
+          importedArt?.render(movingCamera.matrices);
           const enemyText=document.querySelector("#raider-readout");
           enemyText.textContent="RED COLUMN · "+enemyFrame.spawned+" DEPLOYED · "
             +enemyFrame.arrived+" AT GATE · "+combatWorld.snapshot.hits+" BOLT HITS";
@@ -675,6 +697,7 @@
         body.dataset.paused="false";
         window.addEventListener("pagehide",()=>{
           stopped=true;gameLoop.stop();
+          importedArt?.dispose();
           window.removeEventListener("keydown",onKeyDown);
           window.removeEventListener("keyup",onKeyUp);
           window.removeEventListener("blur",onBlur);
