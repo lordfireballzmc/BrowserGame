@@ -65,4 +65,4 @@ assert.ok(scripts.includes(expectedBase+"assets/scenery/"),
 // so it does not appear in the static index.html entry itself.
 assert.ok(scripts.includes("tests/terrain-preview.html"),
   "The compiled landing page has lost its game launch route");
-console.log("PASS: deploy output serves the actual playable page, all 17 GLBs, built JS, correct "+expectedBase+" prefix");
+console.log("PASS: deploy output serves the actual playable page, all 11 GLBs (4 character/lantern + 6 castle + 1 KayKit forest atlas), built JS, correct "+expectedBase+" prefix");
