@@ -297,6 +297,24 @@ jobs:
             test -s "/tmp/bastionfall-unified-$orientation.png"
             test -s "/tmp/bastionfall-unified-$orientation.json"
           done
+          # VQ.02: compare the very same Warden/combat/camera world BEFORE
+          # (procedural fallback) vs AFTER (six source-pinned GLBs) in both
+          # landscape and portrait. This remains the SAME Three renderer.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&environment=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='900,1200'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&environment=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='1500,950'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-vq02-before-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-env-legacy.png"
+            grep -q '"environmentArt": "disabled"' "/tmp/bastionfall-unified-$orientation-env-legacy.json"
+            grep -q '"environmentArt": "pass"' "/tmp/bastionfall-unified-$orientation.json"
+            echo "PASS: VQ.02 $orientation real Three world original / authored castle comparison"
+          done
           # VQ.01: real DPR=2 Three gameplay (not just unit math). Run
           # economy/sharp selection, live CSS viewport resize + restore, and
           # verify the same Warden/19-raider/copper-bolt gameplay stays active.
@@ -413,5 +431,23 @@ jobs:
             /tmp/bastionfall-unified-portrait-dpr2.json
             /tmp/bastionfall-vq01-landscape.log
             /tmp/bastionfall-vq01-portrait.log
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Upload VQ.02 source-pinned castle art before-after game screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vq02-castle-pad-real-game-before-after
+          path: |
+            /tmp/bastionfall-unified-landscape.png
+            /tmp/bastionfall-unified-portrait.png
+            /tmp/bastionfall-unified-landscape.json
+            /tmp/bastionfall-unified-portrait.json
+            /tmp/bastionfall-unified-landscape-env-legacy.png
+            /tmp/bastionfall-unified-portrait-env-legacy.png
+            /tmp/bastionfall-unified-landscape-env-legacy.json
+            /tmp/bastionfall-unified-portrait-env-legacy.json
+            /tmp/bastionfall-vq02-before-landscape.log
+            /tmp/bastionfall-vq02-before-portrait.log
           if-no-files-found: warn
           retention-days: 21
