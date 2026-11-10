@@ -1,5 +1,22 @@
 # Third-party dependency provenance and notices
 
+## VQ.02 — locally bundled CC0 authored Fenwall castle family (2026-11-10)
+
+**Original artist:** [Kenney](https://kenney.nl/). **Original official packs and license evidence:** [Castle Kit](https://kenney.nl/assets/castle-kit), [Tower Defense Kit](https://kenney.nl/assets/tower-defense-kit), both **Creative Commons Zero (CC0 1.0)**. The matching glTF 2.0 textured/atlas GLBs were repackaged by the independent [Tiny Game Engine free-model library](https://github.com/Hidencod/tge-assets), whose README also describes these Kenney model reexports as CC0. The author allows personal/commercial use; credit is not required, but **Kenney receives voluntary credit**.
+
+**Exact Git source:** `Hidencod/tge-assets@3ddcc695adbba9fb918cf31b7c139b3f95b76910`. The Git object SHA-1 of **each bundled binary is identical to its pinned upstream source blob**; `tests/environment-art.test.ts` recomputes and checks that byte-for-byte identity and asserts real glTF 2.0 PBR base-color textures/embedded images.
+
+| Bundled path under `public/assets/environment/` | Exact upstream path | Git blob SHA-1 |
+| --- | --- | --- |
+| `kenney-keep-main.glb` | `packs/castle-kit/tower-slant-roof.glb` | `19a2cb914f1d202faf9880faf64b006287dbc4db` |
+| `kenney-turret-body.glb` | `packs/castle-kit/tower-square-mid-windows.glb` | `17bfeea94217ec38f6e7cc51908a7dc266acff4c` |
+| `kenney-turret-roof.glb` | `packs/castle-kit/tower-square-top-roof-high-windows.glb` | `55d7b589a02c40731aa25448250d2211a5e7757f` |
+| `kenney-pad-border.glb` | `packs/castle-kit/tower-square-base-border.glb` | `556f91c3a33588d8dd7a7a97179fa5b0f54f0b06` |
+| `kenney-pad-inlay.glb` | `packs/castle-kit/tower-square-base-color.glb` | `07d7e7aed0748f59fe55d18c15deb123b76c8163` |
+| `kenney-pad-glyph.glb` | `packs/tower-defense-kit/selection-a.glb` | `0a9983785b128e5182b8998bf4ea3b0a27f8420a` |
+
+The source-pinned shapes, materials and painted-color atlases are **artist-authored**, but they are **non-exclusive, redistributed Kenney art**, *not* original models sculpted by Bastionfall, Kingdom Rush artwork, or proof of a final game art pipeline. Bastionfall's composition (a central Fenwall blue-roofed hall with two multi-storey corner turrets, ten layered tower foundations and gold placement glyphs) and the gameplay-space placements are uniquely composed here. Independent identity/sculpting, scene coherence, richer surface treatment, native mobile visual proof and final legal inventory remain outstanding. No external network fetch occurs at runtime.
+
 ## ART.03a KayKit authored and animated characters (2026-11-10)
 
 **Artist and original author:** Kay Lousberg (KayKit). **Source repository:** [KayKit Character Pack Adventures 1.0](https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0). **Original free-tier license:** Creative Commons Zero (CC0 1.0 Universal), confirmed by the author's own `LICENSE.txt`, not inferred from a third-party catalog. This license permits commercial adaptation and no attribution is mandated; credit is voluntarily retained. We do not bundle paid EXTRA/SOURCE content.
