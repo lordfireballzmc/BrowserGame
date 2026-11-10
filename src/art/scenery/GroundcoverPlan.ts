@@ -49,7 +49,7 @@ function place(kind:GroundcoverKind,source:GroundcoverPlacement["source"],
 }
 function sourceFor(kind:GroundcoverKind,index:number):GroundcoverPlacement["source"] {
   return kind==="grass"?"grass":
-    kind==="shrub"?(index%3===0?"shrub-branch":"shrub-round"):
+    kind==="shrub"?(index%6===0?"shrub-round":"shrub-branch"):
     index%3===0?"flower-lilac":"flower-gold";
 }
 
