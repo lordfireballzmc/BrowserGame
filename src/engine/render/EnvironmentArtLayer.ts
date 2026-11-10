@@ -161,8 +161,11 @@ export class EnvironmentArtLayer {
         pad.position.set(site.x,site.y,site.z);
         const muted=site.unlockWave>1;
         put("pad-border",pad,0,-0.11,0,3.42,0.90,3.42,muted);
-        put("pad-inlay",pad,0,-0.08,0,3.10,0.36,3.10,muted);
-        put("pad-glyph",pad,0,0.31,0,3.65,1,3.65,muted);
+        // The artist-authored azure enamel is a raised inset, not a flat
+        // surface accidentally buried inside the tan stone border. Keep it
+        // within the 4×4 gameplay footprint and the gold corner brackets.
+        put("pad-inlay",pad,0,0.015,0,2.94,0.38,2.94,muted);
+        put("pad-glyph",pad,0,0.415,0,3.65,1,3.65,muted);
         padModules+=3;
         assembly.add(pad);
       }
