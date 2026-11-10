@@ -1,4 +1,5 @@
 import "./style.css";
+import { GpuResources, verifyRendererResources } from "./engine/render/GpuResources";
 import {
   INITIAL_STARTUP_STATE,
   paintGraphicsDiagnostic,
@@ -86,6 +87,15 @@ const canvas = requiredNode<HTMLCanvasElement>(root, "#game");
 
 let state: StartupState = INITIAL_STARTUP_STATE;
 let graphics: WebGL2RenderingContext | null = null;
+let gpu: GpuResources | null = null;
+
+function releaseGpu(contextLost = false): void {
+  const previous = gpu;
+  gpu = null;
+  if (!previous) return;
+  if (contextLost) previous.abandonOnContextLoss();
+  else previous.dispose();
+}
 
 function changeState(event: StartupEvent): void {
   state = transitionStartup(state, event);
@@ -102,6 +112,7 @@ function paintIfVisible(): void {
   try {
     paintGraphicsDiagnostic(canvas, graphics, window.devicePixelRatio);
   } catch {
+    releaseGpu();
     graphics = null;
     changeState({
       type: "PROBE_FAILED",
@@ -111,15 +122,30 @@ function paintIfVisible(): void {
 }
 
 function probeGraphics(): void {
+  releaseGpu();
+  graphics = null;
   changeState({ type: "PROBE_START" });
   const result = probeWebGL2(canvas);
   if (!result.ok) {
-    graphics = null;
     changeState({ type: "PROBE_FAILED", reason: result.reason });
     return;
   }
+
+  // Real shader compile/link, buffer upload and VAO smoke test on this context.
+  // It resets every temporary object; the owner remains for future renderer work.
+  const owner = new GpuResources(result.gl);
+  try {
+    verifyRendererResources(owner);
+  } catch (error) {
+    owner.dispose();
+    const detail = error instanceof Error ? error.message : "Unknown GPU initialization error";
+    changeState({ type: "PROBE_FAILED", reason: "Renderer initialization failed: " + detail });
+    return;
+  }
+
+  gpu = owner;
   graphics = result.gl;
-  changeState({ type: "PROBE_READY", version: result.version });
+  changeState({ type: "PROBE_READY", version: result.version + " · GPU resources checked" });
 }
 
 root.addEventListener("click", (event) => {
@@ -141,12 +167,18 @@ root.addEventListener("click", (event) => {
 
 canvas.addEventListener("webglcontextlost", (event) => {
   event.preventDefault(); // Required for a future webglcontextrestored event.
+  releaseGpu(true);
   graphics = null;
   changeState({ type: "CONTEXT_LOST" });
 });
-canvas.addEventListener("webglcontextrestored", () => {
-  probeGraphics();
-});
+canvas.addEventListener("webglcontextrestored", probeGraphics);
 
 window.addEventListener("resize", paintIfVisible);
+window.addEventListener("pagehide", () => {
+  releaseGpu();
+  graphics = null;
+});
+window.addEventListener("pageshow", () => {
+  if (!graphics) probeGraphics();
+});
 probeGraphics();
