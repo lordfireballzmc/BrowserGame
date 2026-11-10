@@ -4,6 +4,14 @@ Project: Bastionfall
 Canonical repository: lordfireballzmc/BrowserGame
 
 
+## SITE.01 — playable deployment infrastructure merged; Pages activation required (2026-11-10)
+- **Implementation shipped on main:** PR [#30](https://github.com/lordfireballzmc/BrowserGame/pull/30), commit `77f1ca51c9088dac7d4ce54ccc415754f8278e06`. Vite builds the actual playable Three Warden scene + site landing, bundles GLBs with correct hosted-base paths, and automatic Pages workflow packages the static site on each `main` update.
+- **Technical proof:** [production site workflow run #42894651796](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42894651796) **build and real browser play test SUCCESS** in landscape + portrait from compiled `/BrowserGame/` preview; all 4 bundled GLBs present, real 19 raiders and Warden bolts verified. The upload of the compiled Pages artifact also succeeded.
+- **LIVE URL IS NOT ACTIVE YET:** Final deploy job **FAILED** because `actions/configure-pages@v5` returned `Get Pages site failed: Not Found`. Pages has **not been enabled** for this private repository. The GitHub connection has no Pages-admin activation action, so developer cannot turn it on here. DO NOT tell user URL works yet.
+- **One-time owner action:** [GitHub Settings → Pages](https://github.com/lordfireballzmc/BrowserGame/settings/pages) → Source **GitHub Actions**. Private GitHub Pages requires eligible GitHub Pro/Team/Enterprise plan; website is publicly accessible even while source repo stays private. If owner is not eligible, do not publicly expose the source repository without explicit approval; request a supported private-repo static-host connection/alternative. After Pages activation, run [Publish Playable Bastionfall](https://github.com/lordfireballzmc/BrowserGame/actions/workflows/publish-playable.yml) again or push main, then CHECK actual deploy and HTTP before advertising `https://lordfireballzmc.github.io/BrowserGame/`.
+- **Production code quality:** Hosting changes did not alter F3.04 gameplay completeness, nor make the existing rendered art professionally final. VQ.02 environment art and F3.04 economy continue after public preview activation.
+
+
 ## Verified VQ.01 handoff — 2026-11-10 (supersedes older pending notes)
 - **Merged:** PR #29, squash `8c72c55bcde9780388403a3184d700d043a88c22`: responsive physical CSS/DPR × economy/balanced/sharp buffers in live Three movement/combat; GPU-safe WebGLRenderer resize, camera update, graphics settings and rolling frame/CPU telemetry.
 - **Exact-head CI passed:** [Actions #42888985727](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727): 193 unit tests / 23 files, TS/build, real Chrome DPR2 landscape 2400×1350 for CSS 960×540 and portrait 1350×2400 for CSS 540×960, graphics quality switch and viewport resize/restore, 19 raiders/20 skinned actors/physical hits; map pad/cinematic regressions.

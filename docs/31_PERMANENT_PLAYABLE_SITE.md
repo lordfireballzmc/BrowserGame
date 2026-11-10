@@ -17,6 +17,11 @@ These addresses are **standard GitHub Pages project URLs**, not custom DNS the r
 - `.github/workflows/publish-playable.yml` runs on pushes to `main`, and also validates PR builds without deploying. Only the compiled `dist/` (not private source, git data or internal docs) is uploaded as the public Pages artifact. An HTTPS site and public client-side JavaScript assets are inherently accessible to visitors.
 - The separate repository Build and Test workflow remains authoritative for full unit and browser suite; published-site verification is an additional production smoke gate.
 
+## First actual deployment result — BLOCKED, exact evidence
+- [Workflow #42894651796](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42894651796), triggered on merged commit `77f1ca51c9088dac7d4ce54ccc415754f8278e06`: **production build, GLB artifact check, Chrome landscape/portrait play tests and Pages artifact upload all SUCCEEDED**.
+- The deployment job failed in **`actions/configure-pages@v5`** with **`Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions … Error: Not Found`**. The Pages deploy action was skipped. The website is **not** published or verified at the intended URL.
+- **Only one setup action should be needed on eligible GitHub plans:** owner selects **Settings → Pages → Build and deployment Source → GitHub Actions**, then manually reruns the workflow or makes a push to `main`. No source visibility changes, new hosting credentials or separate payments should be made without explicit authorization. If Pages cannot be enabled for a private source repo under this account's plan, choose a private-repo-compatible static hosting alternative.
+
 ## GitHub Pages one-time eligibility and enablement
 1. Open [Settings → Pages](https://github.com/lordfireballzmc/BrowserGame/settings/pages).
 2. Under **Build and deployment**, select **GitHub Actions** as Source.

@@ -6,6 +6,9 @@
 
 ## Play the latest build online — deployment setup
 
+**CURRENT STATUS: compiled site, bundled GLBs, and real production Chrome gameplay tests PASS; public deployment BLOCKED until GitHub Pages is enabled.** [First publishing run](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42894651796) uploaded the artifact but its `configure-pages` step returned `Get Pages site failed: Not Found`. Go to [Settings → Pages](https://github.com/lordfireballzmc/BrowserGame/settings/pages), select **GitHub Actions** as Source (private Pages requires GitHub Pro/Team/Enterprise), then rerun the publishing workflow. The intended URL is **not yet verified live**.
+
+
 **Intended stable project URL:** `https://lordfireballzmc.github.io/BrowserGame/` — **do not describe as live until Pages deployment succeeds and HTTP/browser checks confirm it**.
 
 **Playable test scene:** `https://lordfireballzmc.github.io/BrowserGame/tests/terrain-preview.html?view=movement&quality=sharp` (Warden movement + raiders + bolts, **not** finished tower defense). The website gets rebuilt on every push to `main` through `.github/workflows/publish-playable.yml`, with a production-build browser smoke gate before publishing. PRs validate the production bundle but do not deploy.
