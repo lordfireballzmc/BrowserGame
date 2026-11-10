@@ -9,7 +9,7 @@
 import {
   AnimationAction, AnimationClip, AnimationMixer, Box3, Group,
   LoopOnce, Matrix4, Mesh, Quaternion,
-  Scene, SkinnedMesh, Vector3,
+  Scene, SkinnedMesh, Texture, Vector3,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
@@ -275,7 +275,7 @@ export class RiggedCharacterLayer {
     }
     for(const g of geometries)g.dispose();
     for(const m of materials) {
-      if("map" in m && m.map)m.map.dispose();
+      if("map" in m && m.map instanceof Texture)m.map.dispose();
       m.dispose();
     }
     this.sources.clear();
