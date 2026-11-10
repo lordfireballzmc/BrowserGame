@@ -10,7 +10,7 @@
  * remain the existing cheap double-sided source and are not disguised as art.
  */
 import {
-  Box3, Group, InstancedMesh, Material, Matrix4, Mesh,
+  Box3, Color, Group, InstancedMesh, Material, Matrix4, Mesh,
   MeshStandardMaterial, Quaternion, Scene, Vector3,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -50,7 +50,7 @@ export function sceneryArtScale(
       Number.isFinite(v)&&v>0))throw new RangeError("Invalid scenery bounds");
   const [width,height,depth]=sourceBounds;
   const byHeight=targetHeight/height;
-  const byFootprint=(2*radius*1.10)/Math.max(width,depth);
+  const byFootprint=(2*radius*1.28)/Math.max(width,depth);
   return Math.min(byHeight,byFootprint)*relativeScale;
 }
 
@@ -149,8 +149,12 @@ export class SceneryArtLayer {
           const toned=original.map(m=>{
             const variant=m.clone();
             if(variant instanceof MeshStandardMaterial) {
-              // Keep the artist's original painted texture and faction-friendly
-              // leaf/trunk color groups, without a cyan-to-green fake tint.
+              // The source atlas is deliberately vibrant but too lime-neon
+              // for a meadow at real game zoom. A single stable PBR pigment
+              // multiplier keeps the artist's texture value/UV detail and
+              // warms foliage without adding a second full-screen pass.
+              variant.color.multiply(new Color(model.spec.kind==="rock"
+                ? "#c3c0b7" : "#88a98d"));
               variant.roughness=0.92;
               variant.metalness=0;
             }
@@ -165,12 +169,20 @@ export class SceneryArtLayer {
           mesh.frustumCulled=false; // source bounds do not contain all instances
           for(let i=0;i<selected.length;i++){
             const p=selected[i]!;
-            const k=sceneryArtScale([dims.x,dims.y,dims.z],p.radius,p.scale,
-              model.spec.targetHeight);
+            const treeScale=sceneryArtScale(
+              [dims.x,dims.y,dims.z],p.radius,p.scale,model.spec.targetHeight);
+            // Sculpted stone clusters are naturally broad and low. A uniform
+            // height-driven scale turned them into hard-to-see tiny pebbles;
+            // explicitly ground the source 3D volume as a wide low boulder.
+            const xz=model.spec.kind==="rock"
+              ? Math.min(1.98,2*p.radius*1.10)/Math.max(dims.x,dims.z)*p.scale
+              : treeScale;
+            const sy=model.spec.kind==="rock"
+              ? model.spec.targetHeight/dims.y*p.scale : treeScale;
             const placement=new Matrix4().compose(
-              new Vector3(p.x,p.y-model.bounds.min.y*k,p.z),
+              new Vector3(p.x,p.y-model.bounds.min.y*sy,p.z),
               new Quaternion().setFromAxisAngle(up,p.rotation),
-              new Vector3(k,k,k),
+              new Vector3(xz,sy,xz),
             );
             // The source GLB may contain a small -0.05m authored root offset.
             // Include that local node transform; do not float trees above land.
