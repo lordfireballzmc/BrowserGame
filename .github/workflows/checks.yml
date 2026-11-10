@@ -156,7 +156,7 @@ jobs:
           "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
             --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
             --window-size=1280,960 --virtual-time-budget=6500 \
-            --dump-dom 'http://127.0.0.1:4173/tests/terrain-preview.html' \
+            --dump-dom 'http://127.0.0.1:4173/tests/terrain-preview.html?renderer=legacy' \
             >/tmp/bastionfall-island.html 2>/tmp/bastionfall-island.log
           if ! grep -q 'data-result="pass"' /tmp/bastionfall-island.html \
             || ! grep -q 'data-tiles="54"' /tmp/bastionfall-island.html \
@@ -183,7 +183,7 @@ jobs:
             --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
             --window-size=1280,960 --virtual-time-budget=6500 \
             --screenshot=/tmp/bastionfall-terrain-preview.png \
-            'http://127.0.0.1:4173/tests/terrain-preview.html' \
+            'http://127.0.0.1:4173/tests/terrain-preview.html?renderer=legacy' \
             >/tmp/bastionfall-terrain-capture.log 2>&1
           test -s /tmp/bastionfall-terrain-preview.png
           echo "PASS: F2.05 258 seeded scenery instances, only five mesh draws, existing river/road/pads in WebGL2"
@@ -193,7 +193,7 @@ jobs:
             "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
               --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
               --window-size=1280,960 --virtual-time-budget=6500 \
-              --dump-dom "http://127.0.0.1:4173/tests/terrain-preview.html?probePadClick=$probe" \
+              --dump-dom "http://127.0.0.1:4173/tests/terrain-preview.html?renderer=legacy&probePadClick=$probe" \
               >"/tmp/bastionfall-pad-click-$probe.html" 2>"/tmp/bastionfall-pad-click-$probe.log"
             if ! grep -q 'data-result="pass"' "/tmp/bastionfall-pad-click-$probe.html" \
               || ! grep -q 'data-pad-click-probe="pass"' "/tmp/bastionfall-pad-click-$probe.html"; then
@@ -208,11 +208,11 @@ jobs:
           # from code alone. Two real WebGL2 compositions use identical scene data.
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&aspect=portrait'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&aspect=portrait&renderer=legacy'
               dimensions="900,1200"
               composition='9:16'
             else
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&renderer=legacy'
               dimensions="1500,950"
               composition='16:9'
             fi
@@ -297,6 +297,31 @@ jobs:
             test -s "/tmp/bastionfall-unified-$orientation.png"
             test -s "/tmp/bastionfall-unified-$orientation.json"
           done
+          # ART.02b: SAME single-Three scene must now display full island,
+          # preserve real P01 selection / locked P09, and both cinematic
+          # compositions with a source-verified textured GLB. CDP waits for
+          # actual async GLB decode, not an arbitrary virtual-time budget.
+          for pad in P01 P09; do
+            node scripts/probe_unified_chrome.mjs "$browser" \
+              "http://127.0.0.1:4173/tests/terrain-preview.html?probePadClick=$pad" \
+              "1280,960" landscape map \
+              2>&1 | tee "/tmp/bastionfall-unified-map-$pad.log"
+            test -s "/tmp/bastionfall-unified-map-$pad.png"
+            test -s "/tmp/bastionfall-unified-map-$pad.json"
+          done
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic&aspect=portrait'
+              dimensions="900,1200"
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=cinematic'
+              dimensions="1500,950"
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" cinematic \
+              2>&1 | tee "/tmp/bastionfall-unified-cinematic-$orientation.log"
+            test -s "/tmp/bastionfall-unified-cinematic-$orientation.png"
+            test -s "/tmp/bastionfall-unified-cinematic-$orientation.json"
+          done
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
         uses: actions/upload-artifact@v4
@@ -347,5 +372,13 @@ jobs:
             /tmp/bastionfall-unified-portrait.png
             /tmp/bastionfall-unified-landscape.json
             /tmp/bastionfall-unified-portrait.json
+            /tmp/bastionfall-unified-map-P01.png
+            /tmp/bastionfall-unified-map-P09.png
+            /tmp/bastionfall-unified-map-P01.json
+            /tmp/bastionfall-unified-map-P09.json
+            /tmp/bastionfall-unified-cinematic-landscape.png
+            /tmp/bastionfall-unified-cinematic-portrait.png
+            /tmp/bastionfall-unified-cinematic-landscape.json
+            /tmp/bastionfall-unified-cinematic-portrait.json
           if-no-files-found: warn
           retention-days: 21
