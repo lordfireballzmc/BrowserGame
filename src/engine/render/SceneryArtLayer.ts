@@ -67,12 +67,13 @@ export class SceneryArtLayer {
   private readonly root=new Group();
   private readonly resources:Group[]=[];
   private readonly extraMaterials:Material[]=[];
-  private readonly groundcover=new GroundcoverArtLayer(this.scene);
+  private readonly groundcover:GroundcoverArtLayer;
   private loaded:SceneryArtStats|null=null;
   private loading=false;
   private destroyed=false;
 
   constructor(private readonly scene:Scene) {
+    this.groundcover=new GroundcoverArtLayer(scene);
     this.root.name="Fenwall-instanced-CC0-scenery";
     scene.add(this.root);
   }
