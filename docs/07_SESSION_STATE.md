@@ -31,3 +31,5 @@ Need from user: local installation of existing chat extension not required for c
 
 ## Next session instruction
 Fetch latest AGENTS.md + docs and current main SHA; verify repository state; inspect CI; focus on F0.01 until build is genuinely green. Stop on access/limit/error, do not loop without progress.
+
+- 2026-11-10 (continuation): F0.01 investigation found missing package-lock.json and setup-node npm cache depending on an absent lockfile. Local Node 22.16/npm 10.9 present but registry request failed EAI_AGAIN; no local build tests verified. Created branch `bootstrap/f0-01-verified-lockfile`, changed Actions workflow to generate a reproducible package-lock.json on GitHub runner, install with npm ci, run typecheck/test/build and upload lockfile artifact. This is an **unverified CI bootstrap fix**, not F0.01 completion. Next: inspect PR CI job, obtain/commit lockfile to main, restore npm cache, verify fresh npm ci and build before marking F0.01/F0.02 done.
