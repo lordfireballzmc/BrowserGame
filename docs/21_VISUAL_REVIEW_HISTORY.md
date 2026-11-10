@@ -39,6 +39,14 @@ This document records the user's **actual taste judgments and acceptance criteri
 
 **Mandatory next art work:** coherent authored stylized hero/enemy/keep GLBs, real 3D skeletal animations, broader painted material variation and close-up frame review. Continue ART.02b map/cinematic parity before deleting the fallback renderer.
 
+## 2026-11-10 — ART.02b unified map and 16:9/9:16 cinematic screenshots
+
+**Source:** real Chrome/SwiftShader CI [#42832578697](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42832578697), screenshot artifact **13772835552**, downloaded and visually reviewed. The full-island map, P01 unlocked and P09 locked pads, posed hero/raiders/bolt spires, and the 702KB CC0 lantern all use a single Three.js color/depth/shadow scene. The lighting has visible directional depth and warm road contrast, and the two compositions retain the main action area.
+
+**Art critique:** still visibly inferior to the mandated storybook 3D fantasy north star: large areas of flat green with repetitive scatter, grey empty octagonal tower pads, stiff red toy-soldier raiders, small unexpressive Warden, basic blue-roof keep and thin environmental decoration. Landscape and portrait cinematic frames display an engineering-page shell above the canvas and can vertically scroll; they are diagnostic screenshots, not polished mobile UI. **No new modeled/rigged character assets or animations were introduced**. 
+
+**Next design priority:** ART.03a coherent original high-quality sculpted 3D silhouettes, textured keep/foliage/tower components and skeletal animation. Do not substitute glossy Rise-of-Kingdoms realism or promotional reference screenshots for actual game art. Full acceptance detail: `docs/26_ART02B_MAP_CINEMATIC_REVIEW.md`.
+
 ## Repeatable future review entries
 Append one entry per visually meaningful change:
 - **Milestone / commit / CI run and screenshot artifact:** exact links; flag unavailable material.
