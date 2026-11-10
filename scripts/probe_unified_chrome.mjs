@@ -144,6 +144,14 @@ try {
         selectedPad:d.selectedPad, padCount:d.padCount,
         sceneryCount:d.sceneryCount, composition:d.composition,
         shadows:d.shadows,
+        environmentArt:d.environmentArt,
+        environmentSources:d.environmentSources,
+        environmentTextured:d.environmentTextured,
+        environmentKeepModules:d.environmentKeepModules,
+        environmentPadModules:d.environmentPadModules,
+        environmentInstances:d.environmentInstances,
+        environmentVisuals:d.environmentVisuals,
+        environmentError:d.environmentError,
         graphicsTier:d.graphicsTier,graphicsDpr:d.graphicsDpr,
         graphicsBuffer:d.graphicsBuffer,graphicsCss:d.graphicsCss,
         graphicsLimited:d.graphicsLimited,graphicsPixels:d.graphicsPixels,
@@ -155,7 +163,8 @@ try {
         trace:document.querySelector("#trace")?.textContent?.slice(0,2500)
       };
     })()`);
-    if(lastState.result==="fail" || lastState.assetPilot==="error") {
+    if(lastState.result==="fail" || lastState.assetPilot==="error" ||
+       lastState.environmentArt==="error") {
       throw new Error("Game reported an actual failure: "+JSON.stringify(lastState));
     }
     const common = lastState.result==="pass" &&
@@ -166,7 +175,16 @@ try {
       lastState.sharedDepth==="true" &&
       lastState.unifiedCanvases==="1" &&
       lastState.shadows==="on" &&
-      Number(lastState.padCount)===10;
+      Number(lastState.padCount)===10 &&
+      (scene.searchParams.get("environment")==="legacy"
+        ? lastState.environmentArt==="disabled"
+        : lastState.environmentArt==="pass" &&
+          lastState.environmentVisuals==="kenney-castle-kit-vq02" &&
+          Number(lastState.environmentSources)===6 &&
+          Number(lastState.environmentTextured)===6 &&
+          Number(lastState.environmentKeepModules)===9 &&
+          Number(lastState.environmentPadModules)===30 &&
+          Number(lastState.environmentInstances)===39);
     const trace = (()=>{ try {return JSON.parse(lastState.trace??"{}");} catch {return {};} })();
     if (mode==="movement") {
       ready=common &&
@@ -300,9 +318,11 @@ try {
     format:"png",captureBeyondViewport:false,fromSurface:true,
   },30000);
   if(!image.data || image.data.length<10000)throw new Error("Missing real Chrome screenshot");
-  const suffix=mode==="movement" ? orientation+(requestedDpr===null?"":"-dpr"+requestedDpr)
+  const suffixBase=mode==="movement" ? orientation+(requestedDpr===null?"":"-dpr"+requestedDpr)
     : mode==="map" ? "map-"+(scene.searchParams.get("probePadClick")??"unknown")
     : "cinematic-"+orientation;
+  const suffix=suffixBase+(scene.searchParams.get("environment")==="legacy"
+    ? "-env-legacy" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
