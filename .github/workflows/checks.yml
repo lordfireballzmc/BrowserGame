@@ -1,20 +1,39 @@
 name: Build and Test
+
 on:
   push:
     branches: [main]
   pull_request:
+
 permissions:
   contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js 22 without cache until lockfile is committed
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm install --no-audit --no-fund
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      - name: Resolve lockfile for bootstrap
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Install from resolved lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Export resolved lockfile for committing
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap-package-lock
+          path: package-lock.json
+          if-no-files-found: warn
+          retention-days: 7
