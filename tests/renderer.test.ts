@@ -140,6 +140,33 @@ describe("F1.04 real draw batching contract (mock WebGL)", () => {
     renderer.dispose();
   });
 
+  it("opt-in frustum culls an offscreen instance without changing the one-draw batching rule", () => {
+    const { context, gl } = fixture();
+    const renderer = new InstancedRenderer(context);
+    renderer.uploadMesh("box", bevelBox(1, 1, 1, 0.10));
+    const objects = [
+      { meshId:"box", material:"stone.base", model:translate(0) },
+      { meshId:"box", material:"stone.base", model:translate(-3) },
+      { meshId:"box", material:"stone.base", model:translate(-1.2) },
+    ] as const;
+    const before = renderer.render(camera,objects);
+    expect(before.instances).toBe(3);
+    expect(before.culled).toBe(0);
+    renderer.enableFrustumCulling();
+    const after = renderer.render(camera,objects);
+    expect(after.submitted).toBe(3);
+    expect(after.instances).toBe(2); // z=-1.2 touches the near clip boundary
+    expect(after.culled).toBe(1);
+    expect(after.drawCalls).toBe(1);
+    expect(after.shadowDrawCalls).toBe(0);
+    expect(after.estimatedGpuBytes).toBeGreaterThan(0);
+    expect(gl.drawElementsInstanced).toHaveBeenLastCalledWith(
+      gl.TRIANGLES,expect.any(Number),gl.UNSIGNED_SHORT,0,2,
+    );
+    renderer.dispose();
+    expect(renderer.meshCount).toBe(0);
+  });
+
   it("rejects unknown meshes, duplicate uploads and malformed matrix inputs", () => {
     const { context } = fixture();
     const renderer = new InstancedRenderer(context);
