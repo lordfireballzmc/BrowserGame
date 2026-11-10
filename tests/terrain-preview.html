@@ -631,13 +631,13 @@
           mat4.scale(wardenModel,wardenModel,
             [1-0.012*gait*intensity,1+0.018*gait*intensity,1-0.012*gait*intensity]);
           if(unifiedThree&&renderer.riggedCharactersReady){
-            const recentBolt=combatWorld.snapshot.bolts.some(b=>
-              combatWorld.snapshot.tick-b.bornTick<9);
+            const latestBirth=Math.max(-Infinity,
+              ...combatWorld.snapshot.bolts.map(b=>b.bornTick));
+            const recentBolt=combatWorld.snapshot.tick-latestBirth<9;
             renderer.setRiggedAnimationTime((hero.tick+alpha)/60);
             renderer.setActorMotion(wardenModel,
               recentBolt?"Attack":hero.speedMetersPerSecond>0.15?"Run":"Idle",
-              recentBolt?(combatWorld.snapshot.tick-
-                Math.min(...combatWorld.snapshot.bolts.map(b=>b.bornTick)))/60:
+              recentBolt?(combatWorld.snapshot.tick-latestBirth)/60:
                 hero.speedMetersPerSecond>0.15?hero.distanceMeters/3.4:(hero.tick+alpha)/60);
           }
           const enemyFrame=syncRaiderModels(alpha);
