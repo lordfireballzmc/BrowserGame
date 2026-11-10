@@ -2,7 +2,7 @@
  * F2.02 — authored road mesh, lane edges and sparse embedded wheel ruts.
  *
  * The ground height is carved to y=0 along the corridor by Island.ts.
- * Road top lies 0.04m above it: no carpet floating over hills, no z-fighting.
+ * Road top lies 0.02m above it: no carpet floating over hills, no z-fighting.
  * Ruts are short longitudinal inset markings, one every >=3.5m, not a
  * high-frequency repetitive texture. Meshes use F1.03's validated layout.
  */
