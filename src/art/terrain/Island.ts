@@ -115,7 +115,7 @@ export function terrainHeight(seed: number | string, x: number, z: number): numb
   const anchorFlat = smooth(clamp01((distanceToAnchor - 2.5) / 3.5));
   // Carve an unobstructed 4.5m road with a feathered outer shoulder.
   // At least 1.1m outside each road edge is flat, so 1m terrain cells
-  // cannot poke through the nominal y=+0.04m road quad surface.
+  // cannot poke through the nominal y=+0.02m road quad surface.
   const roadDistance = distanceToRoadXZ(x, z);
   const roadFlat = smooth(clamp01(
     (roadDistance - ROAD_SPEC.flatTerrainHalfWidthMeters) / ROAD_SPEC.terrainFeatherMeters,
