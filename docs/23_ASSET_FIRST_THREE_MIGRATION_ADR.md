@@ -7,6 +7,10 @@ Authority: [master production directive](00_MASTER_PRODUCTION_DIRECTIVE.md), [3D
 ## Current repository-specific constraints
 The custom WebGL2/TWGL renderer is useful and already runs real deterministic terrain, combat, camera and shadows, with regression screenshots. However, all focal meshes are currently handcrafted arrays of beveled primitives and a small fixed material palette. It has no native glTF/GLB scene loading, texture/UV path, material maps, skinning, animation mixer, PBR shader system, or scalable asset authoring pipeline. Extending every one of those features from scratch would be both costly and unlikely to yield the premium illustrated 3D art requested by the user. The existing backend gameplay is independent of rendering, and should be retained.
 
+## Implementation update after ART.02a (2026-11-10)
+
+The initial ART.01 dual-canvas renderer was **retired** after validating one actual unified Three.js scene for the **default Warden gameplay preview**. The old `ImportedArtLayer.ts` has been deleted. `UnifiedThreeRenderer.ts` now imports all original gameplay meshes and the source-verified GLB into **one canvas/depth buffer/sun shadow pass** while reusing the authoritative Warden/raider/bolt simulation and exact camera matrices. The older renderer remains only for static map, cinematic, diagnostics and an explicit `renderer=legacy` Warden fallback until those remaining views pass visual/behavioral parity. The historical first-pilot description below remains as an audit trail, **not** as a current architectural claim. ART.02b must unify remaining views and remove the old backend when proven. See `25_ART02_SINGLE_SCENE_REVIEW.md`.
+
 ## Evaluated options
 | Option | Strength | Liability | Decision |
 | --- | --- | --- | --- |

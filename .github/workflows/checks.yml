@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+# Superseded pushes during intensive 3D work must not waste separate
+# software-WebGL2 CI runs or upload stale screenshots.
+concurrency:
+  group: bastionfall-build-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -237,11 +243,11 @@ jobs:
           # deterministic 90-step displacement, shadowed terrain and camera.
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&renderer=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
               dimensions='900,1200'
               composition='movement-9:16'
             else
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&renderer=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
               dimensions='1500,950'
               composition='movement-16:9'
             fi
@@ -274,39 +280,22 @@ jobs:
             test -s "/tmp/bastionfall-movement-$orientation.png"
             echo "PASS: keyboard + 19 road raiders + swept 3D bolt hits and in-flight projectile ($orientation)"
           done
-          # ART.01: real bundled GLB in the SAME movement and combat scene;
-          # verify the exact imported textured mesh, not a CDN or paper import.
+          # ART.02: native Chrome DevTools Protocol waits for true glTF texture
+          # readiness rather than dumping 'pending' during async ImageBitmap
+          # decode. Capture real frames only after Warden, 19 raiders, hit
+          # registration and the one shared Three/WebGL2 context are proven.
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&assetPilot=1'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
               dimensions='900,1200'
             else
-              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&assetPilot=1'
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeMovement=forward&probeEnemies=advance&probeCombat=physical'
               dimensions='1500,950'
             fi
-            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
-              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
-              --window-size="$dimensions" --virtual-time-budget=13000 \
-              --dump-dom "$url" \
-              >"/tmp/bastionfall-asset-$orientation.html" \
-              2>"/tmp/bastionfall-asset-$orientation.log"
-            if ! grep -q 'data-result="pass"' "/tmp/bastionfall-asset-$orientation.html" \
-              || ! grep -q 'data-asset-pilot="pass"' "/tmp/bastionfall-asset-$orientation.html" \
-              || ! grep -Eq 'data-asset-textured="[1-9][0-9]*"' "/tmp/bastionfall-asset-$orientation.html" \
-              || ! grep -q 'data-asset-source="khronos-lantern-cc0-pilot"' "/tmp/bastionfall-asset-$orientation.html" \
-              || ! grep -q 'data-hero-visible="true"' "/tmp/bastionfall-asset-$orientation.html"; then
-              echo "ART.01 imported GLB in $orientation live scene failed"
-              tail -c 5000 "/tmp/bastionfall-asset-$orientation.html"
-              tail -c 1600 "/tmp/bastionfall-asset-$orientation.log"
-              exit 1
-            fi
-            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
-              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
-              --window-size="$dimensions" --virtual-time-budget=13000 \
-              --screenshot="/tmp/bastionfall-asset-$orientation.png" "$url" \
-              >/tmp/bastionfall-asset-"$orientation"-capture.log 2>&1
-            test -s "/tmp/bastionfall-asset-$orientation.png"
-            echo "PASS: exact Three.js GLTFLoader local textured asset in $orientation Warden game"
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-unified-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation.png"
+            test -s "/tmp/bastionfall-unified-$orientation.json"
           done
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
@@ -348,13 +337,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload ART.01 original textured GLB in-game screenshots
+      - name: Upload ART.02 unified actual game canvas screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: art01-imported-textured-3d-screenshots
+          name: art02-single-scene-three-landscape-portrait
           path: |
-            /tmp/bastionfall-asset-landscape.png
-            /tmp/bastionfall-asset-portrait.png
+            /tmp/bastionfall-unified-landscape.png
+            /tmp/bastionfall-unified-portrait.png
+            /tmp/bastionfall-unified-landscape.json
+            /tmp/bastionfall-unified-portrait.json
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 21
