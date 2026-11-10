@@ -1,15 +1,18 @@
 # ADR-023 — Asset-first graphics migration, Three.js PBR pilot
 
 Date: 2026-11-10  
-Status: **accepted for a bounded vertical slice**; whole-scene renderer migration **not yet authorized by evidence**.  
+Status: **accepted and materially implemented** (ART.01–ART.02b unified actual gameplay, map and cinematic views in Three.js); remaining old renderer is explicit diagnostic/regression fallback. Historic pilot description below is NOT the current runtime.  
 Authority: [master production directive](00_MASTER_PRODUCTION_DIRECTIVE.md), [3D cartoon art north star](20_VISUAL_NORTH_STAR.md).
+
+**Current forward policy:** [VQ fidelity and fluidity mandate](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md). Priority is native-density live gameplay VQ.01, followed by original coherent authored environment, materials and animation. Keep the deterministic simulation and actual evidence requirements; never mistake pilot tech success for art polish.
+
 
 ## Current repository-specific constraints
 The custom WebGL2/TWGL renderer is useful and already runs real deterministic terrain, combat, camera and shadows, with regression screenshots. However, all focal meshes are currently handcrafted arrays of beveled primitives and a small fixed material palette. It has no native glTF/GLB scene loading, texture/UV path, material maps, skinning, animation mixer, PBR shader system, or scalable asset authoring pipeline. Extending every one of those features from scratch would be both costly and unlikely to yield the premium illustrated 3D art requested by the user. The existing backend gameplay is independent of rendering, and should be retained.
 
 ## Implementation update after ART.02a (2026-11-10)
 
-The initial ART.01 dual-canvas renderer was **retired** after validating one actual unified Three.js scene for the **default Warden gameplay preview**. The old `ImportedArtLayer.ts` has been deleted. `UnifiedThreeRenderer.ts` now imports all original gameplay meshes and the source-verified GLB into **one canvas/depth buffer/sun shadow pass** while reusing the authoritative Warden/raider/bolt simulation and exact camera matrices. The older renderer remains only for static map, cinematic, diagnostics and an explicit `renderer=legacy` Warden fallback until those remaining views pass visual/behavioral parity. The historical first-pilot description below remains as an audit trail, **not** as a current architectural claim. ART.02b must unify remaining views and remove the old backend when proven. See `25_ART02_SINGLE_SCENE_REVIEW.md`.
+The initial ART.01 dual-canvas renderer was **retired** after validating one actual unified Three.js scene for the **default Warden gameplay preview**. The old `ImportedArtLayer.ts` has been deleted. `UnifiedThreeRenderer.ts` now imports all original gameplay meshes and the source-verified GLB into **one canvas/depth buffer/sun shadow pass** while reusing the authoritative Warden/raider/bolt simulation and exact camera matrices. ART.02b subsequently unified the full-island static map, pad picking and landscape/portrait cinematic views; legacy rendering remains only for diagnostics/gallery and explicit regression fallback pending full feature parity. The first-pilot description below remains as audit history, **not** current implementation instructions. See `25_ART02_SINGLE_SCENE_REVIEW.md`.
 
 ## Evaluated options
 | Option | Strength | Liability | Decision |
@@ -21,7 +24,7 @@ The initial ART.01 dual-canvas renderer was **retired** after validating one act
 
 Three.js version and types must be committed with a **reproducible npm lockfile**. Preserve WebGL2 as baseline. **WebGPU only after a supported comparative compatibility test; not in this milestone.**
 
-## First complete vertical slice
+## First complete vertical slice — historical ART.01 pilot (already superseded)
 - **Source:** Khronos glTF Sample Assets, **Lantern** (old wooden streetlight), original media **CC0-1.0**. Repo: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern; exact source commit `0b4f3a5862f3037c7092206e75c6f2a31a504ca5`, exact Git blob SHA `0c97893aee066b6fa36f7725443b7536c3510d09`; see upstream LICENSE.md. This external prop is a **technical/art-pipeline sample**, not a finished Bastionfall production hero.
 - **Ingestion:** `scripts/ingest_lantern.py` fetches the pinned GLB at build time, confirms exact Git blob bytes before transformation, recompresses and downsizes embedded textures without changing mesh, normals, UVs or material assignments, validates glTF chunks and limits the final bundle to 2 MiB. Repack into `public/assets/lantern-cc0.glb`, record SHA256 and source provenance. No remote GLB is requested by the production browser.
 - **Runtime:** `ImportedArtLayer` loads the **local** GLB with GLTFLoader and retains authored textured material/maps. The bounded test `?view=movement&assetPilot=1` shows it in world units with the **existing OrthoCamera matrices**, correct physical transform and warm/cool art lighting, while the regular Warden, enemies, road, shots and HUD continue to work.
@@ -36,7 +39,7 @@ Do not ingest entire external packs; use only this independently verified source
 1. Expand typed asset manifest and source license/hash audit to an original coherent *family* of stylized characters/vegetation/architecture, preferably CC0, evaluated for artistic consistency.
 2. Replace one complete class of geometry in a **unified** Three scene; retain game state and camera projections.
 3. Add animation clips/rigs with transitions, author sprite/VFX and custom toon/PBR hybrid materials, then profile real device budgets.
-4. Only then deprecate the custom renderer and delete the dual-context pilot.
+4. The dual-context pilot was already deleted; remove the remaining legacy diagnostic paths only after tested parity.
 
 References:
 - https://threejs.org/docs/#examples/en/loaders/GLTFLoader

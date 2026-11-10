@@ -1,28 +1,32 @@
 # Bastionfall — mandatory development protocol
 
-Read in this order at start of **every** conversation turn:
+Read at the start of every authorized development turn, using **latest GitHub** state:
 1. `AGENTS.md`
-2. **`docs/00_MASTER_PRODUCTION_DIRECTIVE.md` (user-supplied binding studio mission; overrides outdated technical ceilings)**
-3. `docs/02_GAME_DESIGN_BIBLE.md`
-4. **`docs/20_VISUAL_NORTH_STAR.md` (most recent user-approved art direction)**
-5. `docs/visual-references/README.md` (original in-repo SVG and visual evidence)
-6. `docs/03_ART_AND_ANIMATION_BIBLE.md`
-7. `docs/05_ARCHITECTURE.md`
-8. `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md`, `docs/25_ART02_SINGLE_SCENE_REVIEW.md`, `docs/26_ART02B_MAP_CINEMATIC_REVIEW.md`, `docs/27_ART03A_RIGGED_CHARACTERS_REVIEW.md` and `docs/28_ART03B_CHARACTER_IDENTITY_REVIEW.md` for rendering/asset tasks
-9. `docs/06_EXECUTION_BACKLOG.md`
-10. `docs/04_OPEN_SOURCE_COMPONENTS.md` when adding dependencies
-11. `docs/21_VISUAL_REVIEW_HISTORY.md` for any visible task
-12. `docs/07_SESSION_STATE.md`
+2. **`docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md` — binding fidelity, sharpness, motion, and visual-QA requirements**
+3. `docs/20_VISUAL_NORTH_STAR.md` — authoritative original illustrated 3D aesthetic
+4. `docs/00_MASTER_PRODUCTION_DIRECTIVE.md` — full studio mission
+5. `docs/02_GAME_DESIGN_BIBLE.md` — gameplay mechanics
+6. `docs/06_EXECUTION_BACKLOG.md` — current priorities and acceptance gates
+7. `docs/07_SESSION_STATE.md` — accurate cross-chat handoff
+8. `docs/03_ART_AND_ANIMATION_BIBLE.md` and `docs/visual-references/README.md`
+9. `docs/05_ARCHITECTURE.md`, `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md`
+10. `docs/21_VISUAL_REVIEW_HISTORY.md` and actual screenshot reviews
+11. `docs/04_OPEN_SOURCE_COMPONENTS.md` when adding packages
 
 ## Standing operating instruction
-You are implementing the original browser game **Bastionfall**, based on the *advertised defense fantasy*, not copying Kingshot. Game currently runs on a purpose-built 3D WebGL2 engine in strict TypeScript, but the user's binding directive authorizes a **measured migration to Three.js**, vetted GLB assets, PBR materials and skeletal animation. Treat legacy render architecture as temporary; preserve deterministic TypeScript simulation and the 3D cartoon identity. An externally authored mesh is preferable to primitive-only focal art when legally sourced and visually coherent.
+You are implementing the original browser game **Bastionfall**, based on the *advertised defense fantasy*, not copying Kingshot. The primary gameplay scene **already uses Three.js r184/WebGL2** with coherent source-pinned GLB skinned actors, plus preserved deterministic strict-TypeScript simulation. A legacy custom renderer remains for diagnostics/regression. Do not restart the old engine debate; pursue sharper physical resolution, original premium 3D assets and animated fluidity under the binding VQ directive while protecting real gameplay. An externally authored mesh is preferable to primitive-only focal art when legally sourced and visually coherent.
 
 On each new user turn, read current code and state from the **connected GitHub repository** `lordfireballzmc/BrowserGame`. Treat GitHub as canonical, not conversation scrollback or claims from earlier replies. Choose the highest-impact feasible bounded gameplay or **visual production-pipeline** milestone, with direct source and test evidence. Keep existing work running while migrating, and avoid documentation-only stalling. If a prior task has code but lacks verified tests, attempt verification first. Never rewrite whole source files blindly without fetching the current latest version and checking SHA.
 
 Before editing: identify relevant files, current status, tests and exact upstream docs if integrating a dependency. Document what the implementation will do and how to test it in concise internal task notes. Then implement through GitHub connector, commit to feature branch or main according to permissions, run whatever testing is actually available, and update the backlog/session state with truthful verification notes.
 
 ## Priority and conflicts
-The complete user-approved master directive lives in `docs/00_MASTER_PRODUCTION_DIRECTIVE.md`, and the illustration-first visual north star in `docs/20_VISUAL_NORTH_STAR.md`. Together they supersede outdated rules forbidding Three.js, imported focal art, PBR, textures, professional asset tools or suitable postprocessing. **Do not** supersede working simulation, legal provenance, performance safeguards, no paid services, or real verification. `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md` limits the initial dual-renderer GLB proof to one temporary pilot; no parallel renderer as a final architecture. Every subsequent new chat should continue actual code improvements, not re-argue the decision.
+**Precedence:** latest explicit user decision, VQ fidelity/motion directive for production quality, visual north star for original art style, gameplay bible for rules, master directive for general engineering. Historical custom-renderer/primitive-only constraints are superseded, not mandates. New sessions must not treat a concept mockup, CI success or a fixed 720p framebuffer as proof of attractive graphics.
+
+The **latest binding VQ directive** in `docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md` sets real native-resolution, authored-asset, motion and visual-evidence gates; `docs/20_VISUAL_NORTH_STAR.md` sets the original illustrated-3D taste; `docs/00_MASTER_PRODUCTION_DIRECTIVE.md` sets general studio production standards. Together they supersede outdated restrictions forbidding Three.js, textured professional art, PBR or suitable postprocessing, and reject low-res, toy-primitive or glossy strategy-advertisement aesthetics. **Retain** working deterministic simulation, legal provenance, measured performance, no paid services and real verification. ADR-023 documents the historic bounded dual-renderer pilot, which is **already deleted**; current Three.js world/render scenes are unified and remaining legacy diagnostics are temporary. New chats must implement verifiable code improvements rather than restart engine debates.
+
+## Immediate handoff — VQ.01 native-resolution graphics FIRST
+The active movement preview currently sets a fixed **1280×720 landscape / 720×1280 portrait** backbuffer. `CanvasRuntime.ts` already computes safe DPR- and preset-aware sizes but is not wired to the movement scene. The Three renderer's `setPixelRatio(1)` is not itself a bug because backing dimensions are set separately; never apply DPR twice. **Next code task:** integrate responsive CSS-size × DPR quality tiers into the actual Three gameplay renderer, update camera/pad picking on resize, assert physical drawing-buffer values, and verify high-DPI real-browser 16:9/9:16 captures + gameplay regression. Then VQ.02 original authored environment, VQ.03 materials/AA/lighting, VQ.04 animation, while advancing F3.04. **This docs task does not implement those graphics fixes.**
 
 ## Critical honesty constraints
 A GitHub commit is not a passing build; WebGL screenshots cannot be inferred from code; a referenced repo is not an integrated dependency; a claimed deployed URL requires HTTP check; a model's opinion of rendering quality is not a screenshot review. Never invent tests, CI status, benchmarks, screenshot evidence, browser access, deployed URLs or code execution. If code runner is unavailable in this chat, make the minimal commit and leave 'verification pending'. Mark checklist [x] only when verifiable acceptance evidence exists.
@@ -81,7 +85,7 @@ Stop and ask for user decision if:
 Do not circumvent chat restrictions, rate limits, tool approvals or browser workflows.
 
 ## Final response format
-**TASK** <ID> | **COMMIT** <SHA or none> | **IMPLEMENTED** paths+behavior | **VERIFICATION** evidence or pending | **NEXT** <ID> | **STOP** one short line. No unnecessary re-explanation of the whole project.
+**TASK** <ID> | **COMMIT** <SHA or none> | **IMPLEMENTED** paths+behavior | **VISUAL IMPROVEMENT** real evidence or NONE | **VERIFICATION** exact CI/perf/screenshot evidence or pending | **REMAINING DEFICIENCIES** | **NEXT** <ID> | **STOP** one short line. No unnecessary re-explanation of the whole project.
 
 ## External extension
 The optional user-installed browser extension is outside this codebase. This document defines what a **manually or otherwise authorized new chat turn** should request, not a guarantee that background auto-submission is permitted or reliable.

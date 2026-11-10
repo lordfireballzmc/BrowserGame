@@ -1,11 +1,13 @@
-# Custom engine architecture — technical design and module contracts
+# Bastionfall architecture — Three.js rendering + deterministic game systems
 
-## Architecture decision update — user-directed asset-first migration (2026-11-10)
+## Current implementation (2026-11-10)
 
-The historical custom-engine contract below describes **currently deployed code**, not an unchangeable permanent restriction. The binding [master directive](00_MASTER_PRODUCTION_DIRECTIVE.md) and [ADR-023](23_ASSET_FIRST_THREE_MIGRATION_ADR.md) approve TypeScript + exact-locked Three.js, bundled license-verified glTF/GLB and appropriate PBR/animation, with WebGL2 retained as a baseline. The first pilot deliberately overlays one external-model canvas with the same camera, **without depth integration**, to prove local textured asset loading without breaking Warden simulation. This is explicitly temporary; final production must use **one unified renderer**, preserve the old tested behavior and delete the pilot bridge after migration. The older `No Three.js` line in the legacy stack description is superseded.
+**Canonical state:** TypeScript strict, Vite, **Three.js r184 WebGLRenderer/WebGL2**, GLTFLoader, licensed source-pinned textured rigged GLB actors, a unified scene using BufferGeometry/InstancedMesh, stable game camera matrices, real animated models and deterministic TypeScript simulation. The old `InstancedRenderer`/TWGL path remains for diagnostic/gallery and explicit legacy regression only. The initial two-canvas overlay was **already deleted** in ART.02; ART.02b unified the island map/pad interactions/cinematic scenes as well as the Warden gameplay. Do not call Three.js prohibited or redo a completed migration.
 
-## Stack
-TypeScript strict, Vite, WebGL2, TWGL buffer/program helpers, gl-matrix, Vitest, Playwright. Other components introduced only in their milestone. Aim for Node 22 LTS or newer verified compatible; browser targets current desktop Chromium/Firefox/Safari with WebGL2; fallback is an explicit diagnostics screen, not an unrelated 2D game. No Three.js/Unity engine.
+**Binding quality plan:** [VQ visual fidelity / fluidity directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [illustrated cartoon 3D north star](20_VISUAL_NORTH_STAR.md), [master studio mission](00_MASTER_PRODUCTION_DIRECTIVE.md). Immediate VQ.01 integration of existing CSS × DPR × graphics-preset backbuffer sizing in the actual active Three movement scene is **NOT YET IMPLEMENTED**. Preserve aspect, renderer/camera state, pointer/pad hit coordinates and all gameplay while resizing. Next improve coherent authored environment, deliberate lighting/materials and expressive skeletal animation, measured with actual 16:9/9:16 images and motion.
+
+## Historical design note
+The text that follows originated in the custom-renderer F0–F2 phase. Its active gameplay/headless-simulation boundaries remain useful, but the old **no Three.js**, geometry-only and untextured requirements are superseded by the adopted Three.js architecture and VQ policy. Keep historical engineering facts for audit, not future constraints.
 
 ## Boundaries
 `src/main.ts` composes Engine, World, Renderer, Controls, Assets, HUD. It is composition only; business logic lives in systems. `src/engine/` contains EngineLoop, Renderer, Camera, GPU resources and input sampling. `src/art/` contains geometry generators and deterministic procedural model definitions; no game rules. `src/game/` contains typed state, fixed-tick systems and balance. `src/ui/` DOM overlay with no direct mutation of game state. `src/platform/` lifecycle and storage. `tests/` unit, integration, visual, perf.
@@ -56,7 +58,7 @@ No secrets in repo; no user-controlled eval; no dynamic npm shell commands from 
 Unit: PRNG, timing, economy, damage, movement, mesh geometry. Integration: same seed+commands returns same authoritative snapshot hash across runs. Browser: load start, WebGL2 ready, begin run, WASD moves, enemy arrives, coin pickup and tower purchase work, game-over possible. Visual: two recorded screenshots per milestone desktop 16:9 and portrait 9:16, inspected by explicit evidence. Performance: record hardware, browser, viewport, enemies, GPU/render/CPU frame budget. Never claim pass without execution output and commit SHA.
 
 ## Design decisions
-ADR-001: custom WebGL2 rather than Three.js for ownership and performance control.
+ADR-001 (historical, superseded by ADR-023): custom WebGL2 rather than Three.js for initial ownership and performance control.
 ADR-002: deterministic pure simulation with time-step separation.
 ADR-003: procedural **authored** geometric model library, no image generation.
 ADR-004: fixed-route wave maps first, A* only once roads branch.
@@ -75,7 +77,7 @@ The manifest's caret version ranges resolve through committed npm lockfile v3; p
 | Bundler | Vite **7.3.8** | MIT | Used to build the application and run the dev server, verified on CI. |
 | Tests | Vitest **3.2.7** | MIT | Used for deterministic simulation and startup tests, verified on CI. |
 
-**Architecture decisions carried forward:** retain a purpose-built WebGL2 renderer (ADR-001) and fixed-step headless simulation (ADR-002); no Three.js/large game engine. `src/platform/Startup.ts` owns WebGL2 capability/fatal handling; `src/engine/Loop.ts` owns fixed-step timing; `src/game/Random.ts` and `src/game/Balance.ts` own deterministic RNG and numeric rules. None of the F1 render/geometry imports are implemented yet.
+**Architecture decisions carried forward:** retain fixed-step headless simulation (ADR-002); initial custom-only graphics (ADR-001) were superseded by primary Three.js rendering in ADR-023. `src/platform/Startup.ts` owns WebGL2 capability/fatal handling; `src/engine/Loop.ts` owns fixed-step timing; `src/game/Random.ts` and `src/game/Balance.ts` own deterministic RNG and numeric rules. None of the F1 render/geometry imports are implemented yet.
 
 **Dependency change protocol:** check exact upstream version/tag and license, update manifest and lockfile together, `npm ci`/typecheck/test/build, re-check runtime imports and transitive licenses, update `THIRD_PARTY_NOTICES.md`, and record browser/test evidence separately. Do not infer library API usage, security audit, screenshots or deployed gameplay from package installation alone.
 

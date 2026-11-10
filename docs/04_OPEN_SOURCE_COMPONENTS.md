@@ -2,7 +2,16 @@
 Research checkpoint: 2026-11-10. This is a curated architecture and suitability survey, **not** a claim that each library has been installed, benchmarked, audited, or proved compatible with every other. Dependencies are linked directly to upstream GitHub; check tagged releases, dependency trees, security advisories, current licenses, and APIs *before* each integration. Pin resolved versions and commit the lockfile. Preserve notices in third-party attributions.
 
 ## Architectural principle
-We build a custom engine **on top of battle-tested primitives**, not an off-the-shelf scene/game engine. A library only owns a narrow function. The project owns scheduling, scene graph, archetype factories, procedural modeling, rendering policy, animation, battle rules, deterministic saves, and GUI composition. For simple bespoke features, prefer ~30–100 lines of clear local code over forcing an enormous generic dependency.
+**Active architecture** owns deterministic strict-TypeScript simulation and business rules while **Three.js r184 is already the selected main renderer/scene graph, GLB loader and skinned-animation framework**. TWGL/custom WebGL2 is a retained legacy diagnostic/fallback only. Historical instructions prohibiting Three.js are superseded by the [VQ directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [ADR-023](23_ASSET_FIRST_THREE_MIGRATION_ADR.md) and checked-in source. Use external technologies where they materially improve real art; pin packages, audit licenses and avoid redundant dependencies.
+
+## Active rendering / fidelity evaluation (do not mistake links for integrated packages)
+| Need | Technology | Status |
+| --- | --- | --- |
+| 3D scene + GLB animation | [Three.js](https://github.com/mrdoob/three.js) | **Already integrated**, r184/WebGL2 |
+| High-DPI sizing | Existing `src/engine/render/CanvasRuntime.ts` and [Three.js responsive guide](https://threejs.org/manual/en/responsive.html) | Utility exists; **live movement integration VQ.01 pending** |
+| Selective antialiasing/post | [pmndrs/postprocessing](https://github.com/pmndrs/postprocessing) | **Candidate only**; compare cost, sharpness, ghosting vs working MSAA |
+| PBR comparison reference | [Khronos glTF Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer) | Reference implementation, **not installed** |
+| GLB optimization | [glTF-Transform](https://github.com/donmccurdy/glTF-Transform), [meshoptimizer](https://github.com/zeux/meshoptimizer), [KTX-Software](https://github.com/KhronosGroup/KTX-Software) | Candidates, adopt with licensed asset provenance and fidelity tests |
 
 ## Approved candidates with upstream links
 | Requirement | Candidate and upstream | License advertised/upstream | Exact integration boundary and test | Stage |
@@ -29,7 +38,7 @@ We build a custom engine **on top of battle-tested primitives**, not an off-the-
 | procedural sampling (candidate) | [poisson-disk-sampling](https://github.com/kchapelier/poisson-disk-sampling) | confirm license + API | Seeded decoration positions and exclusion; do not import until tested | F2 |
 
 ## Rejected as initial foundations
-- Three.js, Babylon.js, PlayCanvas, Pixi: *not inherently bad*, but violate our explicit build-a-custom-engine goal for scene/render ownership. Their asset converters/examples may inspire distinct parts subject to license.
+- **Historical rejection now superseded:** Three.js is already the main engine; do not forbid it because the first prototype was custom. Babylon.js and alternatives require actual measured benefits to justify migration, not speculation.
 - react-three-fiber: brings abstraction weight and delegates to Three.js.
 - Full-fledged physics: unnecessary for grounded fixed-lane units and lightweight projectile arcs; use analytic collision, swept circle, grid/segment broadphase. Evaluate [Rapier](https://github.com/dimforge/rapier) (Apache-2.0) only after tests establish true rigid-body needs.
 - [bitECS](https://github.com/NateTheGreatt/bitECS): attractive but evaluate license/version and actual needs before adoption; no dependency added reflexively.
@@ -38,7 +47,7 @@ We build a custom engine **on top of battle-tested primitives**, not an off-the-
 
 ## System-to-code contracts (ownership / external help)
 1. **Engine host:** own `src/engine/Loop.ts`; rAF+accumulator fixed 1/60 tick; maximum 5 catch-up ticks; pause on hidden tab; interpolation alpha.
-2. **Rendering:** own `src/engine/render/*`; TWGL helpers only for WebGL objects. Every draw is an indexed/instanced mesh with shader-based palette index; no per-instance allocations on the GPU every frame.
+2. **Rendering (current):** maintain game-specific interfaces in `src/engine/render/*`, but use the existing Three.js `UnifiedThreeRenderer` for active combat/world GLB, PBR and skinning. Retained TWGL is only for explicit legacy diagnostics/regressions until feature-parity verification; retain efficient instancing and GPU resource cleanup.
 3. **Camera:** gl-matrix mat4 ortho+lookAt; deterministic follow state; projection tests.
 4. **Meshes:** own `src/art/mesh/*` geometry constructors; earcut for irregular caps and sampled noise only; generator input: seed + archetype config; output: geometry arrays, bounds, stable hash.
 5. **Actors:** own typed data-oriented arrays or lean entity store; don't add ECS framework until profiling shows need. Entity creation/destruction deferred to end of tick.
