@@ -20,6 +20,7 @@ import {
   sceneryArtUrl, sceneryRockUrl, type SceneryArtModel,
 } from "../../art/assets/SceneryArtManifest";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
+import { GroundcoverArtLayer, type GroundcoverArtStats } from "./GroundcoverArtLayer";
 
 export interface SceneryArtStats {
   readonly sourceModels:number;
@@ -66,6 +67,7 @@ export class SceneryArtLayer {
   private readonly root=new Group();
   private readonly resources:Group[]=[];
   private readonly extraMaterials:Material[]=[];
+  private readonly groundcover=new GroundcoverArtLayer(this.scene);
   private loaded:SceneryArtStats|null=null;
   private loading=false;
   private destroyed=false;
@@ -76,8 +78,12 @@ export class SceneryArtLayer {
   }
   get ready():boolean { return this.loaded!==null; }
   get stats():SceneryArtStats|null { return this.loaded; }
+  get groundcoverReady():boolean {return this.groundcover.ready;}
+  get groundcoverStats():GroundcoverArtStats|null{return this.groundcover.stats;}
 
-  async load(placements:readonly SceneryPlacement[]):Promise<SceneryArtStats> {
+  async load(placements:readonly SceneryPlacement[],
+    seed:string|number="fenwall-crossing-v1",
+    includeGroundcover=true):Promise<SceneryArtStats> {
     if(this.loading||this.ready||this.destroyed)
       throw new Error("Scenery art loads only once");
     const counts={pine:0,broadleaf:0,rock:0,grass:0,flower:0};
@@ -223,6 +229,9 @@ export class SceneryArtLayer {
       }
       if(batches===0||treeInstances!==40||rockInstances!==42||atlases!==7)
         throw new Error("Missing genuine instanced scenery art");
+      // Optional VQ.02d model family is complete before the renderer stops
+      // submitting its original 152 grass/24 flower visual fallbacks.
+      if(includeGroundcover)await this.groundcover.load(gltf.scene,placements,seed);
       this.root.add(work);
       this.loaded=Object.freeze({
         sourceModels:models.length,importedAtlasModels:atlases,
@@ -238,6 +247,7 @@ export class SceneryArtLayer {
   dispose():void {
     if(this.destroyed)return;
     this.destroyed=true;
+    this.groundcover.dispose();
     this.scene.remove(this.root);
     const geometries=new Set<Mesh["geometry"]>();
     const materials=new Set<Material>();
