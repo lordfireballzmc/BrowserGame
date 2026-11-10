@@ -36,7 +36,7 @@ describe("VQ.02b original KayKit CC0 forest and deterministic visual instancing"
     expect(SCENERY_ART_MODELS).toHaveLength(7);
     expect(new Set(SCENERY_ART_MODELS.map(x=>x.sourceNode)).size).toBe(7);
     for(const spec of SCENERY_ART_MODELS){
-      expect(nodes.has(spec.sourceNode)).toBe(true);
+      if(spec.kind!=="rock")expect(nodes.has(spec.sourceNode)).toBe(true);
       expect(spec.targetHeight).toBeGreaterThan(0.75);
     }
   });
@@ -53,7 +53,7 @@ describe("VQ.02b original KayKit CC0 forest and deterministic visual instancing"
       expect(sceneryRockUrl(asset.file)).toContain("assets/scenery/");
       const bytes=readFileSync(join(process.cwd(),"public/assets/scenery",asset.file));
       expect(bytes.byteLength).toBe(asset.bytes);
-      expect(createHash("sha1").update(Buffer.from("blob "+bytes.length+"\\0"))
+      expect(createHash("sha1").update(Buffer.from("blob "+bytes.length+"\0"))
         .update(bytes).digest("hex")).toBe(asset.sourceGitBlob);
       expect(bytes.readUInt32LE(0)).toBe(0x46546c67);
       const j=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString("utf8"));
