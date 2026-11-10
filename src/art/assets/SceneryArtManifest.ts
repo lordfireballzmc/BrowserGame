@@ -25,8 +25,8 @@ export const SCENERY_ART_MODELS = [
   { id:"oak-crowned",kind:"broadleaf",sourceNode:"Tree_1_A_Color1",targetHeight:4.45 },
   { id:"oak-wide",kind:"broadleaf",sourceNode:"Tree_3_A_Color1",targetHeight:4.40 },
   { id:"oak-branched",kind:"broadleaf",sourceNode:"Tree_3_C_Color1",targetHeight:4.55 },
-  { id:"mossy-boulders",kind:"rock",sourceNode:"Rock_2_C_Color1",targetHeight:0.83 },
-  { id:"stacked-boulders",kind:"rock",sourceNode:"Rock_3_E_Color1",targetHeight:0.82 },
+  { id:"mossy-boulders",kind:"rock",sourceNode:"Rock_1_J_Color1",targetHeight:0.83 },
+  { id:"stacked-boulders",kind:"rock",sourceNode:"Rock_3_Q_Color1",targetHeight:0.82 },
 ] as const;
 export type SceneryArtModel = (typeof SCENERY_ART_MODELS)[number];
 export type SceneryArtKind = SceneryArtModel["kind"];
