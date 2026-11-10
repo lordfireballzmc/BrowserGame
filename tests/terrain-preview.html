@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bastionfall F2.01 — terrain engineering preview (not gameplay)</title>
+  <style>
+    * { box-sizing: border-box }
+    body { margin: 0; background: #e9ebe3; color: #243338; font: 14px system-ui; }
+    main { max-width: 1240px; padding: 18px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 4px 0 6px; }
+    p { max-width: 85ch; line-height: 1.5; }
+    canvas { display: block; width: 100%; aspect-ratio: 1200 / 760; border: 1px solid #a8aeac; }
+    pre { font-size: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body data-result="pending">
+<main>
+  <h1>Fenwall Crossing · F2.01 island heightfield</h1>
+  <p>Seeded 72 × 48m island with 54 seam-matched tiles and an exposed layered rock coast.
+     This is a WebGL2 mesh-inspection scene; there is no road, river, gameplay, or authored vegetation yet.</p>
+  <canvas id="terrain" width="1200" height="760" aria-label="Procedurally generated island and cliff terrain"></canvas>
+  <pre id="trace">Generating terrain meshes...</pre>
+</main>
+<script type="module">
+  import { mat4 } from "gl-matrix";
+  import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
+  import { generateTerrain } from "/src/art/terrain/Island.ts";
+  const body = document.body;
+  let renderer;
+  try {
+    const canvas = document.querySelector("#terrain");
+    const gl = canvas.getContext("webgl2", {
+      alpha: false, antialias: true, preserveDrawingBuffer: true,
+    });
+    if (!gl) throw new Error("WebGL2 unavailable");
+    renderer = new InstancedRenderer(gl);
+    const terrain = generateTerrain("fenwall-crossing-v1");
+    const model = mat4.create();
+    const instances = [];
+    for (const tile of terrain.tiles) {
+      const name = "ground-" + tile.column + "-" + tile.row;
+      renderer.uploadMesh(name, tile.surface);
+      instances.push({meshId: name, material: "grass.primary", model});
+      if (tile.cliff) {
+        const cliff = "rock-" + tile.column + "-" + tile.row;
+        renderer.uploadMesh(cliff, tile.cliff);
+        instances.push({meshId: cliff, material: "stone.shadow", model});
+      }
+    }
+    const view = mat4.lookAt(mat4.create(), [73, 94, 83], [0, -0.8, 0], [0, 1, 0]);
+    const projection = mat4.ortho(mat4.create(), -60, 60, -38, 38, 0.1, 300);
+    const viewProjection = mat4.multiply(mat4.create(), projection, view);
+    const stats = renderer.render({view, viewProjection}, instances);
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) throw new Error("WebGL error " + error);
+    const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+    gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    let changedSamples = 0;
+    for (let i = 0; i < pixels.length; i += 16) {
+      if (Math.abs(pixels[i] - 212) > 18 || Math.abs(pixels[i + 1] - 219) > 18
+        || Math.abs(pixels[i + 2] - 210) > 18) changedSamples++;
+    }
+    if (terrain.tiles.length !== 54 || terrain.coastSegments < 50
+      || stats.instances !== instances.length || stats.drawCalls !== instances.length
+      || changedSamples < 500) {
+      throw new Error("Terrain preview acceptance failed; coastline or framebuffer missing");
+    }
+    const trace = {
+      mode: "ENGINEERING PREVIEW (not a game)",
+      seed: terrain.seed, tiles: terrain.tiles.length,
+      cliffSections: terrain.coastSegments,
+      meshes: renderer.meshCount, instances: stats.instances,
+      draws: stats.drawCalls, triangles: stats.triangles,
+      changedFramebufferSamples: changedSamples,
+      cpuSubmissionMs: Number(stats.cpuMilliseconds.toFixed(2)),
+      note: "CPU JS submission only; not GPU frame time or FPS",
+    };
+    body.dataset.result = "pass";
+    body.dataset.tiles = String(terrain.tiles.length);
+    body.dataset.coast = String(terrain.coastSegments);
+    body.dataset.changed = String(changedSamples);
+    document.querySelector("#trace").textContent = JSON.stringify(trace);
+  } catch (error) {
+    body.dataset.result = "fail";
+    document.querySelector("#trace").textContent =
+      String(error instanceof Error ? error.stack : error);
+  } finally {
+    renderer?.dispose();
+  }
+</script>
+</body>
+</html>
