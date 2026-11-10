@@ -149,6 +149,7 @@ try {
         sceneryArtBatches:d.sceneryArtBatches,
         sceneryArtInstances:d.sceneryArtInstances,
         sceneryArtError:d.sceneryArtError,
+        groundArt:d.groundArt,groundPalette:d.groundPalette,
         shadows:d.shadows,
         environmentArt:d.environmentArt,
         environmentSources:d.environmentSources,
@@ -183,6 +184,10 @@ try {
       lastState.unifiedCanvases==="1" &&
       lastState.shadows==="on" &&
       Number(lastState.padCount)===10 &&
+      (scene.searchParams.get("ground")==="legacy"
+        ? lastState.groundArt==="disabled"
+        : lastState.groundArt==="pass" &&
+          lastState.groundPalette==="fenwall-world-pigment-vq02c") &&
       (scene.searchParams.get("scenery")==="legacy"
         ? lastState.sceneryArt==="disabled"
         : lastState.sceneryArt==="pass" &&
@@ -340,7 +345,8 @@ try {
     : "cinematic-"+orientation;
   const suffix=suffixBase+
     (scene.searchParams.get("environment")==="legacy" ? "-env-legacy" : "")+
-    (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "");
+    (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "")+
+    (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
