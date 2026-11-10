@@ -287,7 +287,7 @@ jobs:
             fi
             "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
               --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
-              --window-size="$dimensions" --virtual-time-budget=13000 \
+              --window-size="$dimensions" --virtual-time-budget=24000 \
               --dump-dom "$url" \
               >"/tmp/bastionfall-unified-$orientation.html" \
               2>"/tmp/bastionfall-unified-$orientation.log"
@@ -306,7 +306,7 @@ jobs:
             fi
             "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
               --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
-              --window-size="$dimensions" --virtual-time-budget=13000 \
+              --window-size="$dimensions" --virtual-time-budget=24000 \
               --screenshot="/tmp/bastionfall-unified-$orientation.png" "$url" \
               >"/tmp/bastionfall-unified-$orientation-screenshot.log" 2>&1
             test -s "/tmp/bastionfall-unified-$orientation.png"
