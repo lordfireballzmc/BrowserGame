@@ -4,11 +4,20 @@
 **Status:** F0/F1 foundations and F2.01–F2.07 world/render foundations are implemented: island, winding road, ten pads, northern river, and 258 reproducibly seeded scenery props. The browser contains an original archetype gallery and a separate WebGL2 world inspection preview with projected pad prices and click selection, plus **staged** 3D heroes/raiders, an authored keep, optional cinematic compositions, and soft directional WebGL2 shadows. **F3.03 adds genuine 7m Warden auto-fire: original 3D copper bolts travel at 15m/s and can physically hit the marching Scrappers/Runners, permanently lowering their HP. Enemy attacks, coin payouts, tower purchases and full waves are still not playable.** No public deployment or live game URL.  
 **Goal:** an honest, satisfying playable interpretation of the *advertised* real-time defense/collect/build fantasy in Kingshot-style mobile promotions, built with original IP, procedural geometry and a custom WebGL2 engine.
 
+## Current art-direction decision (2026-11-10)
+
+The user explicitly rejected the overly glossy, realistic *Rise of Kingdoms*-leaning Bastionfall AI mockups and instead wants an **original, playful, illustrated-cartoon tower defense in genuinely sculpted 3D**, drawing only general readability/personality/motion inspiration from *Kingdom Rush* (no copying third-party characters, maps, UI or game art). This decision **overrides older muted mobile-strategy styling** for future visual tasks; it does **not** mean the current runtime already meets that level.
+
+Every new chat and visible task must read [the visual north star](docs/20_VISUAL_NORTH_STAR.md), [the original in-repo SVG target](docs/visual-references/target-illustrated-3d-composition.svg), [the visual-reference index](docs/visual-references/README.md), and [the visual review log](docs/21_VISUAL_REVIEW_HISTORY.md). The reference artwork is an **aspirational guide**, not a screenshot of shipped WebGL2 graphics.
+
 ## Where to start
 
 | File | Purpose |
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Mandatory per-turn developer protocol |
+| [docs/20_VISUAL_NORTH_STAR.md](docs/20_VISUAL_NORTH_STAR.md) | Latest authoritative visual taste decision: illustrated expressive 3D cartoon, not glossy strategy realism |
+| [docs/visual-references/README.md](docs/visual-references/README.md) | Version-controlled original visual composition and concept generation recipes |
+| [docs/21_VISUAL_REVIEW_HISTORY.md](docs/21_VISUAL_REVIEW_HISTORY.md) | Record of rejected looks, what user actually wants, and remaining runtime-art gaps |
 | [docs/01_REFERENCE_ANALYSIS.md](docs/01_REFERENCE_ANALYSIS.md) | Exactly which advertised creative is under study; evidence limitations |
 | [docs/02_GAME_DESIGN_BIBLE.md](docs/02_GAME_DESIGN_BIBLE.md) | Full game rules, numbers, wave schedule, controls, economy, tower types |
 | [docs/03_ART_AND_ANIMATION_BIBLE.md](docs/03_ART_AND_ANIMATION_BIBLE.md) | Enforced color palette, geometry, character construction, animation timing |
