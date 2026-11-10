@@ -2,35 +2,40 @@
 
 Read in this order at start of **every** conversation turn:
 1. `AGENTS.md`
-2. `docs/02_GAME_DESIGN_BIBLE.md`
-3. **`docs/20_VISUAL_NORTH_STAR.md` (most recent user-approved art direction)**
-4. `docs/visual-references/README.md` (original in-repo SVG and visual evidence)
-5. `docs/03_ART_AND_ANIMATION_BIBLE.md`
-6. `docs/05_ARCHITECTURE.md`
-7. `docs/06_EXECUTION_BACKLOG.md`
-8. `docs/04_OPEN_SOURCE_COMPONENTS.md` when adding dependencies
-9. `docs/21_VISUAL_REVIEW_HISTORY.md` for any visible task
-10. `docs/07_SESSION_STATE.md`
+2. **`docs/00_MASTER_PRODUCTION_DIRECTIVE.md` (user-supplied binding studio mission; overrides outdated technical ceilings)**
+3. `docs/02_GAME_DESIGN_BIBLE.md`
+4. **`docs/20_VISUAL_NORTH_STAR.md` (most recent user-approved art direction)**
+5. `docs/visual-references/README.md` (original in-repo SVG and visual evidence)
+6. `docs/03_ART_AND_ANIMATION_BIBLE.md`
+7. `docs/05_ARCHITECTURE.md`
+8. `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md` for rendering/asset tasks
+9. `docs/06_EXECUTION_BACKLOG.md`
+10. `docs/04_OPEN_SOURCE_COMPONENTS.md` when adding dependencies
+11. `docs/21_VISUAL_REVIEW_HISTORY.md` for any visible task
+12. `docs/07_SESSION_STATE.md`
 
 ## Standing operating instruction
-You are implementing the original browser game **Bastionfall**, based on the *advertised defense fantasy*, not copying Kingshot. Game runs on a purpose-built 3D WebGL2 engine written in strict TypeScript; use small permissive upstream libraries at explicit interfaces, not a bundled full game engine.
+You are implementing the original browser game **Bastionfall**, based on the *advertised defense fantasy*, not copying Kingshot. Game currently runs on a purpose-built 3D WebGL2 engine in strict TypeScript, but the user's binding directive authorizes a **measured migration to Three.js**, vetted GLB assets, PBR materials and skeletal animation. Treat legacy render architecture as temporary; preserve deterministic TypeScript simulation and the 3D cartoon identity. An externally authored mesh is preferable to primitive-only focal art when legally sourced and visually coherent.
 
-On each new user turn, read current code and state from the **connected GitHub repository** `lordfireballzmc/BrowserGame`. Treat GitHub as canonical, not conversation scrollback or claims from earlier replies. Pick **only the first uncompleted task whose dependencies are satisfied**, scoped to a single small cohesive improvement. If a prior task has code but lacks verified tests, attempt verification first. Never rewrite whole source files blindly without fetching the current latest version and checking SHA.
+On each new user turn, read current code and state from the **connected GitHub repository** `lordfireballzmc/BrowserGame`. Treat GitHub as canonical, not conversation scrollback or claims from earlier replies. Choose the highest-impact feasible bounded gameplay or **visual production-pipeline** milestone, with direct source and test evidence. Keep existing work running while migrating, and avoid documentation-only stalling. If a prior task has code but lacks verified tests, attempt verification first. Never rewrite whole source files blindly without fetching the current latest version and checking SHA.
 
 Before editing: identify relevant files, current status, tests and exact upstream docs if integrating a dependency. Document what the implementation will do and how to test it in concise internal task notes. Then implement through GitHub connector, commit to feature branch or main according to permissions, run whatever testing is actually available, and update the backlog/session state with truthful verification notes.
+
+## Priority and conflicts
+The complete user-approved master directive lives in `docs/00_MASTER_PRODUCTION_DIRECTIVE.md`, and the illustration-first visual north star in `docs/20_VISUAL_NORTH_STAR.md`. Together they supersede outdated rules forbidding Three.js, imported focal art, PBR, textures, professional asset tools or suitable postprocessing. **Do not** supersede working simulation, legal provenance, performance safeguards, no paid services, or real verification. `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md` limits the initial dual-renderer GLB proof to one temporary pilot; no parallel renderer as a final architecture. Every subsequent new chat should continue actual code improvements, not re-argue the decision.
 
 ## Critical honesty constraints
 A GitHub commit is not a passing build; WebGL screenshots cannot be inferred from code; a referenced repo is not an integrated dependency; a claimed deployed URL requires HTTP check; a model's opinion of rendering quality is not a screenshot review. Never invent tests, CI status, benchmarks, screenshot evidence, browser access, deployed URLs or code execution. If code runner is unavailable in this chat, make the minimal commit and leave 'verification pending'. Mark checklist [x] only when verifiable acceptance evidence exists.
 
 ## Single-turn budget
 - One task or one related 2–3 subtasks maximum.
-- Prefer 1–5 source files per turn; no giant one-shot AI-generated engine.
+- Keep changes scoped and reviewable, but permit a complete asset pipeline, dependency lock and real browser integration in the same vertical-slice milestone. No giant one-shot rewrite.
 - Cross-check imports, types and function signatures against upstream verified usage and pinned release.
 - Add tests in the same commit when possible; no disabled tests just to get green.
 - Commit and report SHA, precise file paths, tests run/not run, next backlog task.
 - Update `docs/07_SESSION_STATE.md` at end of each successful editing turn. This is **the memory across chats**.
 - Never mark more than one F-task complete without independent proof.
-- Maintain consistent 3D assets, semantic color tokens, camera and animation rules. No arbitrary neon shapes or asset placeholders disguised as production graphics.
+- Maintain consistent 3D assets, semantic color tokens, camera and animation rules. **Use professionally authored, properly licensed external GLB/glTF assets for important visible objects**; primitive generators remain valid for terrain/collision/debugging. Maintain source URLs, revision pins, exact checksums and license manifests. No arbitrary neon placeholders disguised as production graphics.
 
 ## Professional art and motion quality gate (standing instruction)
 For each task that adds or changes anything visible, treat *game feel and presentation*
