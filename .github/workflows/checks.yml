@@ -172,6 +172,23 @@ jobs:
             >/tmp/bastionfall-terrain-capture.log 2>&1
           test -s /tmp/bastionfall-terrain-preview.png
           echo "PASS: F2.03 10 carved pads and camera-projected costs with road and terrain in WebGL2"
+          # Dispatch a real pixel-space click in the running browser fixture:
+          # an unlocked P01 must select; locked P09 must refuse selection.
+          for probe in P01 P09; do
+            "$browser" --headless=new --no-sandbox --disable-dev-shm-usage \
+              --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl \
+              --window-size=1280,960 --virtual-time-budget=6500 \
+              --dump-dom "http://127.0.0.1:4173/tests/terrain-preview.html?probePadClick=$probe" \
+              >"/tmp/bastionfall-pad-click-$probe.html" 2>"/tmp/bastionfall-pad-click-$probe.log"
+            if ! grep -q 'data-result="pass"' "/tmp/bastionfall-pad-click-$probe.html" \
+              || ! grep -q 'data-pad-click-probe="pass"' "/tmp/bastionfall-pad-click-$probe.html"; then
+              echo "F2.03 interactive pad selection failed for $probe"
+              tail -c 5000 "/tmp/bastionfall-pad-click-$probe.html"
+              tail -c 1000 "/tmp/bastionfall-pad-click-$probe.log"
+              exit 1
+            fi
+          done
+          echo "PASS: real canvas click selects unlocked pad and rejects locked pad"
       - name: Upload F1.06 gallery screenshot for human art review
         if: always()
         uses: actions/upload-artifact@v4
