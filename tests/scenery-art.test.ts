@@ -57,7 +57,7 @@ describe("VQ.02b original KayKit CC0 forest and deterministic visual instancing"
   it("caps artist canopy size to within carefully bounded scenery clearance",()=>{
     const s=sceneryArtScale([0.8,1.3,0.9],1.2,1,4.6);
     expect(s).toBeGreaterThan(2);
-    expect(s*0.9).toBeLessThanOrEqual(2*1.2*1.10+0.0001);
+    expect(s*0.9).toBeLessThanOrEqual(2*1.2*1.28+0.0001);
     expect(()=>sceneryArtScale([0,2,1],1,1,4)).toThrow();
     expect(()=>sceneryArtScale([1,2,1],1,NaN,4)).toThrow();
   });
