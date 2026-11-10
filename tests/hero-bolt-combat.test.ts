@@ -65,8 +65,11 @@ describe("F3.03 truthful 60Hz Warden auto-fire and projectiles", () => {
       BALANCE.hero.projectileSpeedMetersPerSecond,9);
     expect(bolt.x).toBe(hero.snapshot.x);
     for(let i=1;i<33;i++) tick(hero,enemies,combat);
-    expect(combat.snapshot.shotsFired).toBe(2);
     expect(combat.snapshot.tick).toBe(33);
+    expect(combat.snapshot.shotsFired).toBe(1);
+    tick(hero,enemies,combat); // tick 34: exactly 33 elapsed ticks since shot 1
+    expect(combat.snapshot.tick).toBe(34);
+    expect(combat.snapshot.shotsFired).toBe(2);
     expect(combat.snapshot.bolts.every(b=>b.targetId>0)).toBe(true);
   });
 
