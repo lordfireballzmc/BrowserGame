@@ -114,6 +114,7 @@ export function terrainHeight(seed: number | string, x: number, z: number): numb
   const s = seedToUint32(seed);
   const distanceToAnchor = Math.min(Math.hypot(x - 31, z - 2), Math.hypot(x + 34, z + 5));
   const flatten = smooth(clamp01((distanceToAnchor - 2.5) / 3.5));
+  if (flatten === 0) return 0; // Canonical +0 at fixed spawn/core staging zones.
   const relief = 0.24 * valueNoise(s, x, z, 9)
     + 0.095 * valueNoise(s ^ 0xa5c31e2b, x, z, 3.5);
   return Math.fround(relief * flatten);
