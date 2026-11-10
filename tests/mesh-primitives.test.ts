@@ -195,5 +195,13 @@ describe("F1.03 mesh contract", () => {
     const badNormals = new Float32Array(original.normals);
     badNormals[0] = 20;
     expect(() => validateGeometry({ ...original, normals: badNormals })).toThrow(/normal/);
+
+    // A unit normal can still point the wrong direction at a different vertex.
+    const flipped = new Float32Array(original.normals);
+    const second = original.indices[1]!;
+    for (let axis = 0; axis < 3; axis += 1) {
+      flipped[second * 3 + axis] = -flipped[second * 3 + axis]!;
+    }
+    expect(() => validateGeometry({ ...original, normals: flipped })).toThrow(/flat-shaded normals/);
   });
 });
