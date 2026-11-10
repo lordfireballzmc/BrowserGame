@@ -1,21 +1,21 @@
 /**
- * VQ.02b — source-pinned Kenney CC0 trees and rocks within the ONE shared
+ * VQ.02b — source-pinned KayKit CC0 trees and rocks within the ONE shared
  * Three/WebGL2 scene. This is only a visual replacement: the deterministic
  * 258-prop scenery placement, road/pad/core collision and enemy logic stay
  * owned by the existing game systems.
  *
  * GPU instancing avoids one draw call per tree/rock. Artist-made geometry and
- * authored texture atlases are kept, with a mild coherent palette pass for
- * the otherwise bright cyan Nature Kit materials. The smaller grass/flowers
+ * shared original KayKit gradient atlas is kept with all seven authored
+ * source mesh silhouettes. The smaller grass/flowers
  * remain the existing cheap double-sided source and are not disguised as art.
  */
 import {
-  Box3, Color, Group, InstancedMesh, Material, Matrix4, Mesh,
+  Box3, Group, InstancedMesh, Material, Matrix4, Mesh,
   MeshStandardMaterial, Quaternion, Scene, Vector3,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
-  SCENERY_ART_MODELS, sceneryArtUrl, type SceneryArtModel,
+  SCENERY_ART_MODELS, SCENERY_ART_SOURCE, sceneryArtUrl, type SceneryArtModel,
 } from "../../art/assets/SceneryArtManifest";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 
@@ -26,20 +26,6 @@ export interface SceneryArtStats {
   readonly rockInstances:number;
   readonly artInstances:number;
   readonly instancedMeshes:number;
-}
-
-/** Maps the imported PBR-compatible plain colors into Fenwall's warmer greens,
- * maintaining original multiple named bark, leaves and moss materials. Atlas
- * models use original texture images rather than destructively painting them. */
-export function sceneryMaterialColor(name:string):string|null {
-  const n=name.toLowerCase();
-  if(n.startsWith("leafsdark"))return "#4f815f";
-  if(n.startsWith("leafs"))return "#77a76e";
-  if(n.includes("woodbarkdark"))return "#795c48";
-  if(n.includes("woodbark"))return "#94724c";
-  if(n.includes("grass"))return "#7b9f68";
-  if(n.includes("dirt"))return "#88816a";
-  return null;
 }
 
 /** Stable variety schedule independent of browser frame, seed consumption or
@@ -54,7 +40,8 @@ export function sceneryModelForPlacement(p:SceneryPlacement):SceneryArtModel {
   return options[numeric%options.length]!;
 }
 
-/** Game-safe screen-height scale; never exceed the real scenery footprint. */
+/** Bounded art-scale: richer ~10% foliage spread within generous existing
+ * F2.05 navigation/road/pad clearance buffers; no extra collision surfaces. */
 export function sceneryArtScale(
   sourceBounds:readonly [number,number,number],
   radius:number,relativeScale:number,targetHeight:number,
@@ -63,7 +50,7 @@ export function sceneryArtScale(
       Number.isFinite(v)&&v>0))throw new RangeError("Invalid scenery bounds");
   const [width,height,depth]=sourceBounds;
   const byHeight=targetHeight/height;
-  const byFootprint=(2*radius*0.90)/Math.max(width,depth);
+  const byFootprint=(2*radius*1.10)/Math.max(width,depth);
   return Math.min(byHeight,byFootprint)*relativeScale;
 }
 
@@ -105,36 +92,41 @@ export class SceneryArtLayer {
     }
     this.loading=true;
     try {
-      const loader=new GLTFLoader();
-      const models=await Promise.all(SCENERY_ART_MODELS.map(async spec=>{
-        const response=await fetch(sceneryArtUrl(spec.file),{cache:"force-cache"});
-        if(!response.ok)throw new Error("Scenery CC0 HTTP "+response.status+": "+spec.id);
-        const raw=await response.arrayBuffer();
-        if(raw.byteLength!==spec.bytes ||
-           new DataView(raw).getUint32(0,true)!==0x46546c67) {
-          throw new Error("Changed or broken locally bundled scenery GLB: "+spec.id);
+      // One 396KB bundled KayKit CC0 Forest Nature source contains all seven
+      // required artist meshes, each textured with the same shared atlas.
+      // Load/decode it ONCE rather than fetching seven almost identical GLBs.
+      const source=SCENERY_ART_SOURCE;
+      const response=await fetch(sceneryArtUrl(),{cache:"force-cache"});
+      if(!response.ok)throw new Error("Forest CC0 HTTP "+response.status);
+      const raw=await response.arrayBuffer();
+      if(raw.byteLength!==source.bytes||
+         new DataView(raw).getUint32(0,true)!==0x46546c67) {
+        throw new Error("Locally bundled KayKit forest binary is invalid");
+      }
+      const gltf=await new GLTFLoader().parseAsync(raw,sceneryArtUrl());
+      if(this.destroyed)throw new Error("Scenery layer disposed while loading");
+      gltf.scene.updateMatrixWorld(true);
+      const models=SCENERY_ART_MODELS.map(spec=>{
+        const original=gltf.scene.getObjectByName(spec.sourceNode);
+        if(!(original instanceof Mesh)) {
+          throw new Error("Missing exact authored KayKit forest node "+spec.sourceNode);
         }
-        const gltf=await loader.parseAsync(raw,sceneryArtUrl(""));
-        if(this.destroyed)throw new Error("Scenery layer disposed while loading");
-        let meshCount=0,atlasCount=0;
-        gltf.scene.traverse(child=>{
-          if(!(child instanceof Mesh))return;
-          meshCount++;
-          const materials=Array.isArray(child.material)?child.material:[child.material];
-          if(materials.some(m=>(m as MeshStandardMaterial).map))atlasCount++;
-        });
-        if(meshCount<1||(spec.hasAtlas && atlasCount<1)||
-           (!spec.hasAtlas && atlasCount>0)) {
-          throw new Error("Source authored geometry / texture expectation failed: "+spec.id);
+        const mats=Array.isArray(original.material)
+          ? original.material:[original.material];
+        if(!mats.some(m=>(m as MeshStandardMaterial).map)) {
+          throw new Error("Missing real shared KayKit painted atlas "+spec.sourceNode);
         }
-        gltf.scene.updateMatrixWorld(true);
-        const bounds=new Box3().setFromObject(gltf.scene);
+        const scene=new Group();
+        scene.name="KayKit-"+spec.id;
+        scene.add(original.clone(true));
+        scene.updateMatrixWorld(true);
+        const bounds=new Box3().setFromObject(scene);
         const dims=bounds.getSize(new Vector3());
         if(![dims.x,dims.y,dims.z].every(v=>Number.isFinite(v)&&v>0.01)) {
-          throw new Error("Invalid source scenery mesh dimensions "+spec.id);
+          throw new Error("Invalid original forest geometry dimensions "+spec.id);
         }
-        return {spec,scene:gltf.scene,bounds} satisfies LoadedModel;
-      }));
+        return {spec,scene,bounds} satisfies LoadedModel;
+      });
       if(this.destroyed)throw new Error("Scenery layer disposed during assembly");
       const work=new Group();
       work.name="Fenwall-mass-scenery-art-vq02b";
@@ -145,7 +137,7 @@ export class SceneryArtLayer {
           (p.kind==="pine"||p.kind==="broadleaf"||p.kind==="rock") &&
           sceneryModelForPlacement(p).id===model.spec.id);
         if(!selected.length)throw new Error("Unused 3D scenery source "+model.spec.id);
-        atlases+=Number(model.spec.hasAtlas);
+        atlases++; // all seven models use the one painted KayKit atlas
         if(model.spec.kind==="rock")rockInstances+=selected.length;
         else treeInstances+=selected.length;
         const dims=model.bounds.getSize(new Vector3());
@@ -157,8 +149,8 @@ export class SceneryArtLayer {
           const toned=original.map(m=>{
             const variant=m.clone();
             if(variant instanceof MeshStandardMaterial) {
-              const desired=!variant.map?sceneryMaterialColor(variant.name):null;
-              if(desired)variant.color.set(new Color(desired));
+              // Keep the artist's original painted texture and faction-friendly
+              // leaf/trunk color groups, without a cyan-to-green fake tint.
               variant.roughness=0.92;
               variant.metalness=0;
             }
@@ -190,7 +182,7 @@ export class SceneryArtLayer {
         });
         this.resources.push(model.scene);
       }
-      if(batches===0||treeInstances!==40||rockInstances!==42||atlases!==2)
+      if(batches===0||treeInstances!==40||rockInstances!==42||atlases!==7)
         throw new Error("Missing genuine instanced scenery art");
       this.root.add(work);
       this.loaded=Object.freeze({
