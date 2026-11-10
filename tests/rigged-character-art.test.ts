@@ -1,8 +1,8 @@
 import { describe,expect,it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { Scene } from "three";
-import { RiggedCharacterLayer } from "../src/engine/render/RiggedCharacterLayer";
+import { MeshStandardMaterial, Scene } from "three";
+import { RiggedCharacterLayer, stylizeActorMaterial } from "../src/engine/render/RiggedCharacterLayer";
 
 const base="public/assets/characters/";
 const manifest=JSON.parse(readFileSync(base+"manifest.json","utf8")) as {
@@ -64,6 +64,25 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
     }
     expect(doc.animations.every((anim:{samplers:Array<unknown>;channels:Array<unknown>})=>
       anim.samplers.length>0 && anim.channels.length>0)).toBe(true);
+  });
+
+  it("honors original blue-Warden/red-hostile visual hierarchy without mutating artist materials",()=>{
+    const source=new MeshStandardMaterial({color:0xffffff,roughness:0.52,metalness:0.4});
+    const warden=stylizeActorMaterial(source,"warden");
+    const scrapper=stylizeActorMaterial(source,"scrapper");
+    const runner=stylizeActorMaterial(source,"runner");
+    expect(warden).not.toBe(source);
+    expect(source.color.r).toBeCloseTo(1,5);
+    expect(source.roughness).toBe(0.52);
+    expect(warden.color.b).toBeGreaterThan(warden.color.r);
+    expect(scrapper.color.r).toBeGreaterThan(scrapper.color.g*1.45);
+    expect(runner.color.r).toBeGreaterThan(runner.color.g*1.4);
+    for(const mat of [warden,scrapper,runner]) {
+      expect(mat.roughness).toBeCloseTo(0.89,4);
+      expect(mat.metalness).toBeLessThanOrEqual(0.14);
+      mat.dispose();
+    }
+    source.dispose();
   });
 
   it("validates deterministic visual-only animation clocks without requiring WebGL",()=>{
