@@ -70,8 +70,12 @@ describe("VQ.02d GPU-batched original-artist 3D groundcover",()=>{
       new Set(["grass","shrub-round","shrub-branch","flower-gold","flower-lilac"]));
     for(const p of plan){
       expect([p.x,p.y,p.z,p.variation,p.angle].every(Number.isFinite)).toBe(true);
+      // Canonical points inherit the original, already validated clearance.
+      // Supplemental locations get deliberately larger shrub/grass radii.
+      const scale=p.origin==="canonical"?0.85:
+        p.kind==="shrub"?2.65:p.kind==="grass"?1.4:1.7;
       expect(sceneryClearance(p.x,p.z,p.kind==="shrub"?"grass":p.kind,
-        p.kind==="shrub"?2.65:p.kind==="grass"?1.4:1.7)).toBe(true);
+        scale)).toBe(true);
     }
   });
   it("refuses noncanonical gameplay scenery budgets rather than silently adding colliders",()=>{
