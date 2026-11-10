@@ -21,6 +21,8 @@ export interface EnemySpawn {
   readonly spawnTick: number;
   /** Deterministic left/right road-shoulder offset, meters. */
   readonly laneOffset: number;
+  /** Longitudinal queue slot at the gate, avoids piled-up overlapping actors. */
+  readonly gateHoldBackMeters: number;
 }
 export interface RoadEnemy {
   readonly id: number;
@@ -78,13 +80,18 @@ export function buildEarlySpawnQueue(wave: EarlyWave): readonly EnemySpawn[] {
   if (schedule.length > MAX_RETAINED_ENEMIES) {
     throw new RangeError("Script exceeds enemy entity budget");
   }
-  const result = schedule.map((item, index): EnemySpawn => Object.freeze({
-    id: index + 1,
-    ...item,
-    // Three permanent lateral bands prevent a single-file parade.
-    // Faster Runners are confined to one inner shoulder, never off the road.
-    laneOffset: item.kind === "runner" ? -0.92 : [-0.46, 0, 0.46][index % 3]!,
-  }));
+  const holdingSlots = new Map<string,number>();
+  const result = schedule.map((item, index): EnemySpawn => {
+    // Three permanent Scrapper bands and one faster Runner shoulder.
+    const lane = item.kind === "runner" ? -0.92 : [-0.46, 0, 0.46][index % 3]!;
+    const key = item.kind + ":" + lane;
+    const rank = holdingSlots.get(key) ?? 0;
+    holdingSlots.set(key, rank+1);
+    return Object.freeze({
+      id: index+1, ...item, laneOffset: lane,
+      gateHoldBackMeters: rank*1.20,
+    });
+  });
   // Verify this authored schedule's maximum one-second burst budget.
   for (let i = 0; i < result.length; i++) {
     let count = 0;
@@ -128,7 +135,7 @@ function makeEnemy(
     speedMetersPerSecond: config.speedMetersPerSecond,
     distanceMeters: distance,
     ...locateRoadEnemy(distance, spawn.laneOffset, seed),
-    phase: distance >= GATE_STAGING_DISTANCE_METERS
+    phase: distance >= GATE_STAGING_DISTANCE_METERS - spawn.gateHoldBackMeters - 1e-8
       ? "holding-at-gate" as const : "advancing" as const,
   });
 }
@@ -169,7 +176,8 @@ export class EnemyRoadWorld {
     const nextTick = this.current.tick + 1;
     const next: RoadEnemy[] = this.current.enemies.map(enemy => makeEnemy(
       this.queue[enemy.id - 1]!,
-      Math.min(GATE_STAGING_DISTANCE_METERS,
+      Math.min(GATE_STAGING_DISTANCE_METERS -
+          this.queue[enemy.id - 1]!.gateHoldBackMeters,
         enemy.distanceMeters + enemy.speedMetersPerSecond * dtSeconds),
       this.seed,
     ));
