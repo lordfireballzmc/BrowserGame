@@ -11,6 +11,7 @@
  * state mutations. Road, props, and river geometry belong to later F2 tasks.
  */
 import { seedToUint32 } from "../../game/Random";
+import { distanceToRoadXZ, ROAD_SPEC } from "./RoadPath";
 import type { Geometry, Point3 } from "../mesh/Primitives";
 import { validateGeometry } from "../mesh/Primitives";
 import { MATERIAL_TOKENS, type MaterialToken } from "../../engine/render/Palette";
@@ -112,8 +113,16 @@ export function terrainHeight(seed: number | string, x: number, z: number): numb
   }
   const s = seedToUint32(seed);
   const distanceToAnchor = Math.min(Math.hypot(x - 31, z - 2), Math.hypot(x + 34, z + 5));
-  const flatten = smooth(clamp01((distanceToAnchor - 2.5) / 3.5));
-  if (flatten === 0) return 0; // Canonical +0 at fixed spawn/core staging zones.
+  const anchorFlat = smooth(clamp01((distanceToAnchor - 2.5) / 3.5));
+  // Carve an unobstructed 4.5m road with a feathered outer shoulder.
+  // At least 1.1m outside each road edge is flat, so 1m terrain cells
+  // cannot poke through the nominal y=+0.04m road quad surface.
+  const roadDistance = distanceToRoadXZ(x, z);
+  const roadFlat = smooth(clamp01(
+    (roadDistance - ROAD_SPEC.flatTerrainHalfWidthMeters) / ROAD_SPEC.terrainFeatherMeters,
+  ));
+  const flatten = Math.min(anchorFlat, roadFlat);
+  if (flatten === 0) return 0; // Canonical +0 in the road and staging corridor.
   const relief = 0.24 * valueNoise(s, x, z, 9)
     + 0.095 * valueNoise(s ^ 0xa5c31e2b, x, z, 3.5);
   return Math.fround(relief * flatten);
