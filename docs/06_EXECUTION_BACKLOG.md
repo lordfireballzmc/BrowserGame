@@ -29,7 +29,7 @@ Every task includes ID, dependencies, deliverable, test gate, and asset/visual g
 
 ## F3 — first fully playable 3-wave loop
 - [x] **F3.01** keyboard movement/collision, state snapshot, camera follow; tests diagonal speed and pause. CI **42790695145**: 161 Vitest tests, TypeScript, build, real Chrome 90-tick keyboard/camera loop and landscape/portrait WebGL2 screenshots; previous fixed-step loop pause tests remain green. Original scene/lighting preserved. Reviewed visual quality in docs/17_F3_01_MOVEMENT_REVIEW.md. **Keyboard locomotion only—not combat, touch controls, or articulated run animation.**
-- [ ] **F3.02** enemy road progress and spawn queue, Scrapper/Runner HP/speed/attack; test deterministic movement and spawn count.
+- [x] **F3.02** deterministic enemy road progress and bounded spawn queue, Scrapper/Runner balance HP/speed/strike metadata; wave-1 ten Scrappers and wave-2 fourteen Scrappers/five Runners. CI **42793655064**: 168 unit tests, strict TS, build and real Chrome/SwiftShader live scene march in both aspect ratios plus legacy pad-click checks. Original Runner model, per-lane 1.2m gate spacing and screenshot inspection documented in docs/18_F3_02_RAIDER_MARCH_REVIEW.md. **No active enemy damage, projectile combat or functional wave controller yet.**
 - [ ] **F3.03** 7m hero auto aim/fire and real-time bolt projectile, hit registration, target ordering.
 - [ ] **F3.04** kill resolution and copper pickups with magnet + exact integer credit; prevent double collection.
 - [ ] **F3.05** Bolt Spire pad selection, 20-coin buy, spawn, firing, upgrade T2; atomic cost validation.
