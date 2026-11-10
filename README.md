@@ -6,7 +6,7 @@
 
 ## Binding sharpness, fluidity and production-quality mandate (2026-11-10)
 
-**Read first:** [VQ fidelity & fluidity directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [original illustrated 3D visual north star](docs/20_VISUAL_NORTH_STAR.md) and [AGENTS.md](AGENTS.md). The first pending code task is **VQ.01**: use existing CanvasRuntime CSS/DPR graphics presets to eliminate the fixed 1280×720 movement-preview render ceiling, maintain correct camera/pad picking and prove true high-DPI, landscape/portrait sharpness with actual WebGL browser captures. VQ.02 follows with coherent original keep, pads and foliage assets; VQ.03+ strengthens materials, animation and UI while continuing F3.04 gameplay. **Planned, not yet shipped**; documentation is not a graphics improvement.
+**Read first:** [binding VQ directive](docs/29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md), [3D illustrated art target](docs/20_VISUAL_NORTH_STAR.md), and [VQ.01 real image review](docs/30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). **VQ.01 has shipped:** actual Warden Three.js preview supports CSS/DPR-aware Economy/Balanced/Sharp rendering, correct GPU/camera resize, and graphics telemetry. [CI #42888985727](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727) passed 193 tests and real DPR2 browser screenshots. Test it at `/tests/terrain-preview.html?view=movement&quality=sharp`. **Next VQ.02:** professionally sculpted original 3D keep/pads/environment, plus F3.04 playable economy. Sharper pixels do not yet solve sparse art, generic characters or diagnostic UI.
 
 ## Production mandate and asset-first pilot (2026-11-10)
 

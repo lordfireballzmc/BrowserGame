@@ -4,6 +4,12 @@ Project: Bastionfall
 Canonical repository: lordfireballzmc/BrowserGame
 
 
+## Verified VQ.01 handoff — 2026-11-10 (supersedes older pending notes)
+- **Merged:** PR #29, squash `8c72c55bcde9780388403a3184d700d043a88c22`: responsive physical CSS/DPR × economy/balanced/sharp buffers in live Three movement/combat; GPU-safe WebGLRenderer resize, camera update, graphics settings and rolling frame/CPU telemetry.
+- **Exact-head CI passed:** [Actions #42888985727](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727): 193 unit tests / 23 files, TS/build, real Chrome DPR2 landscape 2400×1350 for CSS 960×540 and portrait 1350×2400 for CSS 540×960, graphics quality switch and viewport resize/restore, 19 raiders/20 skinned actors/physical hits; map pad/cinematic regressions.
+- [Real screenshot artifact](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727/artifacts/13796194576) and [critical review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). Still basic green meadow, simple foliage/keep, gray tower pads and diagnostic UI: sharply rendered does not mean professionally art-directed. Real mobile FPS is unmeasured.
+- **NEXT VQ.02:** original sculpted/painted keep + pad architectural kit with verified license/provenance, gameplay scale and interactions, real before/after 16:9/9:16 screenshot review. Continue F3.04 coin/reward game mechanics. Never repeat VQ.01 or resurrect obsolete no-Three rules.
+
 ## 2026-11-10 — newest mandatory graphics quality and cross-chat continuity
 
 - **User direction, latest:** maximize visually impressive, sharp, professionally polished and *fluid* **actual original 3D Bastionfall gameplay**. The new [visual fidelity & fluidity directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) and amended `AGENTS.md`, master directive, art bible, architecture, dependency matrix, backdrop and prompt explicitly supersede any older no-Three.js, primitive-only, bland/low-res or realistic-strategy-advertising assumptions. Continue the existing **Kingdom Rush-inspired personality and legibility in original 3D**, never copyrighted copies.

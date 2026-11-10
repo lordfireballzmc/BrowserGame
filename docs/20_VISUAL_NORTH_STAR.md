@@ -3,7 +3,7 @@
 **Audience:** every new ChatGPT development session, artists, technical artists, UI and animation engineers.  
 **This document describes a TARGET, not the appearance of today's runtime.**
 
-**Binding quality companion:** [VQ rendering, art and animation directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md). The newest user decision is not simply to match a cartoon style but to produce the **best achievable sharp, polished and fluid original 3D game** in that style. The current fixed-resolution movement buffer, generic environment and limited game-feel are *known defects*, not acceptable final aesthetics. The immediate VQ.01 task adds live native-density output; VQ.02+ supplies professionally authored coherent assets, rich materials and motion. Do not claim the directive itself changed the game.
+**The old fixed-resolution movement buffer was corrected in VQ.01** ([real browser review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md)); artistically primitive grass, trees, keep, pads, HUD and incomplete game-feel still fail the goal. **VQ.02 next** for coherent original sculpted environment assets; later VQ.03/04 painterly lighting and truly fluid articulated motion.
 
 
 ## Executive art mandate
@@ -75,7 +75,7 @@ Don't fill the screen with the keep or overwhelm it with tall battlements. Camer
 - **Immediately**: make F3.04 etc meet this style rather than accumulating temporary flat placeholders.
 - **Next art sprint**: sculpt higher-quality Warden + Scrapper/Runner proportions, actual 7–12-part articulated motion, exaggerated recoil and readable projectile staging.
 - **Environment polish**: replace schematic tree/grass/keep forms with shaped storybook clusters, rich but controlled material ramps, stone/timber trim and stronger contact with the land; maintain path/pad exclusions.
-- **Renderer polish**: first do VQ.01 native-density canvas resizing. Then evaluate outline/silhouette edge technique, toon-style light ramps and artist-controlled ambient occlusion/contact with measured mobile costs (VQ.03). Do not indiscriminately add bloom, depth-of-field or blur.
+- **Renderer polish**: VQ.01 native-DPI game view passed verified Chrome. VQ.03 will evaluate crisp outlines, toon/painterly ramps, contact shadow and AA without indiscriminate blur/DOF/bloom, subject to measured performance.
 - **UI**: rebuild the sparse engineering HUD as a joyful illustrated fantasy presentation with scalable touch-first hierarchy while keeping exact balance data.
 
 ## Source/copyright boundary

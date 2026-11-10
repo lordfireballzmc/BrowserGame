@@ -1,6 +1,6 @@
 # BASTIONFALL — AUTONOMOUS AAA-INSPIRED BROWSER GAME DEVELOPMENT MASTER DIRECTIVE
 
-> **Binding 2026-11-10 addendum:** The later user-approved [VQ visual fidelity & fluidity directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) and [visual north star](20_VISUAL_NORTH_STAR.md) govern the active visual priorities. The objective is the **highest achievable sharp, fluid, polished ORIGINAL illustrated 3D defense game**, with playful readability but no copying of Kingdom Rush; NOT a glossy Rise-of-Kingdoms/Kingshot advertising style. Active rendering is already Three.js/WebGL2 with licensed skinned GLB actors, not the old custom-only architecture. First incomplete rendering code task is VQ.01 CSS/DPR responsive actual gameplay resolution; VQ.02+ introduces better real artwork, lighting and animation alongside gameplay. Earlier phase text below is a historical plan where superseded. This documentation addendum does not implement new pixels or animation.
+The latest approved aesthetic remains sharp, fluid, original illustrated 3D. **VQ.01 responsive native-DPR Warden rendering has now been implemented and verified** in real landscape/portrait Chrome; [proof](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). The next visual code task is **VQ.02** coherent original sculpted environmental art, then sophisticated lighting and motion alongside playable F3.04 economy. Historical earlier phases below are superseded where conflicting.
 
 
 ## YOUR ROLE AND MISSION

@@ -74,6 +74,9 @@ This document records the user's **actual taste judgments and acceptance criteri
 **Known rendering limitation:** active movement preview still sets 1280×720 backing pixels in landscape (720×1280 portrait). Existing CSS/DPR graphics utility is not connected to that gameplay path. High-DPI rendering is therefore **pending VQ.01 code**, not proven by documentation. Next VQ.02+ original keep/pads/environment, material finish, true motion and actual screenshot/sequence comparisons; continue F3.04 economics. Preserve this historical record of user objections. **No new screenshot, runtime improvement or mobile FPS verification was produced by this documentation-only policy update.**
 
 
+## 2026-11-10 — VQ.01 completed, art improvements still needed
+Real [DPR2 screenshots](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727/artifacts/13796194576) and [green CI](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727) verify responsive physical 2400×1350 landscape and 1350×2400 portrait Sharp buffers, real gameplay and quality/resize roundtrips. Positive: crisp rendering; negative: blank octagonal pads, flat grass, repetitive angular vegetation, simplistic keep/HUD. User has not signed off on artistic quality; no real mobile FPS. [Detailed review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). Next VQ.02 original premium environment kit.
+
 ## Repeatable future review entries
 Append one entry per visually meaningful change:
 - **Milestone / commit / CI run and screenshot artifact:** exact links; flag unavailable material.

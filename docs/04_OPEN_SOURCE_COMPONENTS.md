@@ -8,7 +8,7 @@ Research checkpoint: 2026-11-10. This is a curated architecture and suitability 
 | Need | Technology | Status |
 | --- | --- | --- |
 | 3D scene + GLB animation | [Three.js](https://github.com/mrdoob/three.js) | **Already integrated**, r184/WebGL2 |
-| High-DPI sizing | Existing `src/engine/render/CanvasRuntime.ts` and [Three.js responsive guide](https://threejs.org/manual/en/responsive.html) | Utility exists; **live movement integration VQ.01 pending** |
+| High-DPI sizing | Existing `src/engine/render/CanvasRuntime.ts` and [Three.js responsive guide](https://threejs.org/manual/en/responsive.html) | **Integrated VQ.01**, real Chrome DPR2 and resize/quality proof in CI #42888985727 |
 | Selective antialiasing/post | [pmndrs/postprocessing](https://github.com/pmndrs/postprocessing) | **Candidate only**; compare cost, sharpness, ghosting vs working MSAA |
 | PBR comparison reference | [Khronos glTF Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer) | Reference implementation, **not installed** |
 | GLB optimization | [glTF-Transform](https://github.com/donmccurdy/glTF-Transform), [meshoptimizer](https://github.com/zeux/meshoptimizer), [KTX-Software](https://github.com/KhronosGroup/KTX-Software) | Candidates, adopt with licensed asset provenance and fidelity tests |

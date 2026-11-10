@@ -1,6 +1,6 @@
 # Bastionfall — Visual Fidelity, Fluidity & Production Quality Directive (VQ.2026-11-10)
 
-**Status:** user-mandated, binding instruction for every future development session.  
+**Status:** binding user mandate for every new session. **VQ.01 is now implemented and verified; next VQ.02** original authored environment assets. [Actual screenshot/CI review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). This directive's quality gates remain mandatory.
 **Scope:** all shipped gameplay, art, tools, screenshots, performance work, and repository planning.  
 **Authority:** supplements the studio-wide [master production directive](00_MASTER_PRODUCTION_DIRECTIVE.md), sharpens the [illustrated 3D art north star](20_VISUAL_NORTH_STAR.md), and overrides older conflicting low-fidelity/procedural-only constraints. The game design bible governs gameplay rules; this document governs presentation quality, delivery evidence, and sequencing. Historical postmortems remain intact as evidence, not active instructions.
 
@@ -17,9 +17,9 @@ Do not let hand-coded primitive mesh limits dictate art quality. Use source-pinn
 ## 1. Current implementation reality — correct the documented misconceptions
 
 - The primary 3D scene is already rendered by **Three.js r184 / WebGL2**, with deterministic TypeScript game simulation and an explicit legacy diagnostic fallback. Do **not** restart an engine migration or describe Three.js as prohibited. Do not switch to Babylon/Unity/Godot without actual repository-specific evidence of meaningful advantage. WebGPU is optional and must retain a tested WebGL2 path.
-- The **movement preview** currently assigns fixed 1280 × 720 (720 × 1280 portrait) backing pixels; cinematic view uses fixed 1920 × 1080 (1080 × 1920 portrait). CSS scales these to the display. Sharpness is therefore limited when a large/high-DPI display stretches the movement canvas.
+- **Historical VQ.01 gap now closed:** movement previously fixed at 1280×720 (720×1280 portrait). Actual active Three Warden scene now renders responsive CSS × DPR × bounded tier resolution; verified browser results in [VQ.01 review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). Legacy/cinematic paths retain separate fixed-resolution diagnostic behavior.
 - The Three renderer calls `setPixelRatio(1)` **because it treats canvas backing dimensions as already physical pixels**. That line alone does **not** prove a bug. The missing integration is **live CSS size × DPR / quality-budget sizing**, including resize and screenshot consistency; do not multiply by DPR twice.
-- `src/engine/render/CanvasRuntime.ts` already implements `computeCanvasResolution`, quality presets, safe caps, and `resizeCanvas`; **reuse it**. Current movement-preview code in `tests/terrain-preview.html` bypasses it.
+- `CanvasRuntime.computeCanvasResolution` is now integrated in the actual Three gameplay Warden preview (VQ.01) with GPU-safe `resizeBackbuffer`, quality settings, and real Chrome physical-buffer verification. [Evidence](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md).
 - A 4K frame of rudimentary models is still rudimentary. Resolution, edge quality, art fidelity, motion, and composition have **distinct acceptance tests**.
 - Existing ART.03b licensed CC0 rigged characters and 140ms visual transitions are useful foundations, **not final exclusive Bastionfall art**. Environment/keep/pads/HUD remain far behind the goal. Do not claim new assets or effect passes are integrated until the running game proves them.
 
@@ -100,6 +100,6 @@ A screenshot can pass technical correctness while failing appearance. In that ca
 
 ## 6. Immediate next handoff
 
-**Next code task: VQ.01 — integrate existing CSS/DPR-aware canvas sizing into the actual unified Three gameplay preview**. Include tests for landscape/portrait, high-DPI and device pixel caps, resize/orientation and pointer/pad hit correctness, true backbuffer proof, explicit quality tier, real Chrome screenshots, and low-end fallback. Ensure the adaptive renderer actually updates Three/WebGL and camera, not only HTML attributes. Start with this before introducing optional postprocessing dependencies. Then **VQ.02** replace one high-visibility bland environmental asset family and compare real gameplay captures, while keeping **F3.04** gameplay progress active.
+**VQ.01 native-DPI Three gameplay is VERIFIED** by [CI #42888985727](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42888985727) and [actual screenshot review](30_VQ01_NATIVE_DPI_BROWSER_REVIEW.md). **NEXT VQ.02** original sculpted/textured keep and build-pad architectural kit with verified legal provenance, genuine in-game integration, 16:9/9:16 before-after screenshots and art critique; F3.04 playable economy continues. Do not repeat VQ.01 or accept primitive high-DPI graphics as finished.
 
 **This directive changes requirements and plans, not the game binary itself.** Do not claim P0/P1/P2/P3 are implemented merely because this document is committed.
