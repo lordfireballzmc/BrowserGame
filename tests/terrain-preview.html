@@ -132,11 +132,17 @@
       if (Math.abs(pixels[i] - 212) > 18 || Math.abs(pixels[i + 1] - 219) > 18
         || Math.abs(pixels[i + 2] - 210) > 18) changedSamples++;
     }
+    // Instanced geometry shares one mesh: all TEN pads must draw in ONE call.
+    const expectedDraws = terrain.tiles.length +
+      terrain.tiles.filter(tile => tile.cliff !== null).length + 2; // road + shared pad
     if (terrain.tiles.length !== 54 || terrain.coastSegments < 50
-      || stats.instances !== instances.length || stats.drawCalls !== instances.length
+      || stats.instances !== instances.length || stats.drawCalls !== expectedDraws
       || changedSamples < 500 || road.rutCount < 10 || road.sampleStepMaxMeters > 0.55 + 1e-6
-      || PAD_SITES.length !== 10 || stats.instances !== instances.length) {
-      throw new Error("Terrain preview acceptance failed; coastline or framebuffer missing");
+      || PAD_SITES.length !== 10 || labelLayer.childElementCount !== PAD_SITES.length) {
+      throw new Error("Terrain/pad preview acceptance failed: " +
+        JSON.stringify({instances:stats.instances, expectedInstances:instances.length,
+          draws:stats.drawCalls, expectedDraws, changedSamples,
+          labels:labelLayer.childElementCount, padCount:PAD_SITES.length}));
     }
     const trace = {
       mode: "ENGINEERING PREVIEW (not a game)",
