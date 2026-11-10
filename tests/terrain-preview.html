@@ -120,6 +120,7 @@
       </div>
       <a class="movement-exit" href="/" aria-label="Return to Bastionfall menu">MENU</a>
       <div class="hud-bottom"><span>WASD / ARROWS TO MOVE · ESC TO PAUSE</span>
+        <span id="raider-readout">RED COLUMN · APPROACHING</span>
         <span id="move-readout">READY · 0.0 m/s</span></div>
     </div></div>
   <output id="pad-selection" aria-live="polite">Wave 1: two available pads. Click a pad to inspect its build region.</output>
@@ -130,6 +131,8 @@
   import { OrthoCamera } from "/src/engine/Camera.ts";
   import { createBrowserLoop, FIXED_STEP_SECONDS } from "/src/engine/Loop.ts";
   import { HeroMovementWorld } from "/src/game/HeroMovement.ts";
+  import { EnemyRoadWorld } from "/src/game/EnemyRoadWorld.ts";
+  import { createRunnerStudy } from "/src/art/models/RunnerStudy.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
   import { mergeStaticGeometries } from "/src/art/mesh/StaticBatch.ts";
   import { generateTerrain, terrainHeight } from "/src/art/terrain/Island.ts";
@@ -170,6 +173,11 @@
     renderer.enableFrustumCulling();
     const seed = "fenwall-crossing-v1";
     const playerWorld = movement ? new HeroMovementWorld(seed) : null;
+    const raiderWorld = movement ? new EnemyRoadWorld(2, seed) : null;
+    // This is an explicitly mid-approach movement study, not a complete
+    // playable wave. All 19 raiders have genuine deterministic spawn histories.
+    const demoHeadstartTicks = movement ? 30 * 60 : 0;
+    for (let i=0;i<demoHeadstartTicks;i++) raiderWorld.step(FIXED_STEP_SECONDS);
     const terrain = generateTerrain(seed);
     validatePadSites();
     const model = mat4.create();
@@ -226,12 +234,45 @@
       mat4.fromTranslation(wardenModel,[hero.x,hero.groundY+0.04,hero.z]);
       mat4.rotateY(wardenModel,wardenModel,hero.yaw);
     } else stageActor("warden",24,-4,Math.PI*0.70);
-    for (const [x,z] of [[9,-4.1],[11,-5.3],[13,-6.5],[15,-7],[17,-7.2],
-                          [19,-6.9],[20,-5.2],[21,-7],[22,-5.8],
-                          [15,-5.4],[18,-5.4],[20.5,-7.5]]) {
-      stageActor("scrapper",x,z,Math.PI*0.75,0.92);
+    if (!movement) {
+      for (const [x,z] of [[9,-4.1],[11,-5.3],[13,-6.5],[15,-7],[17,-7.2],
+                            [19,-6.9],[20,-5.2],[21,-7],[22,-5.8],
+                            [15,-5.4],[18,-5.4],[20.5,-7.5]]) {
+        stageActor("scrapper",x,z,Math.PI*0.75,0.92);
+      }
+      stageActor("shieldbearer",17.5,-8.2,Math.PI*0.75,1.07);
     }
-    stageActor("shieldbearer",17.5,-8.2,Math.PI*0.75,1.07);
+    // These are now simulated route entities, not static posing. Each entity
+    // retains one WebGL matrix and one authored mesh for its entire lifetime.
+    const raiderMatrices = new Map();
+    if (movement) renderer.uploadMesh("route-runner",createRunnerStudy());
+    const syncRaiderModels = alpha => {
+      if (!raiderWorld) return null;
+      const frame=raiderWorld.sample(alpha);
+      for (const raider of frame.enemies) {
+        let matrix=raiderMatrices.get(raider.id);
+        if (!matrix) {
+          matrix=mat4.create();
+          raiderMatrices.set(raider.id,matrix);
+          instances.push({meshId:raider.kind==="runner"?"route-runner":"staged-scrapper",
+            material:"enemy.red",model:matrix});
+        }
+        // Arc-length animation timing is stable under variable frame rates.
+        // This subtle whole-mesh gait is not an articulated walk cycle.
+        const moving=raider.phase==="advancing";
+        const weight=moving ? 1 : 0;
+        const stride=Math.sin(raider.distanceMeters * (raider.kind==="runner"?13:9)
+          +raider.id*0.45);
+        mat4.fromTranslation(matrix,[raider.x,
+          raider.y+stride*0.025*weight,raider.z]);
+        mat4.rotateY(matrix,matrix,raider.yaw);
+        const scale=raider.kind==="runner"?0.99:0.95;
+        mat4.scale(matrix,matrix,[scale*(1-0.015*stride*weight),
+          scale*(1+0.019*stride*weight),scale]);
+      }
+      return frame;
+    };
+    syncRaiderModels(1);
     if (cinematic) {
       renderer.uploadMesh("staged-bolt-spire",createBoltSpireStudy());
       for (const id of ["P09","P10"]) {
@@ -334,12 +375,13 @@
           labels:labelLayer.childElementCount, padCount:PAD_SITES.length}));
     }
     const trace = {
-      mode: movement ? "F3.01 CONTROLLABLE WARDEN (no combat yet)"
+      mode: movement ? "F3.02 MOVING ROAD RAIDERS (no combat yet)"
         : cinematic ? "CINEMATIC ART STUDY (not gameplay)" : "ENGINEERING WORLD PREVIEW (not a game)",
       sunShadows:renderer.sunShadowsEnabled,
       targetResolution:[canvas.width,canvas.height],
-      stagedActors:movement?14:15, movingWarden:movement?1:0,
-      stagedBoltSpires:cinematic?2:0,
+      stagedActors:movement?1:15, movingWarden:movement?1:0,
+      simulatedRaiders:movement?raiderWorld.snapshot.enemies.length:0,
+      demoHeadstartTicks, stagedBoltSpires:cinematic?2:0,
       seed: terrain.seed, tiles: terrain.tiles.length,
       roadWidthMeters: 4.5, roadLengthMeters: Number(road.lengthMeters.toFixed(2)),
       roadSampleStepMaxMeters: Number(road.sampleStepMaxMeters.toFixed(3)),
@@ -454,7 +496,14 @@
           // Subtle breathing/weight shift now; actual articulated steps F4.01.
           mat4.scale(wardenModel,wardenModel,
             [1-0.012*gait*intensity,1+0.018*gait*intensity,1-0.012*gait*intensity]);
+          const enemyFrame=syncRaiderModels(alpha);
           renderer.render(movingCamera.matrices,instances);
+          const enemyText=document.querySelector("#raider-readout");
+          enemyText.textContent="RED COLUMN · "+enemyFrame.spawned+" ON ROUTE · "
+            +enemyFrame.arrived+" AT GATE (NO DAMAGE YET)";
+          body.dataset.enemyCount=String(enemyFrame.spawned);
+          body.dataset.enemiesAtGate=String(enemyFrame.arrived);
+          body.dataset.enemyTick=String(enemyFrame.tick);
           const status=document.querySelector("#move-readout");
           status.textContent=playerWorld.snapshot.tick+" TICKS · "
             +hero.speedMetersPerSecond.toFixed(1)+" M/S";
@@ -470,7 +519,10 @@
         }
       };
       gameLoop=createBrowserLoop({
-        fixedUpdate(dt){ playerWorld.step(movementInput(),dt); },
+        fixedUpdate(dt){
+          playerWorld.step(movementInput(),dt);
+          raiderWorld.step(dt);
+        },
         render(alpha){ renderMovement(alpha); },
       });
       // Real browser-integrated DOM-keyboard probe: send an actual keydown,
@@ -504,6 +556,28 @@
           movingWarden:1,draws:stats.drawCalls,
           note:"Browser DOM keyboard -> deterministic 60Hz simulation -> actual WebGL2 Warden and camera",
         });
+      }
+      // Real browser verification of the same headless queue used for actual
+      // play. Advance two authoritative seconds and require visible route
+      // motion, exact wave-2 count and the properly modeled Runner silhouette.
+      if (parameters.get("probeEnemies")==="advance") {
+        const before=raiderWorld.snapshot;
+        const leaderBefore=before.enemies.find(enemy=>enemy.kind==="scrapper");
+        for (let i=0;i<120;i++) raiderWorld.step(FIXED_STEP_SECONDS);
+        const after=raiderWorld.snapshot;
+        const leaderAfter=after.enemies.find(enemy=>enemy.id===leaderBefore.id);
+        syncRaiderModels(1);
+        renderMovement(1);
+        if (after.tick-before.tick!==120 || after.enemies.length!==19 ||
+            after.pending!==0 || after.spawned!==19 ||
+            after.enemies.filter(enemy=>enemy.kind==="runner").length!==5 ||
+            leaderAfter.distanceMeters-leaderBefore.distanceMeters<3.5 ||
+            !Number.isFinite(leaderAfter.yaw)) {
+          throw new Error("F3.02 actual WebGL2 road queue failed: "
+            +JSON.stringify({before:leaderBefore,after:leaderAfter,spawned:after.spawned}));
+        }
+        body.dataset.enemyProbe="pass";
+        body.dataset.enemyProgress=leaderAfter.distanceMeters.toFixed(3);
       }
       if (!stopped) {
         gameLoop.start();
