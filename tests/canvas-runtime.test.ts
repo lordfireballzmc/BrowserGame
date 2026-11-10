@@ -47,6 +47,24 @@ describe("F1.05 adaptive canvas resolution", () => {
     expect(r!.limited).toBe(true);
   });
 
+  it("VQ.01 generates real Retina game pixels, but respects the 4M GPU cap", () => {
+    const retina=computeCanvasResolution(1280,720,2,"balanced");
+    expect(retina).toMatchObject({width:2560,height:1440,limited:false});
+    expect(retina!.width*retina!.height).toBe(3_686_400);
+
+    const expensive=computeCanvasResolution(1500,843.75,2,"sharp");
+    expect(expensive!.limited).toBe(true);
+    expect(expensive!.width*expensive!.height).toBeLessThanOrEqual(4_194_304);
+    expect(expensive!.width/expensive!.height).toBeCloseTo(16/9,2);
+
+    const phone=computeCanvasResolution(360,640,3,"sharp",{
+      maxDimension:2048,maxPixels:2_073_600,
+    });
+    expect(phone!.width*phone!.height).toBeLessThanOrEqual(2_073_600);
+    expect(phone!.height).toBeLessThanOrEqual(2048);
+    expect(phone!.portrait).toBe(true);
+  });
+
   it("returns null for hidden canvases and rejects invalid inputs", () => {
     expect(computeCanvasResolution(0, 400, 1)).toBeNull();
     expect(computeCanvasResolution(400, 0, 1)).toBeNull();
