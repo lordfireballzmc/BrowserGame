@@ -143,6 +143,12 @@ try {
         sceneMode:d.sceneMode, padClickProbe:d.padClickProbe,
         selectedPad:d.selectedPad, padCount:d.padCount,
         sceneryCount:d.sceneryCount, composition:d.composition,
+        sceneryArt:d.sceneryArt, sceneryArtSources:d.sceneryArtSources,
+        sceneryArtAtlases:d.sceneryArtAtlases,
+        sceneryArtTrees:d.sceneryArtTrees,sceneryArtRocks:d.sceneryArtRocks,
+        sceneryArtBatches:d.sceneryArtBatches,
+        sceneryArtInstances:d.sceneryArtInstances,
+        sceneryArtError:d.sceneryArtError,
         shadows:d.shadows,
         environmentArt:d.environmentArt,
         environmentSources:d.environmentSources,
@@ -164,7 +170,8 @@ try {
       };
     })()`);
     if(lastState.result==="fail" || lastState.assetPilot==="error" ||
-       lastState.environmentArt==="error") {
+       lastState.environmentArt==="error" ||
+       lastState.sceneryArt==="error") {
       throw new Error("Game reported an actual failure: "+JSON.stringify(lastState));
     }
     const common = lastState.result==="pass" &&
@@ -176,6 +183,16 @@ try {
       lastState.unifiedCanvases==="1" &&
       lastState.shadows==="on" &&
       Number(lastState.padCount)===10 &&
+      (scene.searchParams.get("scenery")==="legacy"
+        ? lastState.sceneryArt==="disabled"
+        : lastState.sceneryArt==="pass" &&
+          Number(lastState.sceneryArtSources)===7 &&
+          Number(lastState.sceneryArtAtlases)===2 &&
+          Number(lastState.sceneryArtTrees)===40 &&
+          Number(lastState.sceneryArtRocks)===42 &&
+          Number(lastState.sceneryArtInstances)===82 &&
+          Number(lastState.sceneryArtBatches)>=7 &&
+          Number(lastState.sceneryArtBatches)<=40) &&
       (scene.searchParams.get("environment")==="legacy"
         ? lastState.environmentArt==="disabled"
         : lastState.environmentArt==="pass" &&
@@ -321,8 +338,9 @@ try {
   const suffixBase=mode==="movement" ? orientation+(requestedDpr===null?"":"-dpr"+requestedDpr)
     : mode==="map" ? "map-"+(scene.searchParams.get("probePadClick")??"unknown")
     : "cinematic-"+orientation;
-  const suffix=suffixBase+(scene.searchParams.get("environment")==="legacy"
-    ? "-env-legacy" : "");
+  const suffix=suffixBase+
+    (scene.searchParams.get("environment")==="legacy" ? "-env-legacy" : "")+
+    (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
