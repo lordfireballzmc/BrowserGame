@@ -254,6 +254,7 @@ jobs:
             if ! grep -q 'data-result="pass"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-movement-probe="pass"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-hero-visible="true"' "/tmp/bastionfall-movement-$orientation.html" \
+              || ! grep -q 'data-immersive="pass"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q 'data-shadows="on"' "/tmp/bastionfall-movement-$orientation.html" \
               || ! grep -q "data-composition=\"$composition\"" "/tmp/bastionfall-movement-$orientation.html"; then
               echo "F3.01 real Chrome $orientation Warden movement scene failed"
