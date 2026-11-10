@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { MeshStandardMaterial, Scene } from "three";
 import { RiggedCharacterLayer, stylizeActorMaterial, factionFragment,
   classifyActorPart, isSelectedEquipment, ACTOR_PALETTES,
+  animationBlend, ANIMATION_BLEND_SECONDS,
 } from "../src/engine/render/RiggedCharacterLayer";
 
 const base="public/assets/characters/";
@@ -140,6 +141,19 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
     expect(visible.some(n=>classifyActorPart(n,role)==="headgear")).toBe(true);
     expect(visible.some(n=>classifyActorPart(n,role)==="leg")).toBe(true);
     expect(visible.some(n=>classifyActorPart(n,role)==="arm")).toBe(true);
+  });
+
+  it("crossfades 41-bone authored poses over 140ms without runtime clock dependence",()=>{
+    expect(ANIMATION_BLEND_SECONDS).toBeCloseTo(0.14,5);
+    expect(animationBlend(-1)).toBe(0);
+    expect(animationBlend(0)).toBe(0);
+    expect(animationBlend(ANIMATION_BLEND_SECONDS/2)).toBeCloseTo(0.5,6);
+    expect(animationBlend(ANIMATION_BLEND_SECONDS)).toBe(1);
+    expect(animationBlend(ANIMATION_BLEND_SECONDS*3)).toBe(1);
+    const first=Array.from({length:15},(_,i)=>animationBlend(i/60));
+    expect(first.every((value,i)=>i===0||value>=first[i-1]!)).toBe(true);
+    expect(()=>animationBlend(Infinity)).toThrow(RangeError);
+    expect(()=>animationBlend(NaN)).toThrow(RangeError);
   });
 
   it("validates deterministic visual-only animation clocks without requiring WebGL",()=>{
