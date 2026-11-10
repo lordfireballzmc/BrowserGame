@@ -1,5 +1,42 @@
 # Third-party dependency provenance and notices
 
+## Current production-pipeline changes — Three.js and first CC0 3D model (ART.01, 2026-11-10)
+
+**This section supersedes historical F0.06 statements below about “no external engine” or unused runtime packages.** Current exact-resolved versions are committed in `package-lock.json`; the old counts and original lock blob in the historical inventory are no longer current.
+
+- **Three.js r184 / npm `three@0.184.0`** — MIT licensed, used by `src/engine/render/ImportedArtLayer.ts` to render an actual glTF asset with its authored 3D geometry and embedded PBR texture maps. Source/notice: https://github.com/mrdoob/three.js/blob/r184/LICENSE. Copyright © 2010–2026 three.js authors. The full MIT permission/copyright conditions apply to redistributed code, and must be included in final release notices.
+- **@types/three 0.184.0** — declarations for the Three.js source, present only in the toolchain. License metadata and its dependencies should be checked before distribution.
+- **@types/node 22.15.30** — Node.js type declarations for GLB integrity tests, not a game runtime dependency.
+- **Lantern glTF 2.0 source model, CC0-1.0** — original textured old wooden lantern by Microsoft/sbtron, contributed to the Khronos glTF Sample Assets and pinned to upstream commit `0b4f3a5862f3037c7092206e75c6f2a31a504ca5` and exact source Git blob SHA `0c97893aee066b6fa36f7725443b7536c3510d09`. License evidence: https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/Lantern/LICENSE.md (the **model** is CC0; the repository's metadata documents may use CC BY). This pilot's derived/bundled GLB is `public/assets/lantern-cc0.glb`, with independently generated SHA256 in the adjacent `.sha256`. Conversion downscales the four embedded texture maps and preserves mesh/UVs/materials. This provenance does **not** imply approval of the asset for commercial character style or model quality.
+- **Pillow 11.3.0** — transient Python image processing tool in a one-time isolated CI environment, not imported by the website or committed as an npm dependency.
+
+### Three.js MIT notice
+
+```text
+The MIT License
+
+Copyright © 2010-2026 three.js authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+
 **Inventory checkpoint:** 2026-11-10 · **scope:** locked npm dependencies, *not* a completed shipping audit.
 
 Canonical source of actual resolved versions is `package-lock.json` (npm lockfile v3, blob `6485e364b4ac221d0a67c354eb385219c31299cc`). `package.json` lists version *ranges*, not the installed exact versions. GitHub Actions uses Node.js 22 and `npm ci` to reproduce the committed lockfile. No external game engine is imported.

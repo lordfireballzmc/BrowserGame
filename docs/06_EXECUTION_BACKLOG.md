@@ -2,6 +2,14 @@
 
 Every task includes ID, dependencies, deliverable, test gate, and asset/visual gate. The agent must implement **one bounded incomplete task at a time**, commit, update status, then continue. Status: [ ] not started, [~] in progress, [x] completed with verification. Never check off without evidence. Ordering may be changed only with written rationale. **F0 is first.** F3 finish provides true playable loop; no fake demo presented as full product.
 
+## VISUAL-PIPELINE OVERRIDE — user-ordered production upgrade
+- [x] **ART.01** Upgrade engineering environment from mandatory primitives to a **reproducible professionally authored, licensed, locally bundled textured GLB pipeline** with Three.js/WebGL2 in the **actual active Warden scene**, independent art/copyright provenance and photo/screenshot gate. Source pinned CC0 Lantern technical sample (NOT final game art); preserve the legacy simulation, prove model/texture/camera integration in desktop + portrait, and explicitly plan retirement of the temporary dual-WebGL2 bridge. Verified [PR CI 42822409551](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42822409551): 178 Vitest tests, strict TypeScript, production build, all original browser graphics/pad/combat regressions and actual imported textured GLB in both 16:9 and portrait Warden scenes. Real screenshots downloaded and reviewed, model visible but small; no commercial art parity. See `docs/00_MASTER_PRODUCTION_DIRECTIVE.md`, `docs/23_ASSET_FIRST_THREE_MIGRATION_ADR.md` and `docs/24_ART01_TEXTURED_GLTF_BROWSER_REVIEW.md`.
+- [ ] **ART.02** Move full game terrain/scenery/actors into one Three.js renderer with actual occlusion, lighting/shadows, input/pad picking and precise WebGL2 browser regression parity; delete the dual-canvas bridge after verification.
+- [ ] **ART.03** Establish a coherent licensed or authored **cartoon-fantasy** GLB character/environment family with versioned rig/texture/animation pipelines; replace original low-detail Warden/Scrapper/keep where quality is proved superior.
+- [ ] **ART.04** Introduce skeletal state blending and follow-through, better stylized PBR/toon materials, controlled postprocessing, and measurable mobile graphics budgets. Never claim mockups or desktop software screenshots as mobile frame-rate evidence.
+
+**Ordering:** This user-requested visual production track may advance in parallel with the next normal gameplay task **F3.04**. Do not falsely check off F3.04 merely for a rendering pilot.
+
 ## F0 — bootstrap (required before visual code)
 - [x] **F0.01** Initialize Vite strict TS, package manager lockfile, Node version, scripts dev/build/typecheck/test; output `package.json, tsconfig.json, index.html`; gate install/typecheck/build.
 - [x] **F0.02** CI GitHub Actions for typecheck/unit/build with caches, least privileges; gate documented green workflow.
