@@ -91,7 +91,7 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
     expect(hood).not.toBe(raider);
     expect(body).toContain("vec3(0.0800,0.3600,0.8800)");
     expect(helmet).toContain("vec3(0.1000,0.3700,0.7700)");
-    expect(cape).toContain("vec3(0.0350,0.1900,0.5800)");
+    expect(cape).toContain("vec3(0.0350,0.1900,0.6200)");
     expect(raider).toContain("vec3(1.0000,0.0350,0.0450)");
     expect(hood).toContain("vec3(0.8400,0.0250,0.1250)");
     expect(()=>factionFragment("void main(){}","warden")).toThrow();
