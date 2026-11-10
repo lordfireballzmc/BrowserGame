@@ -25,11 +25,36 @@ export const SCENERY_ART_MODELS = [
   { id:"oak-crowned",kind:"broadleaf",sourceNode:"Tree_1_A_Color1",targetHeight:4.45 },
   { id:"oak-wide",kind:"broadleaf",sourceNode:"Tree_3_A_Color1",targetHeight:4.40 },
   { id:"oak-branched",kind:"broadleaf",sourceNode:"Tree_3_C_Color1",targetHeight:4.55 },
-  { id:"mossy-boulders",kind:"rock",sourceNode:"Rock_1_J_Color1",targetHeight:0.83 },
-  { id:"stacked-boulders",kind:"rock",sourceNode:"Rock_3_Q_Color1",targetHeight:0.82 },
+  { id:"mossy-boulders",kind:"rock",sourceNode:"rocks-large",targetHeight:0.86 },
+  { id:"stacked-boulders",kind:"rock",sourceNode:"rocks-small",targetHeight:0.71 },
 ] as const;
 export type SceneryArtModel = (typeof SCENERY_ART_MODELS)[number];
 export type SceneryArtKind = SceneryArtModel["kind"];
 export function sceneryArtUrl():string {
   return `${import.meta.env.BASE_URL}assets/scenery/${SCENERY_ART_SOURCE.file}`;
+}
+
+/** VQ.02c — genuinely rounded natural stone clusters. Source-pinned CC0
+ * Kenney Castle Kit GLBs; no longer use the mechanically stacked KayKit
+ * Rock_1_J / Rock_3_Q meshes. Preserve existing site IDs and instancing. */
+export const SCENERY_ROCK_SOURCES = [
+  {
+    id:"mossy-boulders",file:"kenney-organic-rocks-large.glb",bytes:23764,
+    sourceNode:"rocks-large",sourceGitBlob:"c55e671c6c82f75d49eb7c2488bb23c514fbdee2",
+    sourcePath:"packs/castle-kit/rocks-large.glb",
+  },
+  {
+    id:"stacked-boulders",file:"kenney-organic-rocks-small.glb",bytes:22752,
+    sourceNode:"rocks-small",sourceGitBlob:"ab1336c3801232dccfee6fab6059bae43cbe633b",
+    sourcePath:"packs/castle-kit/rocks-small.glb",
+  },
+] as const;
+export const SCENERY_ROCK_SOURCE_INFO = {
+  originalArtist:"Kenney",license:"CC0-1.0",
+  originalPack:"https://kenney.nl/assets/castle-kit",
+  sourceRepository:"Hidencod/tge-assets",
+  sourceCommit:"3ddcc695adbba9fb918cf31b7c139b3f95b76910",
+} as const;
+export function sceneryRockUrl(file:string):string {
+  return `${import.meta.env.BASE_URL}assets/scenery/${file}`;
 }
