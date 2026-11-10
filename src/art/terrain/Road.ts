@@ -84,7 +84,7 @@ class RoadMesh {
   }
 }
 
-function edge(section: RoadPoint, offset: number, height = HEIGHT): Point3 {
+function edge(section: RoadPoint, offset: number, height: number = HEIGHT): Point3 {
   // Left is a 90° anticlockwise turn from travel (X,Z).
   return [
     section.x - section.tangent[1] * offset,
@@ -104,7 +104,7 @@ export function createAuthoredRoad(): AuthoredRoad {
     const right = edge(p, -ROAD_SPEC.halfWidthMeters);
     return Object.freeze({
       distance: p.distance,
-      center: [p.x, HEIGHT, p.z],
+      center: [p.x, HEIGHT, p.z] as Point3,
       left, right,
       widthMeters: Math.hypot(left[0] - right[0], left[2] - right[2]),
     });
