@@ -113,6 +113,14 @@ export function validateGeometry(geometry: Geometry): void {
     if (dot(areaVector, n) <= 0) {
       throw new Error("Mesh normal and triangle winding disagree");
     }
+    for (const vertex of [b, c]) {
+      const vertexNormal: Point3 = [
+        normals[vertex * 3]!, normals[vertex * 3 + 1]!, normals[vertex * 3 + 2]!,
+      ];
+      if (dot(n, vertexNormal) < 0.9999) {
+        throw new Error("Mesh triangle has inconsistent flat-shaded normals");
+      }
+    }
   }
 }
 
