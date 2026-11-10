@@ -1,16 +1,26 @@
 import "./style.css";
+import { bevelBox } from "./art/mesh/Primitives";
+import { OrthoCamera } from "./engine/Camera";
+import {
+  computeCanvasResolution, resizeCanvas, RenderMetricWindow,
+  type ResolutionPreset,
+} from "./engine/render/CanvasRuntime";
+import { InstancedRenderer } from "./engine/render/InstancedRenderer";
 import { GpuResources, verifyRendererResources } from "./engine/render/GpuResources";
 import {
   INITIAL_STARTUP_STATE,
-  paintGraphicsDiagnostic,
   probeWebGL2,
   transitionStartup,
   type StartupEvent,
   type StartupState,
 } from "./platform/Startup";
 
-const root = document.querySelector<HTMLDivElement>("#app");
-if (!root) throw new Error("App element #app is missing");
+function requireAppRoot(): HTMLDivElement {
+  const element = document.querySelector<HTMLDivElement>("#app");
+  if (!element) throw new Error("App element #app is missing");
+  return element;
+}
+const root = requireAppRoot();
 
 // F0.05 is an honest engineering splash, NOT an interactive game or asset preview.
 root.innerHTML = `
@@ -18,7 +28,7 @@ root.innerHTML = `
     <header class="masthead">
       <span class="brand-mark" aria-hidden="true">B</span>
       <span>BASTIONFALL</span>
-      <span class="build-label">ENGINEERING BUILD · F0</span>
+      <span class="build-label">ENGINEERING BUILD · F1.05</span>
     </header>
 
     <section class="splash panel" id="splash" aria-labelledby="splash-title">
@@ -45,10 +55,25 @@ root.innerHTML = `
         </div>
         <button type="button" class="secondary" id="back-to-splash">Back to splash</button>
       </div>
-      <div class="viewport">
-        <canvas id="game" aria-label="Plain WebGL2 clear-color diagnostic canvas"></canvas>
+      <div class="diagnostic-controls">
+        <label for="resolution-preset">Rendering resolution</label>
+        <select id="resolution-preset" aria-label="Rendering resolution">
+          <option value="economy">Economy · 75%</option>
+          <option value="balanced" selected>Balanced · 100%</option>
+          <option value="sharp">Sharp · 125%</option>
+        </select>
       </div>
-      <p class="preview-note">A correctly initialized GPU clears this canvas to a neutral meadow tone. No game world is rendered.</p>
+      <div class="viewport">
+        <canvas id="game" aria-label="WebGL2 engineering calibration cube, not a playable level"></canvas>
+        <div class="render-error" id="render-error" role="alert" hidden>
+          <strong>Rendering interrupted</strong>
+          <p id="render-error-detail">The renderer encountered an error.</p>
+          <button type="button" id="retry-renderer">Retry renderer</button>
+        </div>
+      </div>
+      <output id="canvas-details" class="diagnostic-output" aria-live="off">Waiting for canvas size...</output>
+      <output id="render-metrics" class="diagnostic-output" aria-live="off">Waiting for first frame...</output>
+      <p class="preview-note">This displays one calibrated test box to verify canvas sizing and real draw metrics. It is not an authored game world or gameplay. Reported frame intervals and CPU submission timings are <strong>not GPU timings</strong>.</p>
     </section>
 
     <section class="fatal-screen panel" id="fatal-screen" aria-labelledby="fatal-title" hidden>
@@ -68,7 +93,7 @@ root.innerHTML = `
     <footer class="footer">
       <span>Original game · Original procedural art</span>
       <span>Custom WebGL2 / TypeScript</span>
-      <span>Development milestone F0.05</span>
+      <span>Development milestone F1.05</span>
     </footer>
   </main>
 `;
@@ -84,17 +109,50 @@ const fatal = requiredNode<HTMLElement>(root, "#fatal-screen");
 const status = requiredNode<HTMLElement>(root, "#startup-status");
 const inspectButton = requiredNode<HTMLButtonElement>(root, "#show-diagnostic");
 const canvas = requiredNode<HTMLCanvasElement>(root, "#game");
+const quality = requiredNode<HTMLSelectElement>(root, "#resolution-preset");
+const details = requiredNode<HTMLOutputElement>(root, "#canvas-details");
+const metricsDisplay = requiredNode<HTMLOutputElement>(root, "#render-metrics");
+const errorOverlay = requiredNode<HTMLElement>(root, "#render-error");
+const errorDetail = requiredNode<HTMLElement>(root, "#render-error-detail");
 
 let state: StartupState = INITIAL_STARTUP_STATE;
 let graphics: WebGL2RenderingContext | null = null;
 let gpu: GpuResources | null = null;
+let renderer: InstancedRenderer | null = null;
+let camera: OrthoCamera | null = null;
+const metrics = new RenderMetricWindow();
+const calibrationModel = new Float32Array([
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 0, 1, 0,
+  0, 0.75, 0, 1,
+]);
+let frameHandle: number | null = null;
+let priorFrameMs = 0;
+let lastDisplayMs = 0;
+let pageSuspended = false;
+
+function stopFrames(): void {
+  if (frameHandle !== null) cancelAnimationFrame(frameHandle);
+  frameHandle = null;
+  priorFrameMs = 0;
+}
 
 function releaseGpu(contextLost = false): void {
-  const previous = gpu;
+  stopFrames();
+  const previousRenderer = renderer;
+  const previousGpu = gpu;
+  renderer = null;
   gpu = null;
-  if (!previous) return;
-  if (contextLost) previous.abandonOnContextLoss();
-  else previous.dispose();
+  camera = null;
+  if (previousRenderer) {
+    if (contextLost) previousRenderer.abandonOnContextLoss();
+    else previousRenderer.dispose();
+  }
+  if (previousGpu) {
+    if (contextLost) previousGpu.abandonOnContextLoss();
+    else previousGpu.dispose();
+  }
 }
 
 function changeState(event: StartupEvent): void {
@@ -107,22 +165,96 @@ function changeState(event: StartupEvent): void {
   status.dataset.graphics = state.graphics;
 }
 
-function paintIfVisible(): void {
-  if (state.view !== "diagnostic" || !graphics) return;
+function rendererFailed(error: unknown): void {
+  const detail = error instanceof Error ? error.message : String(error);
+  releaseGpu();
+  graphics = null;
+  root.dataset.renderState = "error";
+  errorDetail.textContent = detail;
+  errorOverlay.hidden = false;
+  status.textContent = "Rendering interrupted. Retry to reinitialize WebGL2.";
+}
+
+function paintIfVisible(nowMs = performance.now()): void {
+  if (state.view !== "diagnostic" || !graphics || !renderer) return;
   try {
-    paintGraphicsDiagnostic(canvas, graphics, window.devicePixelRatio);
-  } catch {
-    releaseGpu();
-    graphics = null;
-    changeState({
-      type: "PROBE_FAILED",
-      reason: "WebGL2 initialized but could not draw. Check your graphics driver and retry.",
-    });
+    const bounds = canvas.getBoundingClientRect();
+    const gpuMax = Number(graphics.getParameter(graphics.MAX_RENDERBUFFER_SIZE));
+    const viewportMax = graphics.getParameter(graphics.MAX_VIEWPORT_DIMS) as Int32Array;
+    const maxDimension = Math.max(1, Math.min(
+      Number.isFinite(gpuMax) && gpuMax > 0 ? gpuMax : 4096,
+      viewportMax?.[0] || 4096, viewportMax?.[1] || 4096, 4096,
+    ));
+    const preset = quality.value as ResolutionPreset;
+    const resolution = computeCanvasResolution(
+      bounds.width, bounds.height, window.devicePixelRatio || 1, preset,
+      { maxDimension, maxPixels: 4_194_304 },
+    );
+    if (!resolution) return;
+
+    resizeCanvas(canvas, resolution);
+    if (!camera) camera = new OrthoCamera(bounds.width, bounds.height);
+    else camera.resize(bounds.width, bounds.height);
+
+    const frame = renderer.render(camera.matrices, [{
+      meshId: "calibration", material: "stone.base", model: calibrationModel,
+    }]);
+    // Dev-only negative-path test: exercise the exact UI exception boundary.
+    if (import.meta.env.DEV
+      && new URLSearchParams(location.search).get("failRender") === "1") {
+      throw new Error("Simulated diagnostic render failure");
+    }
+    metrics.push(priorFrameMs ? Math.max(0, nowMs - priorFrameMs) : 0, frame);
+    priorFrameMs = nowMs;
+    root.dataset.orientation = resolution.portrait ? "portrait" : "landscape";
+    root.dataset.renderState = "active";
+    canvas.dataset.renderState = "active";
+    canvas.dataset.backbuffer = resolution.width + "x" + resolution.height;
+
+    if (nowMs - lastDisplayMs > 450 || lastDisplayMs === 0) {
+      lastDisplayMs = nowMs;
+      details.textContent =
+        (resolution.portrait ? "Portrait" : "Landscape") +
+        " · CSS " + Math.round(bounds.width) + "×" + Math.round(bounds.height) +
+        " · GPU " + resolution.width + "×" + resolution.height +
+        " · effective scale " + resolution.pixelRatio.toFixed(2) +
+        (resolution.limited ? " (budget limited)" : "");
+      const trace = metrics.snapshot();
+      metricsDisplay.textContent =
+        "Draws " + trace.drawCalls + " · triangles " + trace.triangles +
+        " · instances " + trace.instances +
+        " · rAF interval p95 " + trace.frameP95Ms.toFixed(1) + "ms" +
+        " · CPU submit p95 " + trace.cpuSubmitP95Ms.toFixed(2) + "ms" +
+        " · samples " + trace.samples;
+    }
+  } catch (error) {
+    rendererFailed(error);
   }
+}
+
+function scheduleFrames(): void {
+  if (frameHandle !== null || state.view !== "diagnostic" || !renderer) return;
+  frameHandle = requestAnimationFrame((now) => {
+    frameHandle = null;
+    paintIfVisible(now);
+    scheduleFrames();
+  });
+}
+
+function startDiagnostic(): void {
+  if (state.view !== "diagnostic" || !renderer) return;
+  errorOverlay.hidden = true;
+  paintIfVisible();
+  scheduleFrames();
 }
 
 function probeGraphics(): void {
   releaseGpu();
+  metrics.reset();
+  priorFrameMs = 0;
+  lastDisplayMs = 0;
+  errorOverlay.hidden = true;
+  root.dataset.renderState = "checking";
   graphics = null;
   changeState({ type: "PROBE_START" });
   const result = probeWebGL2(canvas);
@@ -143,6 +275,17 @@ function probeGraphics(): void {
     return;
   }
 
+  try {
+    renderer = new InstancedRenderer(result.gl);
+    renderer.uploadMesh("calibration", bevelBox(1.5, 1.5, 1.5, 0.12));
+  } catch (error) {
+    renderer?.dispose();
+    renderer = null;
+    owner.dispose();
+    const detail = error instanceof Error ? error.message : "Unknown renderer initialization error";
+    changeState({ type: "PROBE_FAILED", reason: "Renderer initialization failed: " + detail });
+    return;
+  }
   gpu = owner;
   graphics = result.gl;
   changeState({ type: "PROBE_READY", version: result.version + " · GPU resources checked" });
@@ -154,14 +297,31 @@ root.addEventListener("click", (event) => {
   switch (button?.id) {
     case "show-diagnostic":
       changeState({ type: "SHOW_DIAGNOSTIC" });
-      paintIfVisible();
+      startDiagnostic();
       break;
     case "back-to-splash":
+      stopFrames();
       changeState({ type: "SHOW_SPLASH" });
       break;
     case "retry-webgl2":
       probeGraphics();
       break;
+    case "retry-renderer":
+      probeGraphics();
+      if (state.graphics === "ready") {
+        changeState({ type: "SHOW_DIAGNOSTIC" });
+        startDiagnostic();
+      }
+      break;
+  }
+});
+
+root.addEventListener("change", (event) => {
+  if (event.target === quality) {
+    metrics.reset();
+    priorFrameMs = 0;
+    lastDisplayMs = 0;
+    paintIfVisible();
   }
 });
 
@@ -173,12 +333,26 @@ canvas.addEventListener("webglcontextlost", (event) => {
 });
 canvas.addEventListener("webglcontextrestored", probeGraphics);
 
-window.addEventListener("resize", paintIfVisible);
+const resizeObserver = new ResizeObserver(() => paintIfVisible());
+resizeObserver.observe(canvas);
+window.addEventListener("resize", () => paintIfVisible());
 window.addEventListener("pagehide", () => {
+  pageSuspended = true;
   releaseGpu();
   graphics = null;
 });
 window.addEventListener("pageshow", () => {
-  if (!graphics) probeGraphics();
+  // Initial pageshow is NOT a recovery event. A first-frame renderer failure
+  // must leave its error overlay visible until the user explicitly retries.
+  if (!pageSuspended) return;
+  pageSuspended = false;
+  probeGraphics();
 });
 probeGraphics();
+
+/** Development-only browser smoke path, never a gameplay route. */
+if (import.meta.env.DEV && new URLSearchParams(location.search).get("diagnostic") === "1"
+  && state.graphics === "ready") {
+  changeState({ type: "SHOW_DIAGNOSTIC" });
+  startDiagnostic();
+}
