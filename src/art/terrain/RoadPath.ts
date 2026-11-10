@@ -17,7 +17,7 @@ export const ROAD_SPEC = {
   maxSampleStepMeters: 0.55,
   heightAboveSurfaceMeters: 0.04,
   miterLimit: 1.35,
-  flatTerrainHalfWidthMeters: 3.4,
+  flatTerrainHalfWidthMeters: 3.75,
   terrainFeatherMeters: 1.6,
   entrance: [-34, -5] as RoadXZ,
   destination: [31, 2] as RoadXZ,
