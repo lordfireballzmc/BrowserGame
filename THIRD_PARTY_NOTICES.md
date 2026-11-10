@@ -1,5 +1,16 @@
 # Third-party dependency provenance and notices
 
+## ART.03a KayKit authored and animated characters (2026-11-10)
+
+**Artist and original author:** Kay Lousberg (KayKit). **Source repository:** [KayKit Character Pack Adventures 1.0](https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0). **Original free-tier license:** Creative Commons Zero (CC0 1.0 Universal), confirmed by the author's own `LICENSE.txt`, not inferred from a third-party catalog. This license permits commercial adaptation and no attribution is mandated; credit is voluntarily retained. We do not bundle paid EXTRA/SOURCE content.
+
+**Exact source commit:** `672074b73ba276876a19e8816ecdc5241817ab47`. Original GLB Git blob SHA-1 pins: Knight `717b56ca2b5ff5392679774725201ba03a3eefab` -> Warden, Barbarian `66d312ab6dc02b35fb648e7585bfdddb4e02eeef` -> Scrapper, Rogue_Hooded `5d2b1403240d5f9ffff12e02c017572038eca2a8` -> Runner. Source files: `addons/kaykit_character_pack_adventures/Characters/gltf/*.glb`. Their independent final SHA256, optimized sizes and animation names are recorded alongside the binary assets in `public/assets/characters/manifest.json`.
+
+**Asset transformation:** `scripts/ingest_kaykit_characters.py` verifies source Git blob hashes, strips out unused source animation tracks and unreferenced binary buffer data, while retaining the original artist's meshes, skeletons, UV texture atlas and five animation clips per model. Source files total ~10.87MB; verified bundled output is 1,657,752 bytes. `SkeletonUtils.clone` is part of the already licensed Three.js MIT distribution, not a new third-party package.
+
+**Originality boundary:** These are **licensed third-party prototype assets**, not newly created or exclusive Bastionfall characters and not copied Kingshot/Kingdom Rush art. Distinct original silhouette improvements, armor, colors, material refinement, rig compression and professional animation remain necessary before commercial visual completion. Do not relabel licensed prototypes as wholly original or redistribute the free pack as an asset pack.
+
+
 ## Current production-pipeline changes — Three.js and first CC0 3D model (ART.01, 2026-11-10)
 
 **This section supersedes historical F0.06 statements below about “no external engine” or unused runtime packages.** Current exact-resolved versions are committed in `package-lock.json`; the old counts and original lock blob in the historical inventory are no longer current.

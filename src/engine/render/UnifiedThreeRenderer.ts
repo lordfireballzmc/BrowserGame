@@ -19,6 +19,7 @@ import { validateGeometry, type Geometry } from "../../art/mesh/Primitives";
 import { TERRAIN_ASSETS } from "../../art/assets/AssetManifest";
 import { linearColor, vertexMaterialColor, type MaterialToken } from "./Palette";
 import { aabbIntersectsFrustum } from "./Frustum";
+import { RiggedCharacterLayer, type ActorMotion, type RiggedCharacterStats } from "./RiggedCharacterLayer";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
 /** Nonvisual provenance and validation returned by the locally loaded GLB. */
 export interface ImportedAssetStatus {
@@ -79,6 +80,7 @@ export class UnifiedThreeRenderer {
   private readonly pools = new Map<string, MeshPool>();
   private readonly matrix = new Matrix4();
   private readonly imported = new Group();
+  private readonly animatedCharacters = new RiggedCharacterLayer(this.scene);
   private destroyed = false;
   private useShadows = false;
   private useCulling = false;
@@ -140,6 +142,18 @@ export class UnifiedThreeRenderer {
     return this.bytes + (this.useShadows ? 2048*2048*4 : 0);
   }
   get importedStatus(): ImportedAssetStatus | null { return this.sourceStatus; }
+  get riggedStatus(): RiggedCharacterStats | null { return this.animatedCharacters.stats; }
+  get riggedCharactersReady(): boolean { return this.animatedCharacters.ready; }
+  async loadRiggedCharacters(): Promise<RiggedCharacterStats> {
+    this.assertActive();
+    return this.animatedCharacters.load();
+  }
+  setRiggedAnimationTime(seconds:number): void {
+    this.animatedCharacters.setTime(seconds);
+  }
+  setActorMotion(model:ArrayLike<number>, motion:ActorMotion["motion"],timeSeconds:number):void {
+    this.animatedCharacters.setMotion(model,motion,timeSeconds);
+  }
   get canvas(): HTMLCanvasElement { return this.gpu.domElement; }
   get unifiedContext(): WebGL2RenderingContext {
     return this.gpu.getContext() as WebGL2RenderingContext;
@@ -217,8 +231,12 @@ export class UnifiedThreeRenderer {
     this.camera.matrixWorldAutoUpdate = false;
 
     const batches = new Map<string, Submitted>();
+    // The artist's actual skinned GLBs replace the old primitive meshes only
+    // after all three have loaded, so a network/GLB failure preserves gameplay.
+    const riggedActors = this.animatedCharacters.sync(instances);
     let culled = 0, submitted = 0, triangles = 0, visible = 0;
-    for (const source of instances) {
+    for (let index=0;index<instances.length;index++) {
+      const source=instances[index]!;
       if (!matrixIsValid(source.model)) throw new RangeError("Nonfinite 3D model matrix");
       const geometry = this.stored.get(source.meshId);
       if (!geometry) throw new Error("Unknown original mesh: " + source.meshId);
@@ -226,6 +244,10 @@ export class UnifiedThreeRenderer {
       if (!(opacity>=0 && opacity<=1)) throw new RangeError("Opacity outside [0,1]");
       submitted++;
       if (opacity===0) continue;
+      if (riggedActors.has(index)) {
+        visible++; // actual same-scene SkinnedMesh replaces the instanced actor
+        continue;
+      }
       if (this.useCulling
         && !aabbIntersectsFrustum(geometry.bounds,source.model,camera.viewProjection)) {
         culled++;
@@ -321,6 +343,7 @@ export class UnifiedThreeRenderer {
         mat.dispose();
       }
     });
+    this.animatedCharacters.dispose();
     this.gpu.dispose();
     this.pools.clear();
     this.variants.clear();

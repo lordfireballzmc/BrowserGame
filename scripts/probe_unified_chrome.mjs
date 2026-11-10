@@ -124,6 +124,9 @@ try {
         movementProbe:d.movementProbe, enemyProbe:d.enemyProbe,
         combatProbe:d.combatProbe, hitTargets:d.hitTargets,
         heroVisible:d.heroVisible, enemyCount:d.enemyCount,
+        riggedArt:d.riggedArt,riggedSources:d.riggedSources,
+        riggedAnimations:d.riggedAnimations,riggedActors:d.riggedActors,
+        boneCount:d.boneCount,activeWalkCycles:d.activeWalkCycles,
         sceneMode:d.sceneMode, padClickProbe:d.padClickProbe,
         selectedPad:d.selectedPad, padCount:d.padCount,
         sceneryCount:d.sceneryCount, composition:d.composition,
@@ -169,6 +172,14 @@ try {
         lastState.composition===(orientation==="portrait"?"9:16":"16:9") &&
         trace.stagedBoltSpires===2 &&
         trace.stagedActors===15;
+    }
+    if(ready && scene.searchParams.get("probeCharacters")==="rigged") {
+      ready=lastState.riggedArt==="ready" &&
+        Number(lastState.riggedSources)===3 &&
+        Number(lastState.riggedAnimations)===15 &&
+        Number(lastState.riggedActors)>=(mode==="movement"?20:13) &&
+        Number(lastState.boneCount)>100 &&
+        (mode!=="movement" || Number(lastState.activeWalkCycles)>0);
     }
     if(ready)break;
     await pause(300);
