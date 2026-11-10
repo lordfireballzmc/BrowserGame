@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-10 · **Map template:** Fenwall Crossing · **Primary inspected seed:** `fenwall-crossing-v1` (uint32 3671866285).
 
-**Source evidence:** [Pull request #16](https://github.com/lordfireballzmc/BrowserGame/pull/16), [initial verified screenshot and CI run 42769733700](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42769733700), [actual screenshot artifact 13740549561](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42769733700/artifacts/13740549561). Final tree-scale correction was subsequently committed and strict tree-height test added; verify on final PR head before merge.
+**Source evidence:** [Pull request #16](https://github.com/lordfireballzmc/BrowserGame/pull/16), [initial verified screenshot and CI run 42769733700](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42769733700), [actual screenshot artifact 13740549561](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42769733700/artifacts/13740549561). [Final source CI run 42770476113](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42770476113) passed all 146 tests, strict TypeScript, build and real Chrome checks after the tree-scale correction; [final screenshot artifact 13741482324](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42770476113/artifacts/13741482324) was retrieved and inspected.
 
 ## Design/art implemented
 
@@ -15,7 +15,7 @@
 
 The initial **1280×960 headless Chrome software WebGL2 screenshot was retrieved and inspected** (run 42769733700/artifact 13740549561). A low-poly woodland border now frames the island while retaining intentionally quiet green meadows: dark-crowned pines and broader three-volume leaf silhouettes read as different trees, stone clusters appear as small coherent grey outcrops, and small grass/ivory accents stay understated. The pale gold combat road remains uninterrupted and unobstructed. All ten pad labels (two 20-crown and eight locked-wave indicators), both timber river crossings and blue-green water remain visible. No conspicuous overlap, rock obstruction or bright color noise was seen. The full-map screenshot cannot establish fine flower/grass legibility at gameplay scale; F2.06 will review the scene in **1920×1080 and portrait 9:16**, and add contact shadows/lighting treatments rather than prematurely claiming final art quality.
 
-A final minor code correction limits tree scaling from 1.03× to 1.02× and adds an assertion for **world-scale tree height ≤5.8m**. Initial screenshot remains valid for composition; final exact code revision should be checked by CI and, where available, its new screenshot.
+A final minor code correction limits tree scaling from 1.03× to 1.02× and adds an assertion for **world-scale tree height ≤5.8m**. Final screenshot from run 42770476113 was also extracted and visually inspected: trees are within the 5.8m size contract and the road, river, all ten pad labels, and both bridges remain readable. No new graphic obstruction or high-frequency color noise was observed.
 
 ## Verification and limitations
 
