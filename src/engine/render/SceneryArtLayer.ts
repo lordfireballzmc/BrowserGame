@@ -15,8 +15,7 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
-  SCENERY_ART_MODELS, sceneryArtUrl, type SceneryArtKind,
-  type SceneryArtModel,
+  SCENERY_ART_MODELS, sceneryArtUrl, type SceneryArtModel,
 } from "../../art/assets/SceneryArtManifest";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 
