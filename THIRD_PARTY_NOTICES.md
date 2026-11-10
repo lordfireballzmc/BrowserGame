@@ -1,5 +1,21 @@
 # Third-party dependency provenance and notices
 
+## VQ.02b — seven CC0 author-modeled 3D trees and rocks (2026-11-10)
+
+**Original artist:** [Kenney](https://kenney.nl). **Original model packs:** [Kenney Nature Kit](https://kenney.nl/assets/nature-kit) and [Kenney Castle Kit](https://kenney.nl/assets/castle-kit), CC0 1.0. The original source GLB glTF 2.0 files below are mirrored by [Hidencod/tge-assets](https://github.com/Hidencod/tge-assets) at exact source commit `3ddcc695adbba9fb918cf31b7c139b3f95b76910`. The seven bundled `public/assets/scenery/` binary Git blob SHA-1s match the upstream Git blobs byte for byte and are reverified in `tests/scenery-art.test.ts`. No runtime CDN or paid dependencies.
+
+| Bundled GLB | Upstream source path | Exact source blob SHA-1 |
+|---|---|---|
+| `kenney-pine-layered.glb` | `packs/castle-kit/tree-large.glb` | `3a4b4defaba65f623e06be511c8d95e884b30e79` |
+| `kenney-pine-rounded.glb` | `packs/nature-kit/tree-pinerounda.glb` | `b6d121d0726ae204e184ae1280c4c415734fc91e` |
+| `kenney-canopy-oak.glb` | `packs/nature-kit/tree-oak.glb` | `b136723ada4b5574b71f727120ab21fa579bf2fb` |
+| `kenney-canopy-plateau.glb` | `packs/nature-kit/tree-plateau.glb` | `627378f1f5e8de85d2168f4093c26e7e000be82b` |
+| `kenney-canopy-detailed.glb` | `packs/nature-kit/tree-detailed.glb` | `8d59ea41e280a5ea9234ec1e503fb871c55021de` |
+| `kenney-rocks-mossy.glb` | `packs/castle-kit/rocks-large.glb` | `c55e671c6c82f75d49eb7c2488bb23c514fbdee2` |
+| `kenney-rocks-lichen.glb` | `packs/nature-kit/rock-largea.glb` | `40e1365a43b706bd78c2658b48b189c9a35f8923` |
+
+**Material honesty:** the two **Castle Kit** GLBs have real embedded PBR base-color texture atlases; the five Nature Kit GLBs are **source-authored PBR color-only materials with no texture maps**, not painted texture atlases. For scene coherence the runtime retints certain cyan-green leaf/bark/dirt *materials* without replacing the original geometry or claiming texture where none exists. These freely licensed models are non-exclusive starter art and do **not** constitute a bespoke or completed polished Bastionfall environment. Source author voluntarily credited. Original 258 deterministic locations, nav/road/pad clearance, and gameplay remain unchanged; this pass replaces only 40 trees and 42 rock visuals via GPU instancing, with 176 cheap grass/flower props retained.
+
 ## VQ.02 — locally bundled CC0 authored Fenwall castle family (2026-11-10)
 
 **Original artist:** [Kenney](https://kenney.nl/). **Original official packs and license evidence:** [Castle Kit](https://kenney.nl/assets/castle-kit), [Tower Defense Kit](https://kenney.nl/assets/tower-defense-kit), both **Creative Commons Zero (CC0 1.0)**. The matching glTF 2.0 textured/atlas GLBs were repackaged by the independent [Tiny Game Engine free-model library](https://github.com/Hidencod/tge-assets), whose README also describes these Kenney model reexports as CC0. The author allows personal/commercial use; credit is not required, but **Kenney receives voluntary credit**.
