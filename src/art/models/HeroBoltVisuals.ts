@@ -30,12 +30,13 @@ function join(
 export function createHeroBoltMesh(): Geometry {
   if (bolt) return bolt;
   bolt=join([
-    ["shaft","timber.light",bevelBox(0.085,0.075,0.57,0.022),0,0,0],
-    ["ferrule","metal",bevelBox(0.145,0.12,0.14,0.024),0,0,-0.285],
-    ["point","copper",wedge(0.20,0.14,0.28),0,0,-0.47,Math.PI/2],
-    ["left-feather","ivory",wedge(0.17,0.08,0.22),-0.105,0,0.26],
-    ["right-feather","ivory",wedge(0.17,0.08,0.22),0.105,0,0.26],
-    ["upper-feather","defender.gold",bevelBox(0.065,0.16,0.21,0.012),0,0.06,0.26],
+    ["shaft","timber.light",bevelBox(0.13,0.105,0.84,0.035),0,0,-0.03],
+    ["ferrule","metal",bevelBox(0.20,0.16,0.19,0.033),0,0,-0.47],
+    ["point","copper",wedge(0.27,0.19,0.37),0,0,-0.71,Math.PI/2],
+    ["left-feather","ivory",wedge(0.19,0.11,0.30),-0.14,0,0.36],
+    ["right-feather","ivory",wedge(0.19,0.11,0.30),0.14,0,0.36],
+    ["upper-feather","defender.gold",bevelBox(0.095,0.21,0.29,0.016),0,0.075,0.36],
+    ["spine-inlay","ivory",bevelBox(0.055,0.12,0.46,0.012),0,0.085,-0.17],
   ]);
   return bolt;
 }
