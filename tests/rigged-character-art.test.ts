@@ -2,7 +2,7 @@ import { describe,expect,it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { MeshStandardMaterial, Scene } from "three";
-import { RiggedCharacterLayer, stylizeActorMaterial } from "../src/engine/render/RiggedCharacterLayer";
+import { RiggedCharacterLayer, stylizeActorMaterial, factionFragment } from "../src/engine/render/RiggedCharacterLayer";
 
 const base="public/assets/characters/";
 const manifest=JSON.parse(readFileSync(base+"manifest.json","utf8")) as {
@@ -66,22 +66,38 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
       anim.samplers.length>0 && anim.channels.length>0)).toBe(true);
   });
 
-  it("honors original blue-Warden/red-hostile visual hierarchy without mutating artist materials",()=>{
-    const source=new MeshStandardMaterial({color:0xffffff,roughness:0.52,metalness:0.4});
-    const warden=stylizeActorMaterial(source,"warden");
-    const scrapper=stylizeActorMaterial(source,"scrapper");
-    const runner=stylizeActorMaterial(source,"runner");
-    expect(warden).not.toBe(source);
-    expect(source.color.r).toBeCloseTo(1,5);
-    expect(source.roughness).toBe(0.52);
-    expect(warden.color.b).toBeGreaterThan(warden.color.r);
-    expect(scrapper.color.r).toBeGreaterThan(scrapper.color.g*1.45);
-    expect(runner.color.r).toBeGreaterThan(runner.color.g*1.4);
-    for(const mat of [warden,scrapper,runner]) {
-      expect(mat.roughness).toBeCloseTo(0.89,4);
-      expect(mat.metalness).toBeLessThanOrEqual(0.14);
-      mat.dispose();
+  it("replaces green/brown atlas hue with bright blue/red faction color after map sampling",()=>{
+    const shader="#include <map_fragment>";
+    const wardenShader=factionFragment(shader,"warden");
+    const scrapperShader=factionFragment(shader,"scrapper");
+    const runnerShader=factionFragment(shader,"runner");
+    for(const out of [wardenShader,scrapperShader,runnerShader]){
+      expect(out).toContain("sourceLuma");
+      expect(out).toContain("paintLight");
+      expect(out).toContain("diffuseColor.rgb=mix(diffuseColor.rgb,factionPaint,0.91)");
     }
+    expect(wardenShader).toContain("vec3(0.13,0.43,0.88)");
+    expect(wardenShader).toContain("goldAccent");
+    expect(scrapperShader).toContain("vec3(0.91,0.13,0.20)");
+    expect(runnerShader).toContain("vec3(0.86,0.07,0.23)");
+    expect(scrapperShader).not.toContain("goldAccent");
+    expect(()=>factionFragment("void main(){}","warden")).toThrow();
+    const source=new MeshStandardMaterial({color:0x67ad36,roughness:0.52,metalness:0.4});
+    const originals=source.color.clone();
+    const variants=["warden","scrapper","runner"] as const;
+    const keys=new Set<string>();
+    for(const role of variants){
+      const styled=stylizeActorMaterial(source,role);
+      expect(styled).not.toBe(source);
+      expect(styled.color.getHex()).toBe(0xffffff);
+      expect(styled.roughness).toBeCloseTo(0.89,4);
+      expect(styled.metalness).toBeLessThanOrEqual(0.14);
+      keys.add(styled.customProgramCacheKey());
+      styled.dispose();
+    }
+    expect(keys.size).toBe(3);
+    expect(source.color.equals(originals)).toBe(true);
+    expect(source.roughness).toBe(0.52);
     source.dispose();
   });
 
