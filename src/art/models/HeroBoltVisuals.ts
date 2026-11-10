@@ -5,7 +5,7 @@
  */
 import { bevelBox, facetedCylinder, wedge, type Geometry } from "../mesh/Primitives";
 import { combineRigidParts, type RigidPart } from "./Archetypes";
-import type { MaterialToken } from "../..//engine/render/Palette";
+import type { MaterialToken } from "../../engine/render/Palette";
 
 let bolt: Geometry | null = null;
 let impact: Geometry | null = null;
