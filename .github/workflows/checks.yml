@@ -297,6 +297,28 @@ jobs:
             test -s "/tmp/bastionfall-unified-$orientation.png"
             test -s "/tmp/bastionfall-unified-$orientation.json"
           done
+          # ART.LOCK.01: compare source-exact world/physics/camera in ACTUAL
+          # Three/WebGL with source-kit art vs new painted UV terrain/forest.
+          # Capture BOTH orientations; the original approved reference image
+          # remains a separate binary Git-asset gate, not a spoofed screenshot.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&art=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='900,1200'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&art=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='1500,950'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-artlock01-before-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-art-legacy.png"
+            grep -q '"handpaintedWorld": "legacy"' "/tmp/bastionfall-unified-$orientation-art-legacy.json"
+            grep -q '"forestArt": "source-kit"' "/tmp/bastionfall-unified-$orientation-art-legacy.json"
+            grep -q '"handpaintedWorld": "gouache-uv"' "/tmp/bastionfall-unified-$orientation.json"
+            grep -q '"forestArt": "crooked-brush-canopies"' "/tmp/bastionfall-unified-$orientation.json"
+            grep -q '"artLockCompliance": "partial"' "/tmp/bastionfall-unified-$orientation.json"
+            echo "PASS: ART.LOCK.01 actual hand-painted world and original sculpted forest A/B ($orientation)"
+          done
           # VQ.02: compare the very same Warden/combat/camera world BEFORE
           # (procedural fallback) vs AFTER (six source-pinned GLBs) in both
           # landscape and portrait. This remains the SAME Three renderer.
@@ -546,6 +568,24 @@ jobs:
             /tmp/bastionfall-unified-cinematic-portrait.png
             /tmp/bastionfall-unified-cinematic-landscape.json
             /tmp/bastionfall-unified-cinematic-portrait.json
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Upload ART.LOCK.01 original in-game painted surfaces and forest before-after
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: art-lock01-live-world-painted-a-b
+          path: |
+            /tmp/bastionfall-unified-landscape.png
+            /tmp/bastionfall-unified-portrait.png
+            /tmp/bastionfall-unified-landscape.json
+            /tmp/bastionfall-unified-portrait.json
+            /tmp/bastionfall-unified-landscape-art-legacy.png
+            /tmp/bastionfall-unified-portrait-art-legacy.png
+            /tmp/bastionfall-unified-landscape-art-legacy.json
+            /tmp/bastionfall-unified-portrait-art-legacy.json
+            /tmp/bastionfall-artlock01-before-landscape.log
+            /tmp/bastionfall-artlock01-before-portrait.log
           if-no-files-found: warn
           retention-days: 21
       - name: Upload VQ.02e authentic sculpted tower sockets before-after
