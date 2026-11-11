@@ -654,6 +654,7 @@
           x:site.x,y:padGroundHeight(site,seed),z:site.z,
           unlockWave:site.unlockWave,
         })),
+        parameters.get("pads")==="legacy",
       ).then(status=>{
         if(status.sourceModels!==6||status.texturedModels!==6||
            status.keepModules!==9||status.padModules!==30||
@@ -668,6 +669,7 @@
         body.dataset.environmentPadModules=String(status.padModules);
         body.dataset.environmentInstances=String(status.instances);
         body.dataset.environmentVisuals="kenney-castle-kit-vq02";
+        body.dataset.padArt=status.padStyle;
         return status;
       }) : Promise.resolve(null);
       if (!movement || parameters.has("probeMovement")
