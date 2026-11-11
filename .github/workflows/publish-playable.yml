@@ -57,7 +57,7 @@ jobs:
           echo 'CHECK VQ.03a same-game direct-render baseline (post=off, foliage still animated)'
           node scripts/probe_unified_chrome.mjs "$browser" "http://127.0.0.1:4174/BrowserGame/$baseline" '960,600' landscape movement 1 \
             | tee /tmp/bastionfall-published-post-off.log
-          cp /tmp/bastionfall-unified-landscape-dpr1.png /tmp/bastionfall-landscape-post-off.png
+          cp /tmp/bastionfall-unified-landscape-dpr1-understory-legacy.png /tmp/bastionfall-landscape-post-off.png
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
               path='tests/terrain-preview.html?view=movement&aspect=portrait&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
