@@ -33,7 +33,7 @@ describe("F3.04b authoritative early wave lifecycle and core defense",()=>{
     expect(director.road.snapshot.spawned).toBe(0);
     tick();expect(director.road.snapshot.spawned).toBe(1);
     expect(director.road.snapshot.enemies[0]?.spawnTick).toBe(0);
-    for(let i=0;i<119;i++)tick();
+    for(let i=0;i<120;i++)tick();
     expect(director.road.snapshot.spawned).toBe(2);
     expect(director.snapshot.wave).toBe(1);
     expect(EARLY_WAVE_RULES.authoredWaves).toBe(2);
