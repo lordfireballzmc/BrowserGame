@@ -36,6 +36,19 @@ const SOURCES: readonly {role:Role; url:string; height:number}[]=[
   {role:"scrapper",url:`${import.meta.env.BASE_URL}assets/characters/scrapper-kaykit.glb`,height:1.93},
   {role:"runner",url:`${import.meta.env.BASE_URL}assets/characters/runner-kaykit.glb`,height:1.85},
 ];
+/**
+ * KayKit glTF characters are authored with local +Z as visual forward; the
+ * Bastionfall route/hero heading convention is local -Z (yaw=0 faces north).
+ * Correct the ART, not the authoritative world matrix or projectile aiming.
+ * Apply once to a visual-only parent outside the rig's animated skeleton.
+ */
+export const SOURCE_RIG_FACING_CORRECTION_RADIANS=Math.PI;
+export function makeRigFacingAdapter():Group {
+  const adapter=new Group();
+  adapter.name="kaykit-forward-to-bastionfall-north";
+  adapter.rotation.y=SOURCE_RIG_FACING_CORRECTION_RADIANS;
+  return adapter;
+}
 const OLD_MESH_TO_ROLE: Readonly<Record<string,Role>>={
   "staged-warden":"warden",
   "staged-scrapper":"scrapper",
@@ -314,7 +327,9 @@ export class RiggedCharacterLayer {
     // the source skeleton and freeze/stretch as actors move independently.
     const clone=cloneSkinned(source.template) as Group;
     const root=new Group();
-    root.add(clone);
+    const facing=makeRigFacingAdapter();
+    facing.add(clone);
+    root.add(facing);
     root.name="bastionfall-rigged-"+role;
     this.scene.add(root);
     const mixer=new AnimationMixer(clone);

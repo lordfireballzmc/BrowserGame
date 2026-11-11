@@ -1,10 +1,11 @@
 import { describe,expect,it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { MeshStandardMaterial, Scene } from "three";
+import { Group, MeshStandardMaterial, Scene, Vector3 } from "three";
 import { RiggedCharacterLayer, stylizeActorMaterial, factionFragment,
   classifyActorPart, isSelectedEquipment, ACTOR_PALETTES,
   animationBlend, ANIMATION_BLEND_SECONDS,
+  SOURCE_RIG_FACING_CORRECTION_RADIANS, makeRigFacingAdapter,
 } from "../src/engine/render/RiggedCharacterLayer";
 
 const base="public/assets/characters/";
@@ -19,6 +20,24 @@ const manifest=JSON.parse(readFileSync(base+"manifest.json","utf8")) as {
 const REQUIRED=["Idle","Walk","Run","Attack","Death"];
 
 describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
+  it("corrects KayKit +Z-forward artwork into -Z-forward 60Hz hero/route headings",()=>{
+    expect(SOURCE_RIG_FACING_CORRECTION_RADIANS).toBe(Math.PI);
+    // The correction surrounds the glTF, not its animated skeleton, and
+    // never modifies the physical world/yaw matrix owned by gameplay.
+    for(const worldYaw of [0,Math.PI/2,-Math.PI/2,Math.PI/4]){
+      const actor=new Group();
+      actor.rotation.y=worldYaw;
+      const adapter=makeRigFacingAdapter();
+      actor.add(adapter);
+      actor.updateMatrixWorld(true);
+      const facing=new Vector3(0,0,1).transformDirection(adapter.matrixWorld);
+      expect(facing.x).toBeCloseTo(-Math.sin(worldYaw),7);
+      expect(facing.y).toBeCloseTo(0,7);
+      expect(facing.z).toBeCloseTo(-Math.cos(worldYaw),7);
+      expect(adapter.parent).toBe(actor);
+    }
+  });
+
   it("pins exact upstream source hashes and CC0 terms for three cohesive original fantasy actors",()=>{
     expect(manifest.characters.map(c=>c.role)).toEqual(["warden","scrapper","runner"]);
     expect(manifest.sourceCommit).toMatch(/^[0-9a-f]{40}$/);
