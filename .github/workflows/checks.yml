@@ -315,6 +315,23 @@ jobs:
             grep -q '"environmentArt": "pass"' "/tmp/bastionfall-unified-$orientation.json"
             echo "PASS: VQ.02 $orientation real Three world original / authored castle comparison"
           done
+          # VQ.02e real 3D socket art: inspect exact identical live combat
+          # frame with the old blue-square kit for an honest visual A/B.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&pads=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='900,1200'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&pads=legacy&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dimensions='1500,950'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-vq02e-before-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-pads-legacy.png"
+            grep -q '"padArt": "source-kit"' "/tmp/bastionfall-unified-$orientation-pads-legacy.json"
+            grep -q '"padArt": "sculpted-stone"' "/tmp/bastionfall-unified-$orientation.json"
+            echo "PASS: VQ.02e sculpted tower socket vs blue-square source-kit ($orientation)"
+          done
           # VQ.02b actual in-game source art A/B: preserve VQ.02a castle,
           # camera, combat, deterministic scenery positions and Three renderer.
           # Change ONLY tree and rock visuals to the procedural fallback.
@@ -510,6 +527,24 @@ jobs:
             /tmp/bastionfall-unified-cinematic-portrait.png
             /tmp/bastionfall-unified-cinematic-landscape.json
             /tmp/bastionfall-unified-cinematic-portrait.json
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Upload VQ.02e authentic sculpted tower sockets before-after
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vq02e-stone-and-brass-pad-before-after
+          path: |
+            /tmp/bastionfall-unified-landscape.png
+            /tmp/bastionfall-unified-portrait.png
+            /tmp/bastionfall-unified-landscape.json
+            /tmp/bastionfall-unified-portrait.json
+            /tmp/bastionfall-unified-landscape-pads-legacy.png
+            /tmp/bastionfall-unified-portrait-pads-legacy.png
+            /tmp/bastionfall-unified-landscape-pads-legacy.json
+            /tmp/bastionfall-unified-portrait-pads-legacy.json
+            /tmp/bastionfall-vq02e-before-landscape.log
+            /tmp/bastionfall-vq02e-before-portrait.log
           if-no-files-found: warn
           retention-days: 21
       - name: Upload VQ.01 high-DPI gameplay quality and resize evidence
