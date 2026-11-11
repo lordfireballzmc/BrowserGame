@@ -85,6 +85,11 @@
       box-shadow:0 7px 18px #081d1780; font:700 11px system-ui; }
     .build-panel[hidden] {display:none}
     .build-panel output {font-variant-numeric:tabular-nums; color:#ffe4a0}
+    .build-panel #restart-early-waves {font:800 12px system-ui;
+      padding:6px 10px; background:#d9ba77; color:#223a31;
+      border-radius:6px; text-decoration:none; text-align:center}
+    .build-panel #restart-early-waves[hidden]{display:none}
+    .build-panel button {font-size:11px;min-height:29px}
     .build-panel button {
       pointer-events:auto; width:100%; min-height:33px;
       background:#e8c98a; border:1px solid #ffe9ab; border-radius:7px;
@@ -150,7 +155,7 @@
     <div class="movement-hud" id="movement-hud" hidden aria-hidden="true">
       <div class="hud-top">
         <div class="hud-chip">BASTIONFALL <strong>/ FENWALL CROSSING</strong></div>
-        <div class="hud-chip">WARDEN <strong>· AUTO-FIRE TEST</strong></div>
+        <div class="hud-chip" id="wave-readout">WARDEN <strong>· EARLY DEFENSE</strong></div>
         <label class="quality-control" id="graphics-control" hidden>
           GRAPHICS
           <select id="graphics-quality" aria-label="Render resolution quality">
@@ -167,7 +172,11 @@
         <output id="crowns-readout" aria-live="polite">25 COPPER CROWNS</output>
         <button type="button" id="build-p01">BUILD P01 · 20</button>
         <button type="button" id="build-p02">BUILD P02 · 20</button>
+        <button type="button" id="build-p03">BUILD P03 · WAVE 2</button>
+        <button type="button" id="build-p04">BUILD P04 · WAVE 2</button>
         <output id="tower-build-feedback" aria-live="polite">Walk to fallen crowns to collect.</output>
+        <a id="restart-early-waves" href="?view=movement" hidden
+          aria-label="Play the two-wave Fenwall defense again">REPLAY DEFENSE</a>
       </div>
       <div class="hud-bottom"><span>WASD / ARROWS · BOLT SPIRE 1/2 · ESC PAUSE</span>
         <span id="raider-readout">RED COLUMN · APPROACHING</span>
@@ -184,6 +193,7 @@
   import { EnemyRoadWorld } from "/src/game/EnemyRoadWorld.ts";
   import { HeroBoltCombat } from "/src/game/HeroBoltCombat.ts";
   import { DefenseEconomyWorld } from "/src/game/DefenseEconomyWorld.ts";
+  import { EarlyWaveDirector,EARLY_WAVE_RULES } from "/src/game/EarlyWaveDirector.ts";
   import { createHeroBoltMesh, createBoltImpactMesh, createCrownPickupMesh } from "/src/art/models/HeroBoltVisuals.ts";
   import { createRunnerStudy } from "/src/art/models/RunnerStudy.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
@@ -288,12 +298,23 @@
     renderer.enableFrustumCulling();
     const seed = "fenwall-crossing-v1";
     const playerWorld = movement ? new HeroMovementWorld(seed) : null;
-    const raiderWorld = movement ? new EnemyRoadWorld(2, seed) : null;
+    // Existing automated 19-raider F3.02/F3.03 probes explicitly retain
+    // their original pre-advanced wave-2 source world for exact regression.
+    // Normal ?view=movement is NOW a real finite two-wave play session.
+    const legacyCombatProbe=[
+      "probeMovement","probeEnemies","probeCombat","probeCharacters",
+      "probeTowerBuild",
+    ].some(key=>parameters.has(key));
+    const playableWaves=movement&&!legacyCombatProbe&&
+      parameters.get("waves")!=="legacy";
+    const waveDirector=playableWaves?new EarlyWaveDirector(seed):null;
+    let raiderWorld=movement
+      ?waveDirector?.road??new EnemyRoadWorld(2,seed):null;
     const combatWorld = movement ? new HeroBoltCombat() : null;
     const economyWorld = movement ? new DefenseEconomyWorld(seed) : null;
     // This is an explicitly mid-approach movement study, not a complete
     // playable wave. All 19 raiders have genuine deterministic spawn histories.
-    const demoHeadstartTicks = movement ? 30 * 60 : 0;
+    const demoHeadstartTicks = movement&&!waveDirector ? 30 * 60 : 0;
     for (let i=0;i<demoHeadstartTicks;i++) raiderWorld.step(FIXED_STEP_SECONDS);
     const terrain = generateTerrain(seed);
     // VQ.02c honest same-game-frame ground review: ?ground=legacy returns
@@ -369,6 +390,12 @@
     // These are now simulated route entities, not static posing. Each entity
     // retains one WebGL matrix and one authored mesh for its entire lifetime.
     const raiderMatrices = new Map();
+    const clearPreviousRaiders=()=>{
+      const models=new Set(raiderMatrices.values());
+      for(let i=instances.length-1;i>=0;i--)
+        if(models.has(instances[i].model))instances.splice(i,1);
+      raiderMatrices.clear();
+    };
     if (movement) {
       renderer.uploadMesh("route-runner",createRunnerStudy());
       renderer.uploadMesh("purchased-bolt-spire",createBoltSpireStudy());
