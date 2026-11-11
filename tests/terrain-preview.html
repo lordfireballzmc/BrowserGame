@@ -54,6 +54,10 @@
       display:flex; flex-direction:column; justify-content:space-between;
       padding:clamp(10px,2.5vw,30px); color:#fff4dc; }
     .movement-hud[hidden] { display:none; }
+    body[data-view="movement"][data-core-hit="true"] .stage::after {
+      content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+      box-shadow:inset 0 0 34px 6px #b33a2559;
+    }
     .movement-hud .hud-top { display:flex; justify-content:space-between;
       align-items:flex-start; gap:10px; flex-wrap:wrap; padding-right:100px; }
     .movement-hud .hud-chip { border:1px solid #ecdeb44d; border-radius:8px;
@@ -868,6 +872,9 @@
           body.dataset.coreHp=String(wave.coreHp);
           body.dataset.heroHp=String(wave.heroHp);
           body.dataset.coreStrikes=String(wave.coreStrikes);
+          body.dataset.coreHit=String(
+            wave.lastDamageTarget==="core"&&wave.lastDamageTick!==null&&
+            wave.tick-wave.lastDamageTick<=12);
           body.dataset.heroStrikes=String(wave.heroStrikes);
           body.dataset.wavesCleared=String(wave.wavesCleared);
           body.dataset.waveRewards=String(wave.totalWaveRewards);
@@ -1088,6 +1095,47 @@
           throw new Error("F3.04a actual DOM purchase failed");
         }
         body.dataset.towerPurchaseProbe="pass";
+      }
+      // F3.04b actual browser INTEGRATION: simulate real authored 60Hz
+      // preparation/spawn/movement/attacks in this production scene until a
+      // living gate attacker causes real core HP damage. No fake instant HP
+      // mutation, scripted win, or a second test-only game implementation.
+      if(parameters.get("probeWaveDefense")==="gate"){
+        if(!waveDirector)throw new Error("Real wave director not active");
+        let realGateStrike=false;
+        for(let i=0;i<8000&&!waveDirector.isTerminal;i++){
+          const hero=playerWorld.step({right:0,forward:0},FIXED_STEP_SECONDS);
+          waveDirector.step(hero,playerWorld,combatWorld,economyWorld,
+            FIXED_STEP_SECONDS);
+          if(waveDirector.road!==raiderWorld){
+            clearPreviousRaiders();
+            raiderWorld=waveDirector.road;
+          }
+          if(waveDirector.snapshot.coreStrikes>0 &&
+             waveDirector.snapshot.coreHp<300){
+            realGateStrike=true;break;
+          }
+        }
+        if(!realGateStrike||
+           waveDirector.snapshot.wave!==1||
+           waveDirector.snapshot.phase!=="active"||
+           waveDirector.snapshot.coreHp>=300||
+           waveDirector.road.snapshot.enemies.filter(e=>e.hp>0).length<1)
+          throw new Error("F3.04b real gate strike probe failed: "+
+            JSON.stringify(waveDirector.snapshot));
+        renderMovement(1);
+        body.dataset.waveProbe="pass";
+        body.dataset.waveProbeCoreHp=String(waveDirector.snapshot.coreHp);
+        document.querySelector("#trace").textContent=JSON.stringify({
+          mode:"F3.04b REAL GATE ATTACK VERIFIED",
+          wave:waveDirector.snapshot.wave,
+          phase:waveDirector.snapshot.phase,
+          coreHp:waveDirector.snapshot.coreHp,
+          coreStrikes:waveDirector.snapshot.coreStrikes,
+          spawned:waveDirector.road.snapshot.spawned,
+          living:waveDirector.road.snapshot.enemies.filter(e=>e.hp>0).length,
+          note:"Real staged 60Hz queue, road arrival and legal gate strike",
+        });
       }
       // Real browser-integrated DOM-keyboard probe: send an actual keydown,
       // run exactly 90 authored fixed steps, then sample the visible scene.
