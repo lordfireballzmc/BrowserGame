@@ -156,6 +156,12 @@ try {
   while(Date.now()<deadline) {
     lastState=await evaluate(`(() => {
       const d=document.body?.dataset??{};
+      // CDP polls while HTML is still parsing. CSS checks must tolerate
+      // elements that genuinely do not yet exist rather than throwing.
+      const displayOf=id=>{
+        const el=document.querySelector(id);
+        return el?getComputedStyle(el).display:null;
+      };
       return {
         result:d.result, assetPilot:d.assetPilot, assetSource:d.assetSource,
         assetTextured:d.assetTextured, unifiedRenderer:d.unifiedRenderer,
@@ -193,7 +199,12 @@ try {
         pendingCoins:d.pendingCoins,crownRecoveryPot:d.crownRecoveryPot,
         towerPurchaseProbe:d.towerPurchaseProbe,lastBuildResult:d.lastBuildResult,
         waveProbe:d.waveProbe,waveProbeCoreHp:d.waveProbeCoreHp,
-        wavePhase:d.wavePhase,waveNumber:d.waveNumber,
+        wavePhase:d.wavePhase,waveNumber:d.waveNumber,uiMode:d.uiMode,
+        dockCollapsed:document.querySelector("#tower-build-panel")
+          ?.classList.contains("expanded")===false &&
+          displayOf("#crowns-readout")==="none",
+        diagnosticHidden:displayOf("#resolution-readout")==="none",
+
         coreHp:d.coreHp,heroHp:d.heroHp,coreStrikes:d.coreStrikes,
         heroStrikes:d.heroStrikes,wavesCleared:d.wavesCleared,
         runResult:d.runResult,waveRemaining:d.waveRemaining,
@@ -284,6 +295,21 @@ try {
         Number(lastState.towersBuilt)===0 &&
         lastState.heroVisible==="true" &&
         lastState.graphicsBuffer===lastState.canvasWidth+"x"+lastState.canvasHeight;
+    } else if(mode==="movement" && scene.searchParams.get("probeHUD")==="play"){
+      // Source-exact normal game session: no synthetic enemy pre-advance and
+      // no debug screen. This verifies playable wave state and CSS dock.
+      ready=common &&
+        lastState.sceneMode==="combat" &&
+        lastState.uiMode==="play" &&
+        lastState.dockCollapsed===true &&
+        lastState.diagnosticHidden===true &&
+        ["preparation","active","recovery"].includes(lastState.wavePhase) &&
+        lastState.heroVisible==="true" &&
+        lastState.riggedArt==="ready" &&
+        Number(lastState.riggedSources)===3 &&
+        Number(lastState.riggedActors)>=1 &&
+        Number(lastState.crowns)>=0 &&
+        lastState.graphicsBuffer===lastState.canvasWidth+"x"+lastState.canvasHeight;
     } else if (mode==="movement") {
       ready=common &&
         lastState.sceneMode==="combat" &&
@@ -349,6 +375,29 @@ try {
   if(!ready) {
     throw new Error("Game did not become READY within 65s: "+JSON.stringify(lastState));
   }
+  if(mode==="movement" && scene.searchParams.get("probeHUD")==="play"){
+    const dock=await evaluate(`(() => {
+      const panel=document.querySelector("#tower-build-panel");
+      const button=document.querySelector("#toggle-build");
+      const purchase=document.querySelector("#build-p01");
+      const crown=document.querySelector("#crowns-readout");
+      const initial=button.getAttribute("aria-expanded")==="false";
+      button.click();
+      const expanded=panel.classList.contains("expanded")&&
+        button.getAttribute("aria-expanded")==="true"&&
+        getComputedStyle(crown).display!=="none"&&
+        purchase.getBoundingClientRect().height>=40;
+      button.click();
+      const collapsed=!panel.classList.contains("expanded")&&
+        button.getAttribute("aria-expanded")==="false"&&
+        getComputedStyle(crown).display==="none";
+      return {initial,expanded,collapsed};
+    })()`);
+    if(!dock.initial||!dock.expanded||!dock.collapsed)
+      throw new Error("VQ.05a interactive tower dock was not accessible: "+
+        JSON.stringify(dock));
+    lastState.dockInteraction="pass";
+  }
   if(mode==="movement" && requestedDpr!==null) {
     // Exercise actual select event and live viewport resize, not just the
     // CanvasRuntime unit math. All operations use the same running Three scene.
@@ -411,7 +460,10 @@ try {
           tier:document.body.dataset.graphicsTier,result:document.body.dataset.result,
           buffer:document.body.dataset.graphicsBuffer,
           hero:document.body.dataset.heroVisible,
-          combat:document.body.dataset.combatProbe};
+          combat:document.body.dataset.combatProbe,
+          wave:document.body.dataset.wavePhase,
+          coreHp:document.body.dataset.coreHp,
+          ui:document.body.dataset.uiMode};
       })()`);
       if(final.result==="pass" && final.tier==="sharp" &&
          final.width*final.height===restored.pixels)break;
@@ -419,7 +471,10 @@ try {
     }
     if(final.result!=="pass" || final.tier!=="sharp" ||
        final.width*final.height!==restored.pixels || final.hero!=="true" ||
-       final.combat!=="pass") {
+       (scene.searchParams.get("probeHUD")==="play"
+         ? final.ui!=="play" || !["preparation","active","recovery"].includes(final.wave) ||
+           !(Number(final.coreHp)>0)
+         : final.combat!=="pass")) {
       throw new Error("VQ.01 restore/playability gate failed after readiness polling: "+
         JSON.stringify({restored,final}));
     }
@@ -444,7 +499,8 @@ try {
     (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "")+
     (scene.searchParams.get("pads")==="legacy" ? "-pads-legacy" : "")+
     (scene.searchParams.get("probeTowerBuild")==="P01" ? "-tower-purchase" : "")+
-    (scene.searchParams.get("probeWaveDefense")==="gate" ? "-core-gate" : "");
+    (scene.searchParams.get("probeWaveDefense")==="gate" ? "-core-gate" : "")+
+    (scene.searchParams.get("probeHUD")==="play" ? "-compact-hud" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,

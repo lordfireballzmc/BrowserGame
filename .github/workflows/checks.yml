@@ -425,6 +425,25 @@ jobs:
             grep -q '"coreStrikes": "' "/tmp/bastionfall-unified-$orientation-core-gate.json"
             echo "PASS: F3.04b real authored $orientation core gate damage"
           done
+          # VQ.05a: actual unmodified normal wave gameplay with a compact
+          # fantasy HUD rather than the engineering panel. Click the real
+          # tower dock open and closed, assert 40px controls and screenshot
+          # both real 3D portrait and landscape WebGL output.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeHUD=play'
+              dimensions='540,960'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeHUD=play'
+              dimensions='960,600'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dimensions" "$orientation" movement 1 \
+              2>&1 | tee "/tmp/bastionfall-vq05a-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-dpr1-compact-hud.png"
+            grep -q '"uiMode": "play"' "/tmp/bastionfall-unified-$orientation-dpr1-compact-hud.json"
+            grep -q '"dockInteraction": "pass"' "/tmp/bastionfall-unified-$orientation-dpr1-compact-hud.json"
+            echo "PASS: VQ.05a real normal-wave compact art HUD and reversible tower dock ($orientation)"
+          done
           # VQ.01: real DPR=2 Three gameplay (not just unit math). Run
           # economy/sharp selection, live CSS viewport resize + restore, and
           # verify the same Warden/19-raider/copper-bolt gameplay stays active.
@@ -545,6 +564,20 @@ jobs:
             /tmp/bastionfall-unified-portrait-pads-legacy.json
             /tmp/bastionfall-vq02e-before-landscape.log
             /tmp/bastionfall-vq02e-before-portrait.log
+          if-no-files-found: warn
+          retention-days: 21
+      - name: Upload VQ.05a real compact normal-play mobile HUD screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vq05a-compact-fantasy-hud-landscape-portrait
+          path: |
+            /tmp/bastionfall-unified-landscape-dpr1-compact-hud.png
+            /tmp/bastionfall-unified-portrait-dpr1-compact-hud.png
+            /tmp/bastionfall-unified-landscape-dpr1-compact-hud.json
+            /tmp/bastionfall-unified-portrait-dpr1-compact-hud.json
+            /tmp/bastionfall-vq05a-landscape.log
+            /tmp/bastionfall-vq05a-portrait.log
           if-no-files-found: warn
           retention-days: 21
       - name: Upload VQ.01 high-DPI gameplay quality and resize evidence

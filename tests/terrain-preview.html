@@ -126,6 +126,98 @@
       flex-direction:column; padding-right:65px;
     }
     body[data-view="movement"][data-aspect="portrait"] .hud-bottom { flex-direction:column; align-items:flex-start; }
+    /* VQ.05a playable art UI: short warm-stone wave readout and a collapsible
+       wood-and-brass tower dock. Real gameplay only; engineering/probe views
+       retain complete precision counters, upload metrics and diagnostics. */
+    body[data-ui-mode="play"] .movement-hud {
+      padding:clamp(8px,1.8vw,18px);
+    }
+    body[data-ui-mode="play"] .hud-top {
+      display:block; padding-right:72px; max-width:100%;
+    }
+    body[data-ui-mode="play"] .hud-top > .hud-chip:first-child {display:none}
+    body[data-ui-mode="play"] #wave-readout {
+      display:inline-block; max-width:100%; margin:0; padding:7px 11px;
+      border-radius:9px; font:850 clamp(10px,1.15vw,13px)/1.45 system-ui;
+      letter-spacing:.035em; color:#fff2d1;
+      border:1px solid #d8b77b9c;
+      background:linear-gradient(164deg,#2c5345ee,#1d352fdd);
+      box-shadow:0 2px 0 #ae9560a6,0 5px 14px #10231944;
+      text-shadow:0 1px 0 #142921;
+    }
+    body[data-ui-mode="play"] .quality-control {
+      position:absolute; top:52px; right:clamp(8px,1.8vw,18px);
+      display:flex; padding:3px 5px; border-radius:8px;
+      max-width:108px; min-height:31px;
+      color:transparent; font-size:0;
+      background:linear-gradient(#3a5748dd,#1c3630de);
+      border:1px solid #bea477af; box-shadow:0 3px 9px #0d231c40;
+    }
+    body[data-ui-mode="play"] .quality-control[hidden] {display:none!important}
+    body[data-ui-mode="play"] .quality-control select {
+      max-width:100px; min-height:36px; font:750 11px system-ui;
+      background:#f2e2b8; border:1px solid #c7a96c; color:#26453a;
+      cursor:pointer;
+    }
+    body[data-ui-mode="play"] #resolution-readout,
+    body[data-ui-mode="play"] #graphics-perf,
+    body[data-ui-mode="play"] .hud-bottom {display:none}
+    .build-panel .build-toggle {display:none}
+    body[data-ui-mode="play"] .build-panel {
+      right:clamp(8px,1.8vw,18px);
+      bottom:calc(10px + env(safe-area-inset-bottom,0px));
+      width:min(232px,65vw); padding:5px; gap:5px;
+      border:1px solid #d6b67ccf; border-radius:11px;
+      background:linear-gradient(150deg,#365747e9,#1b342ef0);
+      box-shadow:0 2px 0 #c5a8709e,0 8px 19px #15291c81;
+    }
+    body[data-ui-mode="play"] .build-panel .build-toggle {
+      display:block; grid-column:1 / -1; min-height:44px;
+      font:850 12px/1.4 system-ui; letter-spacing:.025em;
+      color:#fff1c7; background:linear-gradient(#62715a,#33483c);
+      border:1px solid #e4cb8b9e; box-shadow:inset 0 1px #fcdeb35c;
+    }
+    body[data-ui-mode="play"] .build-panel:not(.expanded) > :not(.build-toggle) {
+      display:none !important;
+    }
+    body[data-ui-mode="play"] .build-panel.expanded {
+      width:min(260px,78vw);
+    }
+    body[data-ui-mode="play"] .build-panel.expanded button:not(.build-toggle) {
+      min-height:44px; white-space:normal; font:800 10px/1.2 system-ui;
+      background:#d9bd84; border:1px solid #ffdd97;
+    }
+    body[data-ui-mode="play"] .build-panel.expanded button[disabled] {
+      background:#506b5b;color:#c9d2c4;border-color:#6d8879;
+    }
+    body[data-ui-mode="play"] .build-panel output {
+      font:750 11px/1.25 system-ui;
+    }
+    body[data-ui-mode="play"][data-aspect="portrait"] .hud-top {
+      flex-direction:row; padding-right:67px;
+    }
+    body[data-ui-mode="play"][data-aspect="portrait"] .build-panel {
+      bottom:calc(10px + env(safe-area-inset-bottom,0px));
+      width:min(232px,73vw);
+    }
+    body[data-ui-mode="play"][data-aspect="portrait"] .build-panel.expanded {
+      width:min(260px,80vw);
+    }
+    body[data-ui-mode="play"] .movement-exit {
+      top:clamp(8px,1.8vw,18px); right:clamp(8px,1.8vw,18px);
+      padding:6px 10px; font-size:10px;
+      background:linear-gradient(#365e4de5,#1e382de9);
+      border-color:#cfb481bd;
+    }
+    @media (pointer:coarse) {
+      body[data-ui-mode="play"] .quality-control select,
+      body[data-ui-mode="play"] .movement-exit {min-height:44px}
+      body[data-ui-mode="play"] .build-panel button {min-height:44px}
+    }
+    body[data-ui-mode="play"] .build-toggle:focus-visible,
+    body[data-ui-mode="play"] .quality-control select:focus-visible {
+      outline:3px solid #ffda83;outline-offset:2px;
+    }
     .scene-stamp { display:none; position:absolute; z-index:1; left:3%; top:3%;
       padding:10px 13px; border-radius:8px; color:#f3e8ce; background:#253b35d9;
       font:700 14px/1.3 system-ui; letter-spacing:0.07em; pointer-events:none; }
@@ -164,7 +256,7 @@
       <small>3D SCENE STUDY · NOT LIVE GAMEPLAY</small></div>
     <canvas id="terrain" width="1200" height="760" aria-label="3D miniature terrain, keep, defenses and authored posed actors"></canvas>
     <div class="pad-labels" id="pad-labels" aria-hidden="true"></div>
-    <div class="movement-hud" id="movement-hud" hidden aria-hidden="true">
+    <div class="movement-hud" id="movement-hud" hidden>
       <div class="hud-top">
         <div class="hud-chip">BASTIONFALL <strong>/ FENWALL CROSSING</strong></div>
         <div class="hud-chip" id="wave-readout">WARDEN <strong>· EARLY DEFENSE</strong></div>
@@ -181,6 +273,8 @@
       </div>
       <a class="movement-exit" href="../" aria-label="Return to Bastionfall menu">MENU</a>
       <div class="build-panel" id="tower-build-panel" hidden>
+        <button type="button" class="build-toggle" id="toggle-build"
+          aria-expanded="false" title="Expand or collapse tower purchases">TOWERS · 25 CROWNS</button>
         <output id="crowns-readout" aria-live="polite">25 COPPER CROWNS</output>
         <button type="button" id="build-p01">BUILD P01 · 20</button>
         <button type="button" id="build-p02">BUILD P02 · 20</button>
@@ -326,6 +420,11 @@
       "probeMovement","probeEnemies","probeCombat","probeCharacters",
       "probeTowerBuild",
     ].some(key=>parameters.has(key));
+    // A genuine gameplay screen is not a profiling dashboard. Explicit
+    // ?debug=1 retains diagnostic counters and the uncropped old HUD.
+    body.dataset.uiMode=movement&&!legacyCombatProbe&&
+      !parameters.has("probeWaveDefense")&&parameters.get("debug")!=="1"
+        ?"play":"diagnostic";
     const playableWaves=movement&&!legacyCombatProbe&&
       parameters.get("waves")!=="legacy";
     const waveDirector=playableWaves?new EarlyWaveDirector(seed):null;
@@ -868,6 +967,11 @@
     if (movement) {
       const pressed = new Set();
       const buildPanel=document.querySelector("#tower-build-panel");
+      const buildToggle=document.querySelector("#toggle-build");
+      buildToggle.addEventListener("click",()=>{
+        const expanded=buildPanel.classList.toggle("expanded");
+        buildToggle.setAttribute("aria-expanded",String(expanded));
+      });
       const crownReadout=document.querySelector("#crowns-readout");
       const towerFeedback=document.querySelector("#tower-build-feedback");
       const buildButtons=["P01","P02","P03","P04"].map(id=>({
@@ -881,6 +985,7 @@
         const current=economyWorld.snapshot;
         crownReadout.textContent=current.crowns+" COPPER CROWNS · "
           +current.defeats+" DEFEATED";
+        buildToggle.textContent="TOWERS · "+current.crowns+" CROWNS";
         const wave=waveDirector?.snapshot;
         if(wave){
           const seconds=Math.ceil(wave.phaseRemainingTicks/60);
@@ -897,6 +1002,18 @@
               (wave.phase==="active"?" · "+wave.enemiesRemaining+" RAIDERS":
                 " · "+seconds+"S")+
               " · CORE "+wave.coreHp+"/300 · HERO "+wave.heroHp+"/100";
+          if(body.dataset.uiMode==="play"){
+            if(wave.phase!=="won"&&wave.phase!=="lost"){
+              waveReadout.textContent="W"+wave.wave+"/"+EARLY_WAVE_RULES.authoredWaves+
+                " · "+wave.phase.toUpperCase()+" · "+
+                (wave.phase==="active"?wave.enemiesRemaining+" FOES":
+                  Math.ceil(wave.phaseRemainingTicks/60)+"S")+
+                " · CORE "+wave.coreHp+" · WARDEN "+wave.heroHp;
+            }else{
+              buildPanel.classList.add("expanded");
+              buildToggle.setAttribute("aria-expanded","true");
+            }
+          }
           body.dataset.wavePhase=wave.phase;
           body.dataset.waveNumber=String(wave.wave);
           body.dataset.coreHp=String(wave.coreHp);
