@@ -7,6 +7,8 @@ A small golden-cloaked warden defends a frontier keep from rivers of crimson-cla
 
 **Non-negotiable:** at any given moment, a screenshot must answer (a) who am I? (b) where are enemies coming from? (c) what do they threaten? (d) what can I build? (e) how can I afford it? A first-time user understands in 6 seconds without tutorial paragraphs.
 
+**Current-engine implementation note (2026-11-11):** This file is a GAMEPLAY PRODUCT SPECIFICATION rather than a report of shipped features. Its old custom-WebGL2-only renderer and primitive-only art restrictions are **historical and explicitly superseded** by `AGENTS.md`, [Three.js architecture](05_ARCHITECTURE.md) and [binding illustrated original-3D quality directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md). **F3.04a actual code now verified**: 25 starting crowns, physical proximity-collected enemy kill drops, priced P01/P02 Bolt Spire build and 15m/s physical tower projectiles (PR #35, [exact-head browser/visual review](36_F304A_CROWN_PICKUP_AND_BOLT_SPIRE_REVIEW.md)). **Still SPEC ONLY / NOT IMPLEMENTED:** full stage waves, player/core enemy damage, bonuses/ recovery-pot settlement, tower upgrades and complete 10-wave victory/loss. Do not read those design requirements as current gameplay claims.
+
 ## 1. Core loop / player fantasy
 RECONNOITER → shoot / dodge / lure → collect coins → sprint to valid pad → buy or upgrade tower → survive pressure → collect wave reward → choose route / improvements → repeat. Attacks are automatic, but positioning, body-blocking avoidance, route selection, tower placement, economy, timing and upgrades are deliberate inputs.
 
