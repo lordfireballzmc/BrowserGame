@@ -53,7 +53,7 @@ jobs:
           browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           # VQ.03a isolation/visual A-B: same authenticated scene with HDR
           # compositor disabled; this still compiles real authored windy grass.
-          baseline='tests/terrain-preview.html?view=movement&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged&post=off'
+          baseline='tests/terrain-preview.html?view=movement&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged&post=off&understory=legacy'
           echo 'CHECK VQ.03a same-game direct-render baseline (post=off, foliage still animated)'
           node scripts/probe_unified_chrome.mjs "$browser" "http://127.0.0.1:4174/BrowserGame/$baseline" '960,600' landscape movement 1 \
             | tee /tmp/bastionfall-published-post-off.log
