@@ -1,9 +1,9 @@
 /**
- * F3.04b — finite TWO-WAVE playable Fenwall defense skirmish. This is
- * authoritative 60Hz gameplay, not a HUD countdown or a visual-only proxy.
- * The full product's ten-wave alpha and Shieldbearer/Sapper/Banner boss design
- * are separate future work. Existing F3.02 explicit movement probes remain
- * untouched via the old EnemyRoadWorld default.
+ * F3.04c1 — finite THREE-WAVE playable Fenwall defense vertical slice:
+ * physical Shieldbearer directional defense and legitimate wave-3 win/loss.
+ * Authoritative 60Hz simulation, no HUD-only counters or counterfeit hits.
+ * The full ten-wave alpha and Sapper/Banner/Boss mechanics remain future work.
+ * Existing F3.02 explicit movement probes retain the old wave-2 behavior.
  */
 import {BALANCE} from "./Balance";
 import {EnemyRoadWorld,type EarlyWave} from "./EnemyRoadWorld";
@@ -33,7 +33,7 @@ export interface EarlyWaveSnapshot {
   readonly lastDamageTick:number|null;
 }
 export const EARLY_WAVE_RULES={
-  authoredWaves:2,
+  authoredWaves:3,
   preparationTicks:12*60,
   recoveryTicks:12*60,
   strikeTicks:Math.round(0.6/FIXED_STEP_SECONDS),
@@ -163,6 +163,10 @@ export class EarlyWaveDirector {
       if(wave>=EARLY_WAVE_RULES.authoredWaves){
         phase="won";phaseTicks=0;
       }else {
+        // Recovery must be a strategic choice, not an irreversible attrition
+        // spiral. Heal living Wardens by 20 HP (never resurrect during their
+        // genuine 4-second death timer) before opening another wave.
+        if(heroHp>0)heroHp=Math.min(BALANCE.hero.health,heroHp+20);
         economy.prepareNextWave();
         combat.prepareNextWave();
         this.nextStrikeTick.clear();
