@@ -178,6 +178,11 @@ try {
         crownDrops:d.crownDrops,crownsCollected:d.crownsCollected,
         pendingCoins:d.pendingCoins,crownRecoveryPot:d.crownRecoveryPot,
         towerPurchaseProbe:d.towerPurchaseProbe,lastBuildResult:d.lastBuildResult,
+        waveProbe:d.waveProbe,waveProbeCoreHp:d.waveProbeCoreHp,
+        wavePhase:d.wavePhase,waveNumber:d.waveNumber,
+        coreHp:d.coreHp,heroHp:d.heroHp,coreStrikes:d.coreStrikes,
+        heroStrikes:d.heroStrikes,wavesCleared:d.wavesCleared,
+        runResult:d.runResult,waveRemaining:d.waveRemaining,
         shadows:d.shadows,
         environmentArt:d.environmentArt,
         environmentSources:d.environmentSources,
@@ -249,7 +254,23 @@ try {
           Number(lastState.environmentPadModules)===30 &&
           Number(lastState.environmentInstances)===39);
     const trace = (()=>{ try {return JSON.parse(lastState.trace??"{}");} catch {return {};} })();
-    if (mode==="movement") {
+    if (mode==="movement"&&scene.searchParams.get("probeWaveDefense")==="gate"){
+      ready=common &&
+        lastState.sceneMode==="combat" &&
+        lastState.economyState==="pass" &&
+        lastState.waveProbe==="pass" &&
+        lastState.wavePhase==="active" &&
+        Number(lastState.waveNumber)===1 &&
+        Number(lastState.coreStrikes)>=1 &&
+        Number(lastState.coreHp)<300 &&
+        Number(lastState.coreHp)>0 &&
+        lastState.runResult==="active" &&
+        Number(lastState.enemyCount)>=1 &&
+        Number(lastState.crowns)===25 &&
+        Number(lastState.towersBuilt)===0 &&
+        lastState.heroVisible==="true" &&
+        lastState.graphicsBuffer===lastState.canvasWidth+"x"+lastState.canvasHeight;
+    } else if (mode==="movement") {
       ready=common &&
         lastState.sceneMode==="combat" &&
         lastState.economyState==="pass" &&
@@ -398,7 +419,8 @@ try {
     (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "")+
     (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "")+
     (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "")+
-    (scene.searchParams.get("probeTowerBuild")==="P01" ? "-tower-purchase" : "");
+    (scene.searchParams.get("probeTowerBuild")==="P01" ? "-tower-purchase" : "")+
+    (scene.searchParams.get("probeWaveDefense")==="gate" ? "-core-gate" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
