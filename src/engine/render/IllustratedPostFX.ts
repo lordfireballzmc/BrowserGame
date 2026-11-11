@@ -87,7 +87,10 @@ export class IllustratedPostFX {
       // Pixel ratio is already applied once to the physical backbuffer.
       const target=new WebGLRenderTarget(size.x,size.y,{
         type:HalfFloatType,depthBuffer:true,stencilBuffer:false,
-        samples:4,
+        // Many ANGLE/SwiftShader WebGL2 implementations reject multisampled
+        // half-float FBOs (GL_INVALID_OPERATION). The existing direct MSAA
+        // path remains available, and bloom is low-contrast/small-radius.
+        samples:0,
       });
       const composer=new EffectComposer(this.gpu,target);
       composer.setPixelRatio(1);
