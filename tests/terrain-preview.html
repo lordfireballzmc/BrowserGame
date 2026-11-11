@@ -1104,7 +1104,14 @@
         if(!waveDirector)throw new Error("Real wave director not active");
         let realGateStrike=false;
         for(let i=0;i<8000&&!waveDirector.isTerminal;i++){
-          const hero=playerWorld.step({right:0,forward:0},FIXED_STEP_SECONDS);
+          // Physically walk the defender SOUTH of the actual entry/gate
+          // during prep. Otherwise the legitimate nearest-hero contact
+          // strikes intercept attacks intended for the core. This is a REAL
+          // authorized movement input, NOT a fabricated damage event.
+          const input=i<150?{right:1,forward:1}:{right:0,forward:0};
+          const hero=playerWorld.step(input,FIXED_STEP_SECONDS);
+          movingCamera.follow([hero.x,0,hero.z],FIXED_STEP_SECONDS,
+            [hero.vx*0.17,hero.vz*0.17]);
           waveDirector.step(hero,playerWorld,combatWorld,economyWorld,
             FIXED_STEP_SECONDS);
           if(waveDirector.road!==raiderWorld){
