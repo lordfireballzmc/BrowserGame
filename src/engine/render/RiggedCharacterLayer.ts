@@ -21,6 +21,8 @@ export interface ActorMotion {
   readonly motion: Motion;
   /** Exact simulation-derived time; rendering never advances game state. */
   readonly timeSeconds: number;
+  /** Seconds since a real damage event, or null: presentation only. */
+  readonly hitAgeSeconds: number | null;
 }
 export interface RiggedCharacterStats {
   readonly sources: number;
@@ -171,6 +173,24 @@ function validTime(value:number):void {
 }
 /** Native procedural-to-animated pose handoff; 140ms is visibly short at 30 FPS. */
 export const ANIMATION_BLEND_SECONDS=0.14;
+/** Attack remains readable even when its physical bolt instantly hits a target. */
+export const ATTACK_FOLLOW_THROUGH_SECONDS=0.34;
+/** A short non-looping impulse plus damped counter-swing, sampled from simulation time. */
+export const HIT_RECOIL_SECONDS=0.28;
+/** Attack anticipation/release weight, with no wall-time or per-frame state. */
+export function attackFollowThrough(ageSeconds:number):number {
+  validTime(ageSeconds);
+  if(ageSeconds>=ATTACK_FOLLOW_THROUGH_SECONDS)return 0;
+  const progress=ageSeconds/ATTACK_FOLLOW_THROUGH_SECONDS;
+  return Math.sin(Math.PI*progress)*(1-progress);
+}
+/** Brief impact recoil and quieter opposite recovery; returns exactly 0 at rest. */
+export function impactRecoil(ageSeconds:number):number {
+  validTime(ageSeconds);
+  if(ageSeconds>=HIT_RECOIL_SECONDS)return 0;
+  const progress=ageSeconds/HIT_RECOIL_SECONDS;
+  return Math.sin(Math.PI*2*progress)*(1-progress);
+}
 /** Pure smoothstep: predictable at fixed simulation clock, never Date.now(). */
 export function animationBlend(elapsedSeconds:number):number {
   if(!Number.isFinite(elapsedSeconds))throw new RangeError("Invalid animation transition age");
@@ -199,11 +219,13 @@ export class RiggedCharacterLayer {
 
   setTime(seconds:number):void { validTime(seconds); this.globalTime=seconds; }
 
-  setMotion(model:ArrayLike<number>, motion:Motion,timeSeconds:number):void {
+  setMotion(model:ArrayLike<number>, motion:Motion,timeSeconds:number,
+    hitAgeSeconds:number|null=null):void {
     if(!MOTIONS.includes(motion))throw new RangeError("Unknown authored animation "+motion);
     validTime(timeSeconds);
+    if(hitAgeSeconds!==null)validTime(hitAgeSeconds);
     if(typeof model!=="object" || model===null)throw new TypeError("Actor transform must be stable object");
-    this.motions.set(model,{motion,timeSeconds});
+    this.motions.set(model,{motion,timeSeconds,hitAgeSeconds});
   }
 
   async load():Promise<RiggedCharacterStats> {
@@ -374,6 +396,21 @@ export class RiggedCharacterLayer {
       const animation=this.motions.get(matrix);
       const motion=animation?.motion??"Idle";
       const time=animation?.timeSeconds??this.globalTime;
+      // The source matrices remain gameplay-authoritative. These small
+      // additive 3D poses are reconstructed every render (never accumulated)
+      // and never touch collision, aim, HP or projectile trajectories.
+      if(motion==="Attack"){
+        const anticipation=attackFollowThrough(time);
+        actor.group.rotateX(-0.18*anticipation);
+        actor.group.translateZ(-0.08*anticipation);
+      }
+      if(animation?.hitAgeSeconds!==null && animation?.hitAgeSeconds!==undefined){
+        const recoil=impactRecoil(animation.hitAgeSeconds);
+        const amount=Math.abs(recoil);
+        actor.group.rotateZ((role==="runner"?0.26:0.20)*recoil);
+        actor.group.scale.y*=1-0.09*amount;
+        actor.group.scale.x*=1+0.035*amount;
+      }
       const currentAction=actor.actions.get(motion)!;
       if(motion!==actor.motion){
         // Short crossfade between authored bone poses instead of abruptly
@@ -402,9 +439,11 @@ export class RiggedCharacterLayer {
       // Exact sampled game world progress, not accumulating Date.now()/rAF:
       // a pause or render refresh never changes authoritative simulation.
       const duration=currentAction.getClip().duration;
-      const authoredTime=motion==="Death"
+      const authoredTime=motion==="Death"||motion==="Attack"
         ? Math.min(time,duration-1e-4)
         : time + (i%7)*0.135;
+      // Keep idle/gait phase staggering, but NEVER offset a release/death
+      // clip by actor index: its contact frame must match the real event.
       actor.mixer.setTime(authoredTime);
       if(motion==="Walk" || motion==="Run")walkCycles++;
       meshCount+=actor.skinnedMeshes;

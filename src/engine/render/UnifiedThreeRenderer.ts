@@ -189,8 +189,9 @@ export class UnifiedThreeRenderer {
   setRiggedAnimationTime(seconds:number): void {
     this.animatedCharacters.setTime(seconds);
   }
-  setActorMotion(model:ArrayLike<number>, motion:ActorMotion["motion"],timeSeconds:number):void {
-    this.animatedCharacters.setMotion(model,motion,timeSeconds);
+  setActorMotion(model:ArrayLike<number>, motion:ActorMotion["motion"],
+    timeSeconds:number,hitAgeSeconds:number|null=null):void {
+    this.animatedCharacters.setMotion(model,motion,timeSeconds,hitAgeSeconds);
   }
   get canvas(): HTMLCanvasElement { return this.gpu.domElement; }
   get unifiedContext(): WebGL2RenderingContext {
