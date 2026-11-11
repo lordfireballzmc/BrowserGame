@@ -7,7 +7,7 @@
 - [x] Save exact 11-section original textual brief in Git and register original uploaded file SHA-256, role and dimensions.
 - [x] Establish a binding, single source-of-truth **hand-painted** art requirement; mark current runtime and former SVG target as REJECTED.
 - [x] Update repository entry points, PR review workflow and existing art docs to link to one canonical directive.
-- [ ] **CRITICAL:** transfer the seven **exact original PNG binaries** into `docs/art-direction/`, compare SHA-256 with manifest, add actual Git blob SHA links, and verify all images render in GitHub. Do not falsify or substitute.
+- [ ] **CRITICAL:** transfer the seven **exact original PNG binaries** into `docs/art-direction/`, compare SHA-256 with manifest, add actual Git blob SHA links, and verify all images render in GitHub. Do not falsify or substitute. Clearly marked **PARTIAL** visual reconstruction PRs may land after real screenshot/technical verification, but no asset family can be labeled fully **ACCEPTED** until `verify:art-refs:strict` passes and human visual sign-off is recorded.
 - [x] Implement an explicitly PARTIAL runtime paint pass: world-space gouache brush textures for actual terrain/road/water/cliffs/timber, plus 40 native twisted wood and flattened hand-cut yellow-olive foliage trees, 80 crooked branches and 144 canopy clusters. See PR #46; source-exact WebGL portrait+landscape remains the real release gate. Current screenshots show visible improvement but still NOT the approved painting.
 - [ ] Capture live same-seed/same-tick 16:9 and 9:16 **before/after** frames and critique all remaining original-reference deficits (tower/keep/hero/goblin/UI/rock/river).
 
