@@ -10,16 +10,24 @@
  * per frame. Textures are variations around the real material's vertex colors.
  */
 import {CanvasTexture,RepeatWrapping,SRGBColorSpace} from "three";
+import {nearestRoadPoint} from "../../art/terrain/RoadPath";
 export type PaintedSurfaceKind="meadow"|"road"|"river"|"stone"|"timber"|"foliage"|"bark";
 type Marks={x:number;y:number;length:number;width:number;tilt:number;tone:number;opacity:number};
 export const PAINTERLY_SURFACE={
   textureSize:512,worldRepeatMeters:9,
-  brushCount:420,brushSeed:0x7154cafa,
+  brushSeed:0x7154cafa,
 } as const;
 
+const brushCounts:Readonly<Record<PaintedSurfaceKind,number>>={
+  meadow:190,road:118,river:95,stone:165,timber:156,foliage:300,bark:235,
+};
+export function brushCount(kind:PaintedSurfaceKind):number{
+  if(!isPaintedSurfaceKind(kind))throw new RangeError("Invalid paint brush kind");
+  return brushCounts[kind];
+}
 const samplePalette:Record<PaintedSurfaceKind,readonly string[]>={
-  meadow:["#b4bd78","#9da96e","#b8ae65","#768f60","#d5c487"],
-  road:["#e4c58d","#f5dcad","#cba16b","#ad875e","#e8bb79"],
+  meadow:["#b1bd7d","#a6b078","#b8b179","#899a6e","#c7bd80"],
+  road:["#ead19f","#f5dfb8","#debd8d","#d2ac7e","#e9c999"],
   river:["#b3d5cc","#89b9bd","#d9eee2","#629d9e","#9dc9c7"],
   stone:["#c6c9bb","#899892","#ded4ba","#737f7a","#b7ae96"],
   timber:["#cfaa7d","#e6c69b","#99744f","#6f4e39","#ba865a"],
@@ -27,7 +35,7 @@ const samplePalette:Record<PaintedSurfaceKind,readonly string[]>={
   bark:["#ad7d51","#d2a16c","#87573b","#633e2d","#bf8954"],
 };
 const base:Record<PaintedSurfaceKind,string>={
-  meadow:"#bdc081",road:"#edd19d",river:"#c3ddd5",
+  meadow:"#bbc18a",road:"#efd5a9",river:"#c3ddd5",
   stone:"#d4d1bd",timber:"#d5ae83",foliage:"#acb651",bark:"#b88758",
 };
 /** Integer PRNG avoids Math.random and produces same stroke family on reload. */
@@ -56,18 +64,19 @@ export function planPaintMarks(kind:PaintedSurfaceKind,seed:number=PAINTERLY_SUR
   const local=seed^((kinds.indexOf(kind)+1)*0x9e3779b9);
   const rand=generator(local);
   const strokes:Marks[]=[];
-  for(let i=0;i<PAINTERLY_SURFACE.brushCount;i++){
+  for(let i=0;i<brushCount(kind);i++){
     const x=rand(),y=rand();
-    const scale=kind==="foliage"?0.052:kind==="bark"?0.036
-      :kind==="river"?0.10:kind==="road"?0.12:0.083;
+    const scale=kind==="foliage"?0.075:kind==="bark"?0.07
+      :kind==="river"?0.20:kind==="road"?0.22:0.16;
     const dir=kind==="bark"?Math.PI*0.5:kind==="river"?0.08
-      :kind==="road"?0.38:kind==="foliage"?-0.35:0.13;
+      :kind==="road"?0.02:kind==="foliage"?-0.35:0.13;
     strokes.push(Object.freeze({
       x,y,length:scale*(0.42+rand()*1.40),
       width:scale*(0.075+rand()*0.17),
       tilt:dir+(rand()-0.5)*(kind==="bark"?0.28:1.2),
       tone:Math.floor(rand()*samplePalette[kind].length),
-      opacity:0.16+0.44*rand(),
+      opacity:(kind==="road"||kind==="meadow"
+        ?0.075+0.19*rand():0.13+0.32*rand()),
     }));
   }
   return Object.freeze(strokes);
@@ -139,8 +148,16 @@ export function worldPaintUV(
     const x=sourcePositions[i*3]!,y=sourcePositions[i*3+1]!,
       z=sourcePositions[i*3+2]!;
     if(![x,y,z].every(Number.isFinite))throw new RangeError("Nonfinite painted UV");
-    out[i*2]=x/meter;
-    out[i*2+1]=kind==="stone"?(y+z*0.72)/meter:z/meter;
+    if(kind==="road"){
+      // Painted earth marks follow the actual winding road tangent in world
+      // space instead of crosshatching through its bends like generic tile UV.
+      const road=nearestRoadPoint(x,z);
+      out[i*2]=road.distance/meter;
+      out[i*2+1]=road.signedLateralMeters/meter;
+    }else{
+      out[i*2]=x/meter;
+      out[i*2+1]=kind==="stone"?(y+z*0.72)/meter:z/meter;
+    }
   }
   return out;
 }
