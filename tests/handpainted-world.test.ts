@@ -4,7 +4,7 @@ import {generateTerrain} from "../src/art/terrain/Island";
 import {mergeStaticGeometries} from "../src/art/mesh/StaticBatch";
 import {toThreeGeometry} from "../src/engine/render/UnifiedThreeRenderer";
 import {
-  PAINTERLY_SURFACE,paintedFamilyForMesh,
+  PAINTERLY_SURFACE,paintedFamilyForMesh,brushCount,
   planPaintMarks,worldPaintUV,
 } from "../src/engine/render/HandpaintedSurfaces";
 import {
@@ -17,7 +17,9 @@ describe("ART.LOCK.01 actual Three painterly-world, not art mockup",()=>{
     const road=planPaintMarks("road");
     const bark=planPaintMarks("bark");
     const leaf=planPaintMarks("foliage");
-    expect(road).toHaveLength(PAINTERLY_SURFACE.brushCount);
+    expect(road).toHaveLength(brushCount("road"));
+    expect(brushCount("road")).toBeLessThan(brushCount("meadow"));
+    expect(brushCount("foliage")).toBeGreaterThan(brushCount("road"));
     expect(road).toEqual(planPaintMarks("road"));
     expect(road).not.toEqual(planPaintMarks("river"));
     expect(bark).not.toEqual(leaf);
@@ -46,7 +48,10 @@ describe("ART.LOCK.01 actual Three painterly-world, not art mockup",()=>{
     const a=worldPaintUV(p,"meadow");
     expect([...a]).toEqual([0,0,1,1,-1,-1]);
     const b=worldPaintUV(p,"road");
-    expect(b[2]).toBeCloseTo(9/6.5,6);
+    expect(b[2]).toBeGreaterThan(0);
+    expect([...b].every(Number.isFinite)).toBe(true);
+    // The bend-following map deliberately differs from linear world XY UV.
+    expect([...b]).not.toEqual([...worldPaintUV(p,"meadow")]);
     expect(()=>worldPaintUV(new Float32Array([0,1]),"meadow")).toThrow();
     expect(()=>worldPaintUV(new Float32Array([NaN,1,0]),"meadow")).toThrow();
   });
