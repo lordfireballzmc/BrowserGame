@@ -50,7 +50,7 @@ export function isPaintedSurfaceKind(input:string):input is PaintedSurfaceKind {
  * opaque paint; don't confuse this procedural first pass with finished
  * artist-approved painted textures.
  */
-export function planPaintMarks(kind:PaintedSurfaceKind,seed=PAINTERLY_SURFACE.brushSeed):readonly Marks[] {
+export function planPaintMarks(kind:PaintedSurfaceKind,seed:number=PAINTERLY_SURFACE.brushSeed):readonly Marks[] {
   if(!isPaintedSurfaceKind(kind)||!Number.isSafeInteger(seed))
     throw new RangeError("Unknown hand-painted material or invalid paint seed");
   const local=seed^((kinds.indexOf(kind)+1)*0x9e3779b9);
