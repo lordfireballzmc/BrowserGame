@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { vec3 } from "gl-matrix";
-import { CAMERA_SPEC, OrthoCamera, type WorldPoint } from "../src/engine/Camera";
+import { CAMERA_SPEC, COMBAT_CAMERA_SPEC, OrthoCamera, combatCameraLead,
+  type WorldPoint } from "../src/engine/Camera";
 
 const deg = (degrees: number) => degrees * Math.PI / 180;
 
@@ -109,6 +110,59 @@ describe("F1.02: orthographic camera geometry", () => {
     const test = vec3.transformMat4(vec3.create(), [0, 0, 0], camera.matrices.viewProjection);
     expect(Math.abs(test[0])).toBeLessThan(0.00001);
     expect(Math.abs(test[1])).toBeLessThan(0.00001);
+  });
+});
+
+describe("VQ.02f: 3/4-isometric cinematic gameplay framing", () => {
+  it("uses 35-degree isometric 3D elevation only for gameplay, not the map overview",()=>{
+    expect(CAMERA_SPEC.tiltFromHorizonDegrees).toBe(53);
+    expect(COMBAT_CAMERA_SPEC.tiltFromHorizonDegrees).toBeCloseTo(35.26438968,7);
+    expect(COMBAT_CAMERA_SPEC.tiltFromHorizonDegrees).toBeLessThan(40);
+    expect(COMBAT_CAMERA_SPEC.azimuthDegrees).toBe(CAMERA_SPEC.azimuthDegrees);
+    const overview=new OrthoCamera(1600,900);
+    const combat=new OrthoCamera(1600,900,[0,0,0],"combat");
+    expect(overview.profile).toBe("overview");
+    expect(combat.profile).toBe("combat");
+    expect(overview.visibleWorldHeight).toBe(31);
+    expect(combat.visibleWorldHeight).toBe(28);
+    const apparentHeight=(camera:OrthoCamera)=>{
+      const ground=camera.project([0,0,0]), head=camera.project([0,2.2,0]);
+      return ground.y-head.y;
+    };
+    // Articulated faces/torsos are materially larger at battle zoom.
+    expect(apparentHeight(combat)).toBeGreaterThan(apparentHeight(overview)*1.3);
+    expect(()=>new OrthoCamera(1600,900,[0,0,0],"invalid" as "combat")).toThrow(RangeError);
+  });
+
+  it("preserves ground-pad raycasting and projection on 16:9 and 9:16 3D battle views",()=>{
+    for(const [width,height] of [[1600,900],[900,1600]]){
+      const camera=new OrthoCamera(width!,height!,[19,0,-3],"combat");
+      camera.setZoom(1.06);
+      for(const point of [[19,0,-3],[21,0,0],[17,0,-5],[25,0,2]] as WorldPoint[]){
+        const onScreen=camera.project(point);
+        expectWorldNear(camera.screenToGround(onScreen.x,onScreen.y),point,0.0007);
+      }
+      const before=camera.project([20,1.2,0]);
+      camera.resize(width!/2,height!/2);
+      const after=camera.project([20,1.2,0]);
+      expect(after.x).toBeCloseTo(before.x/2,3);
+      expect(after.y).toBeCloseTo(before.y/2,3);
+    }
+  });
+
+  it("keeps the Warden central and previews only genuine nearby living threats",()=>{
+    const hero={x:0,z:0,vx:0,vz:0};
+    expect(combatCameraLead(hero,[])).toEqual([0,0]);
+    expect(combatCameraLead(hero,[{x:50,z:0,hp:30}])).toEqual([0,0]);
+    expect(combatCameraLead(hero,[{x:2,z:0,hp:0}])).toEqual([0,0]);
+    const lead=combatCameraLead(hero,[{x:9,z:0,hp:30},{x:-3,z:2,hp:20}]);
+    expect(lead[0]).toBeLessThan(0);
+    expect(lead[1]).toBeGreaterThan(0);
+    expect(Math.hypot(...lead)).toBeLessThanOrEqual(3.25);
+    expect(combatCameraLead({x:0,z:0,vx:100,vz:100},[]).reduce((a,b)=>a+b*b,0))
+      .toBeLessThanOrEqual(3.25*3.25+1e-8);
+    expect(()=>combatCameraLead(hero,[{x:NaN,z:0,hp:5}])).toThrow(RangeError);
+    expect(()=>combatCameraLead({x:NaN,z:0,vx:0,vz:0},[])).toThrow(RangeError);
   });
 });
 
