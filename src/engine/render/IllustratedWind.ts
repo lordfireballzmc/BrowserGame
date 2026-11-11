@@ -23,14 +23,14 @@ export function windVertexShader(source:string,minY:number,maxY:number):string {
     .replace(start,`${start}
     #ifdef USE_INSTANCING
       // Same shader for every copy; instance positions decorrelate gusts.
-      float fenStem=clamp((position.y-${minimum})/${extent},0.0,1.0);
+      float fenStem=clamp((position.y-(${minimum}))/${extent},0.0,1.0);
       float fenRoot=smoothstep(0.18,0.95,fenStem);
       float fenBend=fenRoot*fenRoot;
       vec2 fenSite=instanceMatrix[3].xz;
       float fenPhase=fenSite.x*0.37+fenSite.y*0.51;
       float fenGust=0.71*sin(uFenwallWindSeconds*1.55+fenPhase)
         +0.29*sin(uFenwallWindSeconds*2.37+fenPhase*1.91);
-      transformed.x+=fenBend*${extent}*0.105*fenGust;
+      transformed.x+=fenBend*${extent}*${WIND_BEND_FRACTION.toFixed(3)}*fenGust;
       transformed.z+=fenBend*${extent}*0.052*
         sin(uFenwallWindSeconds*1.24+fenPhase*1.61);
     #endif
@@ -51,7 +51,8 @@ export function installFoliageWind(
     shader.uniforms.uFenwallWindSeconds=clock;
     shader.vertexShader=windVertexShader(shader.vertexShader,minY,maxY);
   };
-  material.customProgramCacheKey=()=>originalKey()+"|bastionfall-foliage-wind-v1";
+  material.customProgramCacheKey=()=>originalKey()+"|bastionfall-foliage-wind-v2|"+
+    minY.toFixed(6)+"|"+maxY.toFixed(6);
   material.needsUpdate=true;
   return clock;
 }
