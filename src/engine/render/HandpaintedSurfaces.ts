@@ -30,7 +30,6 @@ const base:Record<PaintedSurfaceKind,string>={
   meadow:"#bdc081",road:"#edd19d",river:"#c3ddd5",
   stone:"#d4d1bd",timber:"#d5ae83",foliage:"#acb651",bark:"#b88758",
 };
-const fract=(x:number)=>x-Math.floor(x);
 /** Integer PRNG avoids Math.random and produces same stroke family on reload. */
 function generator(seed:number):()=>number {
   let v=seed>>>0;
