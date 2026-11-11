@@ -58,9 +58,10 @@ describe("ART.LOCK — mandatory user hand-painted direction in version control"
   it("requires a declared image acceptance classification on future visual pull requests",()=>{
     const template=file(".github/pull_request_template.md");
     for(const token of ["NONCOMPLIANT","PARTIAL","ACCEPTED","SHA-256",
-      "16:9","9:16","NOT","HARD_REQUIREMENTS.md"]){
+      "16:9","9:16","HARD_REQUIREMENTS.md"]){
       expect(template).toContain(token);
     }
+    expect(template).toContain("Never mark this PR visually accepted");
     const workflow=file(".github/workflows/handpainted-art-gate.yml");
     expect(workflow).toContain("node scripts/verify-art-anchor.mjs --strict");
     expect(workflow).toContain("src/art/**");
