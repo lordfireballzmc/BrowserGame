@@ -193,7 +193,13 @@ try {
         pendingCoins:d.pendingCoins,crownRecoveryPot:d.crownRecoveryPot,
         towerPurchaseProbe:d.towerPurchaseProbe,lastBuildResult:d.lastBuildResult,
         waveProbe:d.waveProbe,waveProbeCoreHp:d.waveProbeCoreHp,
-        wavePhase:d.wavePhase,waveNumber:d.waveNumber,
+        wavePhase:d.wavePhase,waveNumber:d.waveNumber,uiMode:d.uiMode,
+        dockCollapsed:document.querySelector("#tower-build-panel")
+          ?.classList.contains("expanded")===false &&
+          getComputedStyle(document.querySelector("#crowns-readout")).display==="none",
+        diagnosticHidden:getComputedStyle(document.querySelector("#resolution-readout"))
+          .display==="none",
+
         coreHp:d.coreHp,heroHp:d.heroHp,coreStrikes:d.coreStrikes,
         heroStrikes:d.heroStrikes,wavesCleared:d.wavesCleared,
         runResult:d.runResult,waveRemaining:d.waveRemaining,
@@ -284,6 +290,21 @@ try {
         Number(lastState.towersBuilt)===0 &&
         lastState.heroVisible==="true" &&
         lastState.graphicsBuffer===lastState.canvasWidth+"x"+lastState.canvasHeight;
+    } else if(mode==="movement" && scene.searchParams.get("probeHUD")==="play"){
+      // Source-exact normal game session: no synthetic enemy pre-advance and
+      // no debug screen. This verifies playable wave state and CSS dock.
+      ready=common &&
+        lastState.sceneMode==="combat" &&
+        lastState.uiMode==="play" &&
+        lastState.dockCollapsed===true &&
+        lastState.diagnosticHidden===true &&
+        ["preparation","active","recovery"].includes(lastState.wavePhase) &&
+        lastState.heroVisible==="true" &&
+        lastState.riggedArt==="ready" &&
+        Number(lastState.riggedSources)===3 &&
+        Number(lastState.riggedActors)>=1 &&
+        Number(lastState.crowns)>=0 &&
+        lastState.graphicsBuffer===lastState.canvasWidth+"x"+lastState.canvasHeight;
     } else if (mode==="movement") {
       ready=common &&
         lastState.sceneMode==="combat" &&
@@ -348,6 +369,29 @@ try {
   }
   if(!ready) {
     throw new Error("Game did not become READY within 65s: "+JSON.stringify(lastState));
+  }
+  if(mode==="movement" && scene.searchParams.get("probeHUD")==="play"){
+    const dock=await evaluate(`(() => {
+      const panel=document.querySelector("#tower-build-panel");
+      const button=document.querySelector("#toggle-build");
+      const purchase=document.querySelector("#build-p01");
+      const crown=document.querySelector("#crowns-readout");
+      const initial=button.getAttribute("aria-expanded")==="false";
+      button.click();
+      const expanded=panel.classList.contains("expanded")&&
+        button.getAttribute("aria-expanded")==="true"&&
+        getComputedStyle(crown).display!=="none"&&
+        purchase.getBoundingClientRect().height>=40;
+      button.click();
+      const collapsed=!panel.classList.contains("expanded")&&
+        button.getAttribute("aria-expanded")==="false"&&
+        getComputedStyle(crown).display==="none";
+      return {initial,expanded,collapsed};
+    })()`);
+    if(!dock.initial||!dock.expanded||!dock.collapsed)
+      throw new Error("VQ.05a interactive tower dock was not accessible: "+
+        JSON.stringify(dock));
+    lastState.dockInteraction="pass";
   }
   if(mode==="movement" && requestedDpr!==null) {
     // Exercise actual select event and live viewport resize, not just the
@@ -444,7 +488,8 @@ try {
     (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "")+
     (scene.searchParams.get("pads")==="legacy" ? "-pads-legacy" : "")+
     (scene.searchParams.get("probeTowerBuild")==="P01" ? "-tower-purchase" : "")+
-    (scene.searchParams.get("probeWaveDefense")==="gate" ? "-core-gate" : "");
+    (scene.searchParams.get("probeWaveDefense")==="gate" ? "-core-gate" : "")+
+    (scene.searchParams.get("probeHUD")==="play" ? "-compact-hud" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
