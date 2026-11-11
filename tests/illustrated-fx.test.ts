@@ -54,6 +54,10 @@ describe("VQ.04b actual authored groundcover vertex animation",()=>{
     expect(shader).toContain("transformed.x+=fenBend");
     expect(shader).toContain("transformed.z+=fenBend");
     expect(shader).toContain("1.140000");
+    expect(shader).toContain("position.y-(-0.040000)");
+    expect(shader).not.toContain("position.y--");
+    const positive=windVertexShader(original,0.02,1);
+    expect(positive).toContain("position.y-(0.020000)");
     expect(shader).not.toBe(original);
     expect(WIND_BEND_FRACTION).toBeLessThan(0.12);
     expect(()=>windVertexShader("broken",0,1)).toThrow();
@@ -64,7 +68,7 @@ describe("VQ.04b actual authored groundcover vertex animation",()=>{
     const mat=new MeshStandardMaterial();
     const uniform=installFoliageWind(mat,0,2);
     const program=mat.customProgramCacheKey();
-    expect(program).toContain("bastionfall-foliage-wind-v1");
+    expect(program).toContain("bastionfall-foliage-wind-v2|0.000000|2.000000");
     const clocks=[uniform,{value:0}];
     advanceFoliageWind(clocks,0.25);
     expect(clocks.map(c=>c.value)).toEqual([0.25,0.25]);
