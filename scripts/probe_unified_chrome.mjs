@@ -155,7 +155,10 @@ try {
         riggedArt:d.riggedArt,riggedSources:d.riggedSources,
         riggedAnimations:d.riggedAnimations,riggedActors:d.riggedActors,
         boneCount:d.boneCount,activeWalkCycles:d.activeWalkCycles,
-        sceneMode:d.sceneMode, padClickProbe:d.padClickProbe,
+        sceneMode:d.sceneMode,
+        cameraProfile:d.cameraProfile,cameraElevation:d.cameraElevation,
+        rigFacingCorrection:d.rigFacingCorrection,
+        padClickProbe:d.padClickProbe,
         selectedPad:d.selectedPad, padCount:d.padCount,
         sceneryCount:d.sceneryCount, composition:d.composition,
         sceneryArt:d.sceneryArt, sceneryArtSources:d.sceneryArtSources,
@@ -311,6 +314,11 @@ try {
         lastState.composition===(orientation==="portrait"?"9:16":"16:9") &&
         trace.stagedBoltSpires===2 &&
         trace.stagedActors===15;
+    }
+    if(ready && mode==="movement"){
+      ready=lastState.cameraProfile==="combat" &&
+        Math.abs(Number(lastState.cameraElevation)-35.264)<0.01 &&
+        Math.abs(Number(lastState.rigFacingCorrection)-Math.PI)<1e-6;
     }
     if(ready && scene.searchParams.get("probeCharacters")==="rigged") {
       ready=lastState.riggedArt==="ready" &&
