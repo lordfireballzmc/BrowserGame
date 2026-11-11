@@ -1,5 +1,8 @@
 # Visual references — original Bastionfall art direction
 
+**Latest REAL in-engine two-wave siege evidence, 2026-11-11:** [GitHub Chrome 16:9/9:16 screenshots, authentic core HP 300→296](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42939029548/artifacts/13819453304) in [F3.04b review](../37_F304B_REAL_TWO_WAVE_CORE_DEFENSE_REVIEW.md). These are true active Three.js Warden-vs-red-raider game captures, not composited target art. All imported CC0 rigged and environment assets are loaded in both capture JSONs. Permanent review describes actual remaining VQ failures; Actions ZIP expires after 21 days. No claim that the two-wave still is full 10-wave completion, premium user-approved sculpting or a real-phone FPS benchmark.
+
+
 **Authoritative decision:** `docs/20_VISUAL_NORTH_STAR.md`.  
 
 **Mandatory render-quality and animation companion:** [VQ visual fidelity & fluidity directive](../29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md). The version-controlled SVG below is aspirational only; it does not justify accepting an upscaled 720p game or low-quality primitive rendering. Latest intent: maximal original illustrated 3D clarity, sculpted detail, professional fluid movement and real engine capture verification.
