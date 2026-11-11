@@ -1,5 +1,8 @@
 # BASTIONFALL — Game Design Bible, v0.1
 
+**Implementation truth checkpoint, 2026-11-11:** The game-design bible describes the intended TEN-wave game, not already implemented code. Actual `main` has [F3.04b finite TWO-wave playable siege](https://github.com/lordfireballzmc/BrowserGame/pull/36), [220-test source-exact CI](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42939029548), [real 16:9/9:16 wave-one gate strike proof](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42939029548/artifacts/13819453304). Core 300 HP/hero 100 HP, real 0.6s attack, 4s respawn, two original Scrapper/Runner queues, 12s preparation/recovery, 10-crown wave payout plus half-value physical coin pot, P03/P04 unlock and genuine early TWO-wave win/loss are now implemented. **NOT YET REAL CODE:** full ten waves, elite enemy behaviors, other towers/tiers, responsive touch pad selection, professionally sculpted animation and commercial visual art signoff. The historic custom-only WebGL2 engine/procedural-only art text below is explicitly superseded by `AGENTS.md`, `docs/05_ARCHITECTURE.md` and the mandatory VQ directive; current runtime is a single unified Three.js WebGL2 scene.
+
+
 **Status:** SPECIFICATION, not a report of implemented code. Superseded only by an explicit documented product decision. **Genre:** single-player, real-time hero-action + tower defense. **Platform:** desktop and touch browser. **Engine:** our own WebGL2 custom engine with narrowly scoped reusable libraries. **Art:** coherent procedurally modeled stylized 3D geometry. **Business:** no ads, purchases, idle grind, loot boxes, pay-to-win or compulsory account.
 
 ## 0. North star
