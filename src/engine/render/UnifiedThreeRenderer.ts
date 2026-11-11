@@ -27,6 +27,8 @@ import {
 import { SceneryArtLayer, type SceneryArtStats } from "./SceneryArtLayer";
 import type { GroundcoverArtStats } from "./GroundcoverArtLayer";
 import { groundPigmentAt } from "../../art/terrain/GroundPigment";
+import {makePainterlyTexture,paintedFamilyForMesh,worldPaintUV,
+  type PaintedSurfaceKind} from "./HandpaintedSurfaces";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
 import type { ResolutionPreset } from "./CanvasRuntime";
@@ -55,6 +57,7 @@ type MeshPool = {
 /** Directly reuse existing validated vertices/normals, preserve authored token ramps. */
 export function toThreeGeometry(
   source: Geometry,fallback: MaterialToken,groundSeed?:number|string,
+  paintedFamily?:PaintedSurfaceKind,
 ): BufferGeometry {
   validateGeometry(source);
   const geometry = new BufferGeometry();
@@ -72,6 +75,8 @@ export function toThreeGeometry(
     colors[i * 3 + 2] = color[2];
   }
   geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
+  if(paintedFamily)geometry.setAttribute("uv",
+    new Float32BufferAttribute(worldPaintUV(source.positions,paintedFamily),2));
   geometry.computeBoundingSphere();
   return geometry;
 }
@@ -91,6 +96,8 @@ export class UnifiedThreeRenderer {
   private readonly camera = new Camera();
   private readonly stored = new Map<string, Geometry>();
   private groundPigmentSeed: number|string|undefined;
+  private paintedSurfaces=false;
+  private readonly paintedTextures=new Map<PaintedSurfaceKind,ReturnType<typeof makePainterlyTexture>>();
   private readonly variants = new Map<string, BufferGeometry>();
   private readonly pools = new Map<string, MeshPool>();
   private readonly matrix = new Matrix4();
@@ -181,9 +188,9 @@ export class UnifiedThreeRenderer {
   }
   async loadSceneryArt(placements:readonly SceneryPlacement[],
     seed:string|number="fenwall-crossing-v1",
-    includeGroundcover=true):Promise<SceneryArtStats> {
+    includeGroundcover=true,paintedTrees=false):Promise<SceneryArtStats> {
     this.assertActive();
-    return this.sceneryArt.load(placements,seed,includeGroundcover);
+    return this.sceneryArt.load(placements,seed,includeGroundcover,paintedTrees);
   }
   get environmentReady(): boolean { return this.environment.ready; }
   /** Load optional art atomically; preserved procedural actors and pads remain
@@ -236,6 +243,29 @@ export class UnifiedThreeRenderer {
         JSON.stringify({requested:[width,height],actual}));
     }
     return true;
+  }
+
+  /**
+   * ART.LOCK.01: physically mapped pigment stroke atlas on REAL game meshes,
+   * not a screenshot/filter and never a replacement for world collision.
+   * Enable before first draw; ?art=legacy is a true 3D same-state control.
+   */
+  enableHandPaintedWorld():void {
+    this.assertActive();
+    if(this.variants.size||this.pools.size||this.paintedSurfaces)
+      throw new Error("Paint materials must initialize before first draw");
+    this.paintedSurfaces=true;
+    this.gpu.toneMappingExposure=1.04;
+    this.scene.background=new Color("#aab9b0");
+  }
+  get handPaintedWorldEnabled():boolean{return this.paintedSurfaces;}
+  private paintedMaterial(kind:PaintedSurfaceKind) {
+    let texture=this.paintedTextures.get(kind);
+    if(!texture){
+      texture=makePainterlyTexture(kind);
+      this.paintedTextures.set(kind,texture);
+    }
+    return texture;
   }
 
   /** The painted ground's RGB can be set only before any render variants.
@@ -389,7 +419,8 @@ export class UnifiedThreeRenderer {
       let geom=this.variants.get(geomKey);
       if (!geom) {
         geom=toThreeGeometry(this.stored.get(batch.meshId)!,batch.material,
-          batch.meshId==="island-static-ground"?this.groundPigmentSeed:undefined);
+          batch.meshId==="island-static-ground"?this.groundPigmentSeed:undefined,
+          this.paintedSurfaces?(paintedFamilyForMesh(batch.meshId)??undefined):undefined);
         this.variants.set(geomKey,geom);
       }
       let pool=this.pools.get(key);
@@ -407,6 +438,8 @@ export class UnifiedThreeRenderer {
         // Only meaningful real physical projectiles/impacts exceed the HDR
         // bloom threshold; meadow, roads and towers stay crisp and unbloomed.
         setCombatEmissive(material,batch.meshId);
+        const family=this.paintedSurfaces?paintedFamilyForMesh(batch.meshId):null;
+        if(family)material.map=this.paintedMaterial(family);
         const capacity = Math.max(batch.models.length, pool?.capacity??0, 1);
         const mesh=new InstancedMesh(geom,material,capacity);
         mesh.instanceMatrix.setUsage(DynamicDrawUsage);
@@ -469,6 +502,8 @@ export class UnifiedThreeRenderer {
     this.environment.dispose();
     this.sceneryArt.dispose();
     this.illustratedFX.dispose();
+    for(const texture of this.paintedTextures.values())texture.dispose();
+    this.paintedTextures.clear();
     this.gpu.dispose();
     this.pools.clear();
     this.variants.clear();

@@ -8,7 +8,8 @@
 - [x] Remove rejected old SVG anchor and obsolete SVG-oriented AI mockup prompts; compact redundant current README, AGENTS, visual north star and session state while leaving history in Git.
 - [x] Add required PR visual-compliance declaration and original-PNG strict integrity workflow for all future visual source PRs.
 - [ ] **BLOCKING**: Upload all seven original user-supplied PNG binaries (not redrawn/downsized copies) via Git binary transport, validate original sha256 and actual GitHub `image/png` blob, then switch art-direction index to render the approved PNG. Do NOT count manifest-only registration as upload.
-- [ ] Replace terrain/road/river/water and foliage with true hand-painted original 3D/painted texture; then own sculpted painted tower/keep and hero/enemy rigs, painted FX/medieval UI, coherent animation/touch and genuine gameplay screenshot comparison.
+- [~] ART.LOCK.01 (PR #46): actual 3D gouache-inspired surface materials + native twisted forest and painted canopy layers, preserving world collision and 3-draw instancing; **PARTIAL** and image-reviewed but not user-approved. Follow with hand-authored texture masks/geometry for road/cliff/bank/keep and hero/raider/towers, with A/B screenshot evidence.
+- [ ] Replace remaining non-painterly road/river/backdrop/rock, tower/keep and hero/enemy rigs, painted FX/medieval UI, coherent animation/touch and genuine gameplay screenshot comparison.
 - [ ] Complete functional 10-wave content without promoting noncompliant visuals as final or falsely claiming live GitHub Pages.
 
 **Progress label:** ART.LOCK standards adopted; PNG binary archive and actual-runtime compliance **NOT COMPLETE**. Prior VQ/F3 engineering milestones remain valid solely as gameplay/renderer infrastructure. No future ART PR can pass its strict `node scripts/verify-art-anchor.mjs --strict` gate until original user references are truly in Git.

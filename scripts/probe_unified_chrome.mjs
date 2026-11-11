@@ -193,6 +193,8 @@ try {
         groundcoverBatches:d.groundcoverBatches,
         groundcoverTriangles:d.groundcoverTriangles,
         groundArt:d.groundArt,groundPalette:d.groundPalette,
+        handpaintedWorld:d.handpaintedWorld,forestArt:d.forestArt,
+        artLockCompliance:d.artLockCompliance,
         economyState:d.economyState,crowns:d.crowns,towersBuilt:d.towersBuilt,
         towerShots:d.towerShots,towerHits:d.towerHits,enemyDefeats:d.enemyDefeats,
         crownDrops:d.crownDrops,crownsCollected:d.crownsCollected,
@@ -255,6 +257,14 @@ try {
           Number(lastState.groundcoverBatches)>=5 &&
           Number(lastState.groundcoverBatches)<=12 &&
           Number(lastState.groundcoverTriangles)<=650000) &&
+      (scene.searchParams.get("art")==="legacy"
+        ? lastState.handpaintedWorld==="legacy" &&
+          (scene.searchParams.get("scenery")==="legacy" ||
+            lastState.forestArt==="source-kit")
+        : lastState.handpaintedWorld==="gouache-uv" &&
+          lastState.artLockCompliance==="partial" &&
+          (scene.searchParams.get("scenery")==="legacy" ||
+            lastState.forestArt==="crooked-brush-canopies")) &&
       (scene.searchParams.get("ground")==="legacy"
         ? lastState.groundArt==="disabled"
         : lastState.groundArt==="pass" &&
@@ -498,6 +508,7 @@ try {
     (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "")+
     (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "")+
     (scene.searchParams.get("pads")==="legacy" ? "-pads-legacy" : "")+
+    (scene.searchParams.get("art")==="legacy" ? "-art-legacy" : "")+
     (scene.searchParams.get("probeTowerBuild")==="P01" ? "-tower-purchase" : "")+
     (scene.searchParams.get("probeWaveDefense")==="gate" ? "-core-gate" : "")+
     (scene.searchParams.get("probeHUD")==="play" ? "-compact-hud" : "");
