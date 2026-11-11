@@ -164,6 +164,8 @@ export class EnemyRoadWorld {
   readonly queue: readonly EnemySpawn[];
   private current: EnemyWorldSnapshot;
   private previous: EnemyWorldSnapshot;
+  private spawningEnabled=true;
+  private spawnBaseTick=0;
 
   constructor(
     readonly wave: EarlyWave = 1,
@@ -174,6 +176,16 @@ export class EnemyRoadWorld {
     this.previous = this.current;
   }
   get snapshot(): EnemyWorldSnapshot { return this.current; }
+
+  /** F3.04b: preparation freezes the authored queue, NOT the 60Hz clock.
+   * Re-enabling spawns preserves all source intervals relative to the start
+   * of the active phase. Default behavior stays unchanged for F3.02 probes. */
+  setWaveActive(enabled:boolean):void {
+    if(enabled && !this.spawningEnabled){
+      this.spawnBaseTick=this.current.tick;
+    }
+    this.spawningEnabled=enabled;
+  }
 
   step(dtSeconds: number): EnemyWorldSnapshot {
     if (!Number.isFinite(dtSeconds) || Math.abs(dtSeconds - FIXED_STEP_SECONDS) > 1e-10) {
@@ -188,9 +200,9 @@ export class EnemyRoadWorld {
           enemy.distanceMeters + enemy.speedMetersPerSecond * dtSeconds),
       this.seed, enemy.hp, enemy.hitTick,
     ));
-    for (const scheduled of this.queue) {
+    if(this.spawningEnabled)for (const scheduled of this.queue) {
       if (scheduled.id <= this.current.spawned) continue;
-      if (scheduled.spawnTick >= nextTick) break;
+      if (scheduled.spawnTick+this.spawnBaseTick >= nextTick) break;
       next.push(makeEnemy(scheduled, 0, this.seed));
     }
     this.previous = this.current;

@@ -86,6 +86,19 @@ export class HeroMovementWorld {
 
   get snapshot(): HeroSnapshot { return this.current; }
 
+  /** Four-second respawn at the authored safe gate, never rewinding the tick. */
+  respawnAtCore():HeroSnapshot {
+    if(!this.canOccupy(START[0],START[1]))
+      throw new Error("Authored respawn is no longer safely walkable");
+    this.current=Object.freeze({...this.current,
+      x:START[0],z:START[1],
+      groundY:terrainHeight(this.seed,START[0],START[1]),
+      vx:0,vz:0,speedMetersPerSecond:0,yaw:Math.PI*0.72,
+    });
+    this.previous=this.current;
+    return this.current;
+  }
+
   /** Interpolated render-only sample, never fed back into physics. */
   sample(alpha: number): HeroSnapshot {
     if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) {

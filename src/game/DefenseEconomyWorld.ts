@@ -295,6 +295,35 @@ export class DefenseEconomyWorld {
     });
     return this.state;
   }
+  /** Wave settlement credits the real ten-crown bonus plus the documented
+   * half-value recovery pot, including any uncollected physical pickups.
+   * The caller authorizes this once per completed wave. */
+  settleCompletedWave():Readonly<{bonus:number;recovered:number;crowns:number}> {
+    const bonus=BALANCE.economy.betweenWaveCrowns;
+    const abandoned=this.state.pendingPickups.reduce((sum,p)=>
+      sum+Math.floor(p.amount*0.5),0);
+    const recovered=this.state.recoveryPotCrowns+abandoned;
+    this.state=immutableSnapshot({...this.state,
+      crowns:this.state.crowns+bonus+recovered,
+      recoveryPotCrowns:0,pendingPickups:[],towerBolts:[],towerImpacts:[],
+    });
+    return Object.freeze({bonus,recovered,crowns:this.state.crowns});
+  }
+
+  /** Raids reuse entity IDs. Preserve the player ledger and spires while
+   * clearing only per-wave hit-target identity and lingering projectiles. */
+  prepareNextWave():void {
+    if(this.state.pendingPickups.length||this.state.recoveryPotCrowns)
+      throw new Error("Settle last wave rewards before entering another");
+    this.rewarded.clear();
+    this.lastRoadTick=null;
+    this.state=immutableSnapshot({...this.state,
+      towerBolts:[],towerImpacts:[],
+    });
+    for(const tower of this.state.towers)
+      this.nextFire.set(tower.padId,this.state.tick+1);
+  }
+
   /** Only the GPU render sample may interpolate projectiles. */
   sample(alpha:number):DefenseEconomySnapshot {
     if(!Number.isFinite(alpha)||alpha<0||alpha>1)
