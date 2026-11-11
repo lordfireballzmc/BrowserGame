@@ -93,6 +93,7 @@ export class EarlyWaveDirector {
     economy.step(hero,this.enemyWorld,dtSeconds);
     let coreHp=this.state.coreHp,heroHp=this.state.heroHp;
     let respawn=this.state.heroRespawnTicks;
+    let contactX=hero.x,contactZ=hero.z;
     let coreStrikes=this.state.coreStrikes,
       heroStrikes=this.state.heroStrikes,deaths=this.state.heroDeaths;
     let lastDamageTarget=this.state.lastDamageTarget;
@@ -108,7 +109,11 @@ export class EarlyWaveDirector {
       respawn--;
       if(respawn===0 && coreHp>0){
         heroHp=50;
-        player.respawnAtCore(); // no tick rewind or collision bypass
+        const safe=player.respawnAtCore(); // no tick rewind
+        // A respawn is a physical teleport to the authored core-safe pad.
+        // The old downed-position contact MUST NOT strike the reborn Warden
+        // during this tick before the next controller update.
+        contactX=safe.x;contactZ=safe.z;
       }
     }
     if(phase==="active"){
@@ -119,7 +124,7 @@ export class EarlyWaveDirector {
       for(const enemy of this.enemyWorld.snapshot.enemies){
         if(enemy.hp<=0)continue;
         const heroContact=heroHp>0&&
-          Math.hypot(hero.x-enemy.x,hero.z-enemy.z) <=
+          Math.hypot(contactX-enemy.x,contactZ-enemy.z) <=
             EARLY_WAVE_RULES.heroContactRadiusMeters;
         const atGate=enemy.phase==="holding-at-gate"&&
           enemy.gateHoldBackMeters <=
