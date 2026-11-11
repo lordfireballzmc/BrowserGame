@@ -189,9 +189,9 @@ export class UnifiedThreeRenderer {
   /** Load optional art atomically; preserved procedural actors and pads remain
    * valid collision/selection fallbacks until these GLBs are fully decoded. */
   async loadEnvironmentArt(keep:EnvironmentPlacement,
-    pads:readonly EnvironmentPadPlacement[]):Promise<EnvironmentArtStatus> {
+    pads:readonly EnvironmentPadPlacement[],sourceKitPads=false):Promise<EnvironmentArtStatus> {
     this.assertActive();
-    return this.environment.load(keep,pads);
+    return this.environment.load(keep,pads,sourceKitPads);
   }
   async loadRiggedCharacters(): Promise<RiggedCharacterStats> {
     this.assertActive();
