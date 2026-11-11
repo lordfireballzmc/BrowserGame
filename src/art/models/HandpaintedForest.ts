@@ -14,7 +14,7 @@
  * user's attached image pasted into a quad and NOT yet final approved art.
  */
 import {
-  BufferGeometry,Color,Float32BufferAttribute,Group,InstancedMesh,
+  BufferGeometry,Float32BufferAttribute,Group,InstancedMesh,
   Matrix4,MeshStandardMaterial,Quaternion,StaticDrawUsage,Vector3,
 } from "three";
 import type {SceneryPlacement} from "../scenery/Scenery";
@@ -27,8 +27,6 @@ export const PAINTERLY_TREE_BUDGET={
 type Vec3=readonly [number,number,number];
 type TubePoint={position:Vec3;radius:number};
 const UP=new Vector3(0,1,0);
-const GOLD=new Color("#ffedb5");
-const DARK=new Color("#a19772");
 const barkShades=[0.74,0.87,1.02,0.81,1.08,0.78,0.96,0.83];
 const clamp=(v:number,lo:number,hi:number)=>Math.max(lo,Math.min(hi,v));
 
