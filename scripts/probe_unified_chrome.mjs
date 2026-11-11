@@ -28,6 +28,7 @@ if (!browser || !url?.startsWith("http://127.0.0.1:") ||
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const profile = mkdtempSync(join(tmpdir(), "bastionfall-cdp-"));
 const browserLog = [];
+const pageConsole = [];
 const child = spawn(browser, [
   "--headless=new", "--no-sandbox", "--disable-dev-shm-usage",
   "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-webgl",
@@ -112,6 +113,16 @@ async function openChromePage() {
   socket.addEventListener("message",event=>{
     let response;
     try {response=JSON.parse(String(event.data));} catch {return;}
+    if(response.method==="Runtime.consoleAPICalled"){
+      const line=String(response.params?.type)+": "+
+        (response.params?.args??[]).map(a=>a.value??a.description??"").join(" ");
+      pageConsole.push(line);
+      if(pageConsole.length>75)pageConsole.shift();
+    }
+    if(response.method==="Runtime.exceptionThrown"){
+      pageConsole.push("EXCEPTION "+JSON.stringify(response.params?.exceptionDetails).slice(0,1200));
+      if(pageConsole.length>75)pageConsole.shift();
+    }
     if(!response.id)return;
     const waiter=pending.get(response.id);
     if(!waiter)return;
@@ -439,6 +450,7 @@ try {
 } catch(error) {
   console.error("FAIL ART.02 "+orientation+": "+String(error));
   console.error("Last browser state: "+JSON.stringify(lastState).slice(0,3000));
+  console.error("Chrome JS/WebGL console (tail): "+pageConsole.join("\n").slice(-12000));
   console.error("Chrome stderr (tail): "+browserLog.join("").slice(-3200));
   process.exitCode=1;
 } finally {
