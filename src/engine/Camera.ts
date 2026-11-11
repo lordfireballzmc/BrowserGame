@@ -9,6 +9,8 @@ import { mat4, vec3 } from "gl-matrix";
 
 export type WorldPoint = readonly [number, number, number];
 export type HorizontalLead = readonly [number, number];
+/** Overview preserves map/cinematic/picking behavior. Combat uses true 3/4 isometric staging. */
+export type CameraProfile = "overview" | "combat";
 
 export interface ScreenPoint {
   readonly x: number;
@@ -29,17 +31,33 @@ export const CAMERA_SPEC = {
   farMeters: 180,
 } as const;
 
-const RAD = Math.PI / 180;
-const AZIMUTH = CAMERA_SPEC.azimuthDegrees * RAD;
-const TILT = CAMERA_SPEC.tiltFromHorizonDegrees * RAD;
-const HORIZONTAL_EYE = Math.cos(TILT) * CAMERA_SPEC.eyeDistanceMeters;
-const EYE_OFFSET: WorldPoint = [
-  HORIZONTAL_EYE * Math.cos(AZIMUTH),
-  Math.sin(TILT) * CAMERA_SPEC.eyeDistanceMeters,
-  HORIZONTAL_EYE * Math.sin(AZIMUTH),
-];
-const UP = vec3.fromValues(0, 1, 0);
+/**
+ * True 3/4 orthographic action camera. The ~35.264° elevation + 45° azimuth
+ * gives classic isometric foreshortening, not the former steep 53° map view.
+ * World-axis rotation is unchanged: keyboard movement remains camera-relative.
+ * A slightly tighter framing enlarges authentic skinned silhouettes.
+ * Overview/movie staging retains CAMERA_SPEC unchanged.
+ */
+export const COMBAT_CAMERA_SPEC = {
+  ...CAMERA_SPEC,
+  tiltFromHorizonDegrees: 35.264389682754654,
+  viewHeightMeters: 28,
+  followTimeConstantSeconds: 0.22,
+} as const;
 
+const RAD = Math.PI / 180;
+const UP = vec3.fromValues(0, 1, 0);
+type CameraConfiguration = typeof CAMERA_SPEC | typeof COMBAT_CAMERA_SPEC;
+function eyeOffset(spec: CameraConfiguration): WorldPoint {
+  const azimuth = spec.azimuthDegrees * RAD;
+  const tilt = spec.tiltFromHorizonDegrees * RAD;
+  const horizontal = Math.cos(tilt) * spec.eyeDistanceMeters;
+  return [
+    horizontal * Math.cos(azimuth),
+    Math.sin(tilt) * spec.eyeDistanceMeters,
+    horizontal * Math.sin(azimuth),
+  ];
+}
 function requirePositive(value: number, label: string): void {
   if (!Number.isFinite(value) || value <= 0) {
     throw new RangeError(label + " must be a finite positive number");
@@ -53,6 +71,8 @@ function requireWorld(point: WorldPoint): void {
 }
 
 export class OrthoCamera {
+  private readonly config: CameraConfiguration;
+  readonly profile: CameraProfile;
   private readonly focus = vec3.create();
   private readonly view = mat4.create();
   private readonly projection = mat4.create();
@@ -62,7 +82,14 @@ export class OrthoCamera {
   private heightPx: number;
   private zoom = 1;
 
-  constructor(widthPx: number, heightPx: number, initialFocus: WorldPoint = [0, 0, 0]) {
+  constructor(
+    widthPx: number, heightPx: number,
+    initialFocus: WorldPoint = [0, 0, 0], profile: CameraProfile = "overview",
+  ) {
+    if(profile!=="overview" && profile!=="combat")
+      throw new RangeError("Unknown orthographic camera profile");
+    this.profile=profile;
+    this.config=profile==="combat"?COMBAT_CAMERA_SPEC:CAMERA_SPEC;
     requirePositive(widthPx, "Viewport width");
     requirePositive(heightPx, "Viewport height");
     requireWorld(initialFocus);
@@ -84,7 +111,7 @@ export class OrthoCamera {
   }
 
   get visibleWorldHeight(): number {
-    return CAMERA_SPEC.viewHeightMeters / this.zoom;
+    return this.config.viewHeightMeters / this.zoom;
   }
 
   get visibleWorldWidth(): number {
@@ -111,7 +138,7 @@ export class OrthoCamera {
   /** Zoom greater than 1 shows less world; clamp to design-bible range. */
   setZoom(requestedZoom: number): void {
     requirePositive(requestedZoom, "Zoom");
-    this.zoom = Math.min(CAMERA_SPEC.zoomMax, Math.max(CAMERA_SPEC.zoomMin, requestedZoom));
+    this.zoom = Math.min(this.config.zoomMax, Math.max(this.config.zoomMin, requestedZoom));
     this.recalculate();
   }
 
@@ -136,7 +163,7 @@ export class OrthoCamera {
       throw new RangeError("Camera lead must have two finite X/Z coordinates");
     }
     if (elapsedSeconds === 0) return;
-    const weight = -Math.expm1(-elapsedSeconds / CAMERA_SPEC.followTimeConstantSeconds);
+    const weight = -Math.expm1(-elapsedSeconds / this.config.followTimeConstantSeconds);
     // Ground-plane tracking: hero's jump animation must not bounce the camera.
     const targetX = hero[0] + leadXZ[0];
     const targetZ = hero[2] + leadXZ[1];
@@ -191,17 +218,18 @@ export class OrthoCamera {
   private recalculate(): void {
     const halfHeight = this.visibleWorldHeight / 2;
     const halfWidth = this.visibleWorldWidth / 2;
+    const offset=eyeOffset(this.config);
     const eye = vec3.fromValues(
-      this.focus[0] + EYE_OFFSET[0],
-      this.focus[1] + EYE_OFFSET[1],
-      this.focus[2] + EYE_OFFSET[2],
+      this.focus[0] + offset[0],
+      this.focus[1] + offset[1],
+      this.focus[2] + offset[2],
     );
     mat4.lookAt(this.view, eye, this.focus, UP);
     // gl-matrix 3.4.4 ortho uses OpenGL/WebGL clip-Z [-1, +1].
     mat4.ortho(
       this.projection,
       -halfWidth, halfWidth, -halfHeight, halfHeight,
-      CAMERA_SPEC.nearMeters, CAMERA_SPEC.farMeters,
+      this.config.nearMeters, this.config.farMeters,
     );
     mat4.multiply(this.viewProjection, this.projection, this.view);
     if (!mat4.invert(this.inverseViewProjection, this.viewProjection)) {
