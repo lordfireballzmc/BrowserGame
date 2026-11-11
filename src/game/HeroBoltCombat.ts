@@ -152,7 +152,8 @@ export class HeroBoltCombat {
           [before.x,before.y+1.10,before.z],
           [target.x,target.y+1.10,target.z],
         )) {
-        const amount=world.applyBoltDamage(target.id,HERO.autoAttackDamage);
+        const amount=world.applyBoltDamage(target.id,HERO.autoAttackDamage,
+          {x:bolt.x,z:bolt.z});
         if (amount>0) {
           hits++;damageDealt+=amount;lastHitId=target.id;
           impacts.push(Object.freeze({

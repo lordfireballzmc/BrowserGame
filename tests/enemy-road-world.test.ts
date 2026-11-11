@@ -30,7 +30,8 @@ describe("F3.02 deterministic real-path raiders", () => {
         expect(Math.abs(queue[i]!.laneOffset)).toBeLessThan(ROAD_SPEC.halfWidthMeters-0.55);
       }
     }
-    expect(() => buildEarlySpawnQueue(3 as 1)).toThrow(RangeError);
+    // F3.04c1 added genuine third-wave Shields; wave four is not authored.
+    expect(() => buildEarlySpawnQueue(4 as 1)).toThrow(RangeError);
   });
 
   it("uses exact balance health, speeds and per-strike damage without fabricating attacks", () => {
