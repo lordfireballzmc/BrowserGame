@@ -139,7 +139,8 @@ export interface PaintedTreeSpec {
   readonly yaw:number;readonly size:number;readonly kind:"pine"|"broadleaf";
 }
 export function planPainterlyTrees(placements:readonly SceneryPlacement[]):readonly PaintedTreeSpec[] {
-  const trees=placements.filter(p=>p.kind==="pine"||p.kind==="broadleaf");
+  const trees=placements.filter((p):p is SceneryPlacement&{kind:"pine"|"broadleaf"}=>
+    p.kind==="pine"||p.kind==="broadleaf");
   if(trees.length!==PAINTERLY_TREE_BUDGET.treeCount||
      trees.filter(t=>t.kind==="pine").length!==24||
      trees.filter(t=>t.kind==="broadleaf").length!==16)
