@@ -658,7 +658,8 @@
       }) : Promise.resolve(null);
       if (!movement || parameters.has("probeMovement")
         || parameters.has("probeEnemies") || parameters.has("probeCombat")
-        || parameters.has("probeCharacters")) {
+        || parameters.has("probeCharacters")
+        || parameters.has("probeWaveDefense")) {
         // Static maps/cinematics have no animation loop: await the model so
         // the very first framebuffer includes this genuine textured prop.
         // Browser movement probes also require GLB completion to pass.
