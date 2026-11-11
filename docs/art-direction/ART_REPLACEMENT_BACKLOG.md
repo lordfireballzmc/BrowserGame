@@ -8,7 +8,8 @@
 - [x] Establish a binding, single source-of-truth **hand-painted** art requirement; mark current runtime and former SVG target as REJECTED.
 - [x] Update repository entry points, PR review workflow and existing art docs to link to one canonical directive.
 - [ ] **CRITICAL:** transfer the seven **exact original PNG binaries** into `docs/art-direction/`, compare SHA-256 with manifest, add actual Git blob SHA links, and verify all images render in GitHub. Do not falsify or substitute.
-- [ ] Capture live same-seed/same-tick 16:9 and 9:16 before-state images; publish honest per-family ART.LOCK non-compliance audit.
+- [x] Implement an explicitly PARTIAL runtime paint pass: world-space gouache brush textures for actual terrain/road/water/cliffs/timber, plus 40 native twisted wood and flattened hand-cut yellow-olive foliage trees, 80 crooked branches and 144 canopy clusters. See PR #46; source-exact WebGL portrait+landscape remains the real release gate. Current screenshots show visible improvement but still NOT the approved painting.
+- [ ] Capture live same-seed/same-tick 16:9 and 9:16 **before/after** frames and critique all remaining original-reference deficits (tower/keep/hero/goblin/UI/rock/river).
 
 ## Original paint-first visual production order (preserve 60Hz simulation)
 
