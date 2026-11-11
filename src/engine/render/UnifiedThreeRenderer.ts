@@ -197,9 +197,9 @@ export class UnifiedThreeRenderer {
     this.assertActive();
     return this.animatedCharacters.load();
   }
-  setRiggedAnimationTime(seconds:number): void {
+  setRiggedAnimationTime(seconds:number,animateFoliage=true): void {
     this.animatedCharacters.setTime(seconds);
-    this.sceneryArt.setWindTime(seconds);
+    this.sceneryArt.setWindTime(animateFoliage?seconds:0);
   }
   setActorMotion(model:ArrayLike<number>, motion:ActorMotion["motion"],timeSeconds:number):void {
     this.animatedCharacters.setMotion(model,motion,timeSeconds);
