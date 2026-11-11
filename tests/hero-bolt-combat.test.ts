@@ -55,10 +55,12 @@ describe("F3.03 truthful 60Hz Warden auto-fire and projectiles", () => {
     const {hero,enemies,combat}=setup();
     const first=combat.snapshot;
     expect(first.shotsFired).toBe(0);
+    expect(first.lastShotTick).toBeNull();
     tick(hero,enemies,combat);
     const fired=combat.snapshot;
     expect(fired.tick).toBe(1);
     expect(fired.shotsFired).toBe(1);
+    expect(fired.lastShotTick).toBe(1);
     expect(fired.bolts).toHaveLength(1);
     const bolt=fired.bolts[0]!;
     expect(Math.hypot(bolt.vx,bolt.vy,bolt.vz)).toBeCloseTo(
@@ -67,9 +69,11 @@ describe("F3.03 truthful 60Hz Warden auto-fire and projectiles", () => {
     for(let i=1;i<33;i++) tick(hero,enemies,combat);
     expect(combat.snapshot.tick).toBe(33);
     expect(combat.snapshot.shotsFired).toBe(1);
+    expect(combat.snapshot.lastShotTick).toBe(1); // persists if bolt already hit
     tick(hero,enemies,combat); // tick 34: exactly 33 elapsed ticks since shot 1
     expect(combat.snapshot.tick).toBe(34);
     expect(combat.snapshot.shotsFired).toBe(2);
+    expect(combat.snapshot.lastShotTick).toBe(34);
     expect(combat.snapshot.bolts.every(b=>b.targetId>0)).toBe(true);
   });
 
@@ -86,6 +90,7 @@ describe("F3.03 truthful 60Hz Warden auto-fire and projectiles", () => {
     expect(hitTick).toBeGreaterThan(launchTick+1);
     expect(combat.snapshot.damageDealt).toBeGreaterThan(0);
     expect(combat.snapshot.hits).toBe(1);
+    expect(combat.snapshot.lastShotTick).not.toBeNull();
     const damaged=enemies.snapshot.enemies.filter(e=>e.hp<e.maxHp);
     expect(damaged).toHaveLength(1);
     const hp=damaged[0]!.hp;
