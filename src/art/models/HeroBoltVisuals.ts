@@ -9,6 +9,7 @@ import type { MaterialToken } from "../../engine/render/Palette";
 
 let bolt: Geometry | null = null;
 let impact: Geometry | null = null;
+let crown:Geometry | null = null;
 
 function join(
   recipe: ReadonlyArray<readonly [
@@ -52,4 +53,17 @@ export function createBoltImpactMesh(): Geometry {
     ["diagonal-right","ivory",bevelBox(0.38,0.08,0.06,0.016),0.12,-0.13,0.02,0,-Math.PI/4],
   ]);
   return impact;
+}
+
+/** F3.04a — a physical 3D copper crown pickup (not free HUD income).
+ * The little carved octagon has a square punch and readable rim at game zoom.
+ * This is provisional ORIGINAL geometry, not a ripped game currency symbol. */
+export function createCrownPickupMesh():Geometry {
+  if(crown)return crown;
+  crown=join([
+    ["coin-body","copper",facetedCylinder(0.22,0.072,8),0,0,0],
+    ["beveled-rim","defender.gold",facetedCylinder(0.195,0.082,8,0.175),0,0.007,0],
+    ["square-cutout","stone.shadow",bevelBox(0.092,0.086,0.092,0.009),0,0.050,0],
+  ]);
+  return crown;
 }
