@@ -205,6 +205,14 @@ export class HeroBoltCombat {
     return this.current;
   }
 
+  /** New wave has fresh enemy IDs; no old bolt can damage a new actor.
+   * Preserve Warden clock and cumulative hit/shot accounting. */
+  prepareNextWave():void {
+    this.current=freezeSnapshot({...this.current,bolts:[],impacts:[],
+      targetId:null,aimYaw:null});
+    this.nextFireTick=this.current.tick+1;
+  }
+
   /** Visual-only interpolation of in-flight bolts, never affects hit tests. */
   sample(alpha: number): HeroCombatSnapshot {
     if (!Number.isFinite(alpha) || alpha<0 || alpha>1) {
