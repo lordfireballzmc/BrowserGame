@@ -173,6 +173,11 @@ try {
         groundcoverBatches:d.groundcoverBatches,
         groundcoverTriangles:d.groundcoverTriangles,
         groundArt:d.groundArt,groundPalette:d.groundPalette,
+        economyState:d.economyState,crowns:d.crowns,towersBuilt:d.towersBuilt,
+        towerShots:d.towerShots,towerHits:d.towerHits,enemyDefeats:d.enemyDefeats,
+        crownDrops:d.crownDrops,crownsCollected:d.crownsCollected,
+        pendingCoins:d.pendingCoins,crownRecoveryPot:d.crownRecoveryPot,
+        towerPurchaseProbe:d.towerPurchaseProbe,lastBuildResult:d.lastBuildResult,
         shadows:d.shadows,
         environmentArt:d.environmentArt,
         environmentSources:d.environmentSources,
@@ -247,6 +252,15 @@ try {
     if (mode==="movement") {
       ready=common &&
         lastState.sceneMode==="combat" &&
+        lastState.economyState==="pass" &&
+        Number.isSafeInteger(Number(lastState.crowns)) &&
+        Number(lastState.crowns)>=0 &&
+        (scene.searchParams.get("probeTowerBuild")==="P01"
+          ? lastState.towerPurchaseProbe==="pass" &&
+            lastState.lastBuildResult==="built" &&
+            Number(lastState.towersBuilt)===1 &&
+            Number(lastState.crowns)===5
+          : Number(lastState.towersBuilt)>=0) &&
         lastState.movementProbe==="pass" &&
         lastState.enemyProbe==="pass" &&
         lastState.combatProbe==="pass" &&
@@ -383,7 +397,8 @@ try {
     (scene.searchParams.get("environment")==="legacy" ? "-env-legacy" : "")+
     (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "")+
     (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "")+
-    (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "");
+    (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "")+
+    (scene.searchParams.get("probeTowerBuild")==="P01" ? "-tower-purchase" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
   writeFileSync(dest,Buffer.from(image.data,"base64"));
   writeFileSync(`/tmp/bastionfall-unified-${suffix}.json`,
