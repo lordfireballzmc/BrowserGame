@@ -77,6 +77,8 @@ export class SceneryArtLayer {
     this.root.name="Fenwall-instanced-CC0-scenery";
     scene.add(this.root);
   }
+  /** Shared 60Hz interpolated visual clock; physics never depends on wind. */
+  setWindTime(seconds:number):void {this.groundcover.setWindTime(seconds);}
   get ready():boolean { return this.loaded!==null; }
   get stats():SceneryArtStats|null { return this.loaded; }
   get groundcoverReady():boolean {return this.groundcover.ready;}
