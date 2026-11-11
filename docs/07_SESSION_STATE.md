@@ -10,6 +10,10 @@ The user explicitly rejected both the shipped flat/plastic starter-asset visuals
 
 **Critical incomplete task:** Upload original seven user PNG binaries to specified paths and prove byte SHA-256 + actual Git blob rendering. Image file names/hashes in prose DO NOT count as binary uploads. Original sources are available from the conversation as uploaded files; a binary-compatible transfer path is required.
 
+## Active ART.LOCK.01 gameplay art implementation (2026-11-11)
+
+PR #46 introduces **actual same-Three-scene painterly source geometry**: one-time brushed 512px material textures sampled through world-space UVs on island turf, authored road (UVs follow actual S-curve), river/water, cliffs and timber; 40 existing canonical 3D seeded trees are replaced visibly with 40 original twisting trunks, 80 crooked forked branches and 144 irregular flat-canopy brush leaf masses in three instanced GPU batches. A/B: `?art=legacy`. Cumulative original GLB scenery provenance preserved; no game path or collision changes. Browser builds and tests must be checked source-exact; current art is still **PARTIAL / NOT USER APPROVED**, notably characters, towers, cliffs and combat UI. The strict original PNG Git-ingestion requirement remains open issue #45.
+
 ## Runtime state vs visual acceptance
 
 **Latest verified foundation:** Full two-wave real 60Hz defense (#36), Three/WebGL2 source-pinned CC0 skinned actors and environment, legitimate physical bolts/tower purchases/kill crowns, native-DPI landscape+portrait game tests, corrected 35.264° forward-facing camera (#38), selective HDR bolt bloom and GPU grass wind (#39), original but still non-painterly stone foundations (#40), collapsible HUD (#42). These are technically useful, **all currently visually NOT APPROVED against ART.LOCK**. Developer can keep rendering fallbacks and mechanical geometry while replacing their appearance with original painted art.
