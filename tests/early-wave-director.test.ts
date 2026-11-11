@@ -36,7 +36,7 @@ describe("F3.04b authoritative early wave lifecycle and core defense",()=>{
     for(let i=0;i<120;i++)tick();
     expect(director.road.snapshot.spawned).toBe(2);
     expect(director.snapshot.wave).toBe(1);
-    expect(EARLY_WAVE_RULES.authoredWaves).toBe(2);
+    expect(EARLY_WAVE_RULES.authoredWaves).toBe(3);
   });
   it("downed enemies never damage gates; living physically arrived raiders CAN damage real core to defeat",()=>{
     const {director,tick}=harness(1,5);
@@ -55,16 +55,17 @@ describe("F3.04b authoritative early wave lifecycle and core defense",()=>{
     expect(director.snapshot.coreHp).toBe(0);
     // The real auto-firing hero can clear wave one on the way to an eventual
     // wave-two defeat; losing never implies a fabricated zero clear count.
-    expect(director.snapshot.wavesCleared).toBeLessThan(2);
+    expect(director.snapshot.wavesCleared).toBeLessThan(3);
     const lost=director.snapshot;
     expect(tick()).toBe(lost);
     expect(Object.isFrozen(lost)).toBe(true);
   });
-  it("two real authored queues clear, pay exactly once, reset numbered enemy IDs, and finish in WON",()=>{
+  it("three real authored queues clear, pay exactly once, reset numbered enemy IDs, and finish in WON",()=>{
     const {director,economy,combat,tick}=harness(2,3);
     expect(economy.tryBuildBoltSpire("P01",1).ok).toBe(true);
-    let oldRoad=director.road,changed=false;
-    for(let i=0;i<4500 && !director.isTerminal;i++){
+    let oldRoad=director.road;
+    const transitions:number[]=[];
+    for(let i=0;i<6600 && !director.isTerminal;i++){
       tick();
       // Unit test injects legitimate health damage into existing spawned
       // entities to exhaust the queue rapidly; the REAL physically traveling
@@ -72,20 +73,21 @@ describe("F3.04b authoritative early wave lifecycle and core defense",()=>{
       for(const e of director.road.snapshot.enemies)
         if(e.hp>0)director.road.applyBoltDamage(e.id,999);
       if(oldRoad!==director.road){
-        changed=true;oldRoad=director.road;
-        expect(director.snapshot.wave).toBe(2);
+        oldRoad=director.road;
+        transitions.push(director.snapshot.wave);
+        expect(director.snapshot.wave).toBe(transitions.length+1);
         expect(director.snapshot.phase).toBe("preparation");
         expect(economy.snapshot.crowns).toBeGreaterThan(5);
         expect(economy.snapshot.towers.map(t=>t.padId)).toEqual(["P01"]);
         expect(combat.snapshot.bolts).toHaveLength(0);
       }
     }
-    expect(changed).toBe(true);
+    expect(transitions).toEqual([2,3]);
     expect(director.snapshot.phase).toBe("won");
-    expect(director.snapshot.wavesCleared).toBe(2);
-    expect(director.snapshot.totalWaveRewards).toBe(20);
+    expect(director.snapshot.wavesCleared).toBe(3);
+    expect(director.snapshot.totalWaveRewards).toBe(30);
     expect(director.snapshot.coreHp).toBeGreaterThan(0);
-    expect(economy.snapshot.defeats).toBe(29);
+    expect(economy.snapshot.defeats).toBe(58);
     expect(director.snapshot.enemiesRemaining).toBe(0);
     expect(director.snapshot.coreStrikes).toBe(0);
   });
