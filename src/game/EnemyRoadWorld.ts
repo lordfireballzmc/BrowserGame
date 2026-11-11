@@ -1,7 +1,8 @@
 /**
  * F3.02 — deterministic first-wave enemy spawn queues and road-lane movement.
  * Pure fixed-tick simulation: no wall clock, DOM, WebGL, mutable RNG or GPU.
- * Wave progression, kill rewards and loot drops belong to later F3 tasks.
+ * F3.04c1 extends the real road to three authored waves with directional
+ * shield defense. Later roles and the full ten-wave campaign remain open.
  * F3.03 preserves damage and a downed actor state across ticks for real bolts. Raiders stop visibly at a safe gate staging point, NOT
  * inside the solid keep. No invented core damage or victory conditions.
  */
@@ -12,8 +13,8 @@ import {
 import { terrainHeight } from "../art/terrain/Island";
 import { FIXED_STEP_SECONDS } from "../engine/Loop";
 
-export type EarlyEnemyKind = Extract<EnemyKind, "scrapper" | "runner">;
-export type EarlyWave = 1 | 2;
+export type EarlyEnemyKind = Extract<EnemyKind, "scrapper" | "runner" | "shieldbearer">;
+export type EarlyWave = 1 | 2 | 3;
 
 export interface EnemySpawn {
   readonly id: number;
@@ -61,32 +62,44 @@ export const GATE_STAGING_DISTANCE_METERS = ROAD_LENGTH_METERS - GATE_STAGING_GA
 export const MAX_SPAWNS_PER_SECOND = 6;
 
 function assertEarlyWave(value: number): asserts value is EarlyWave {
-  if (value !== 1 && value !== 2) throw new RangeError("Only authored waves 1 and 2 are available");
+  if (value !== 1 && value !== 2 && value !== 3)
+    throw new RangeError("Only authored waves 1 through 3 are available");
 }
 function entry(kind: EarlyEnemyKind, spawnTick: number) {
   return { kind, spawnTick };
 }
 
-/** Stable, finite authored 20-second scripts; early waves have no randomness. */
+/** Stable, finite authored 20–40s scripts; early waves have no randomness. */
 export function buildEarlySpawnQueue(wave: EarlyWave): readonly EnemySpawn[] {
   assertEarlyWave(wave);
   const schedule: { kind: EarlyEnemyKind; spawnTick: number }[] = [];
   if (wave === 1) {
     for (let i = 0; i < 10; i++) schedule.push(entry("scrapper", i * 120));
-  } else {
+  } else if (wave === 2) {
     for (let i = 0; i < 14; i++) schedule.push(entry("scrapper", i * 90));
     for (let i = 0; i < 5; i++) schedule.push(entry("runner", 90 + i * 225));
+  } else {
+    // First genuine mixed-column assault. Heavy shields appear after the
+    // opening raiders so players can reposition around their protected front.
+    // This is real authored 60Hz gameplay, never a visual-only enemy overlay.
+    for (let i = 0; i < 18; i++) schedule.push(entry("scrapper", i * 120));
+    for (let i = 0; i < 8; i++) schedule.push(entry("runner", 120 + i * 270));
+    for (let i = 0; i < 3; i++) schedule.push(entry("shieldbearer", 360 + i * 570));
   }
+  const order:Readonly<Record<EarlyEnemyKind,number>>={
+    scrapper:0,shieldbearer:1,runner:2,
+  };
   schedule.sort((a, b) =>
-    a.spawnTick - b.spawnTick ||
-    (a.kind === b.kind ? 0 : a.kind === "scrapper" ? -1 : 1));
+    a.spawnTick - b.spawnTick || order[a.kind]-order[b.kind]);
   if (schedule.length > MAX_RETAINED_ENEMIES) {
     throw new RangeError("Script exceeds enemy entity budget");
   }
   const holdingSlots = new Map<string,number>();
   const result = schedule.map((item, index): EnemySpawn => {
-    // Three permanent Scrapper bands and one faster Runner shoulder.
-    const lane = item.kind === "runner" ? -0.92 : [-0.46, 0, 0.46][index % 3]!;
+    // Distinct shoulders: quick flankers to the south, heavy shields north.
+    const lane = item.kind === "runner" ? -0.92
+      : item.kind === "shieldbearer" ? 0.92
+      : [-0.46, 0, 0.46][index % 3]!;
     const key = item.kind + ":" + lane;
     const rank = holdingSlots.get(key) ?? 0;
     holdingSlots.set(key, rank+1);
@@ -159,6 +172,30 @@ function blendAngle(a: number, b: number, t: number): number {
   return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;
 }
 
+/**
+ * F3.04c1: physically directional Shieldbearer armor.
+ * Source position is the bolt's world-space location on its swept impact
+ * segment. The front 120-degree arc (dot >= 0.5) absorbs 45% damage.
+ * Rear/flanking hits and every other enemy retain canonical raw damage.
+ * Tests/scripts with no physical shot source remain exact raw damage.
+ */
+export function resolveProjectileDamage(
+  enemy:Readonly<Pick<RoadEnemy,"kind"|"x"|"z"|"yaw">>,
+  rawDamage:number,source?:Readonly<{x:number;z:number}>,
+):number {
+  if(!Number.isSafeInteger(rawDamage)||rawDamage<=0)
+    throw new RangeError("Impact damage must be a positive integer");
+  if(enemy.kind!=="shieldbearer"||!source)return rawDamage;
+  if(!Number.isFinite(source.x)||!Number.isFinite(source.z))
+    throw new RangeError("Projectile source must have finite world coordinates");
+  const dx=source.x-enemy.x,dz=source.z-enemy.z;
+  const length=Math.hypot(dx,dz);
+  if(length<1e-6)return rawDamage; // degenerate impact cannot infer an arc
+  const facingX=-Math.sin(enemy.yaw),facingZ=-Math.cos(enemy.yaw);
+  const fromFront=(facingX*dx+facingZ*dz)/length>=0.5;
+  return fromFront?Math.max(1,Math.round(rawDamage*0.55)):rawDamage;
+}
+
 /** Headless authoritative enemy-state owner; sample(alpha) is visual only. */
 export class EnemyRoadWorld {
   readonly queue: readonly EnemySpawn[];
@@ -215,14 +252,18 @@ export class EnemyRoadWorld {
    * F3.04 will own kill payouts and removal; this state only stops a defeated
    * raider and prevents further targeting. Never respawn or restore its HP.
    */
-  applyBoltDamage(enemyId: number, damage: number): number {
+  applyBoltDamage(enemyId: number, damage: number,
+    projectileSource?:Readonly<{x:number;z:number}>): number {
     if (!Number.isInteger(enemyId) || enemyId < 1
       || !Number.isInteger(damage) || damage <= 0) {
       throw new RangeError("Bolt damage requires a valid ID and positive integer damage");
     }
     const old = this.current.enemies.find(enemy => enemy.id === enemyId);
     if (!old || old.hp === 0) return 0;
-    const actual = Math.min(old.hp, damage);
+    // Shieldbearer frontal armor is computed from the REAL incoming world
+    // projectile direction at impact, never from a fake visual state.
+    const actual = Math.min(old.hp,
+      resolveProjectileDamage(old,damage,projectileSource));
     const next = this.current.enemies.map(enemy => enemy.id !== enemyId
       ? enemy
       : Object.freeze({
