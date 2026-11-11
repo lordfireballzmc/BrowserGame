@@ -199,7 +199,7 @@
 </main>
 <script type="module">
   import { mat4, vec4 } from "gl-matrix";
-  import { OrthoCamera } from "/src/engine/Camera.ts";
+  import { OrthoCamera, COMBAT_CAMERA_SPEC, combatCameraLead } from "/src/engine/Camera.ts";
   import { createBrowserLoop, FIXED_STEP_SECONDS } from "/src/engine/Loop.ts";
   import { HeroMovementWorld } from "/src/game/HeroMovement.ts";
   import { EnemyRoadWorld } from "/src/game/EnemyRoadWorld.ts";
@@ -209,6 +209,7 @@
   import { createHeroBoltMesh, createBoltImpactMesh, createCrownPickupMesh } from "/src/art/models/HeroBoltVisuals.ts";
   import { createRunnerStudy } from "/src/art/models/RunnerStudy.ts";
   import { InstancedRenderer } from "/src/engine/render/InstancedRenderer.ts";
+  import { SOURCE_RIG_FACING_CORRECTION_RADIANS } from "/src/engine/render/RiggedCharacterLayer.ts";
   import { computeCanvasResolution, resizeCanvas, RenderMetricWindow } from "/src/engine/render/CanvasRuntime.ts";
   import { mergeStaticGeometries } from "/src/art/mesh/StaticBatch.ts";
   import { generateTerrain, terrainHeight } from "/src/art/terrain/Island.ts";
@@ -547,8 +548,13 @@
     const viewProjectionStatic = mat4.multiply(mat4.create(), projection, view);
     movingCamera = movement ? new OrthoCamera(canvas.width,canvas.height,[
       playerWorld.snapshot.x,0,playerWorld.snapshot.z,
-    ]) : null;
-    if (movingCamera) movingCamera.setZoom(1.06);
+    ],"combat") : null;
+    if (movingCamera) {
+      movingCamera.setZoom(1.06);
+      body.dataset.cameraProfile=movingCamera.profile;
+      body.dataset.cameraElevation=COMBAT_CAMERA_SPEC.tiltFromHorizonDegrees.toFixed(3);
+      body.dataset.rigFacingCorrection=String(SOURCE_RIG_FACING_CORRECTION_RADIANS);
+    }
     const camera = movingCamera ? movingCamera.matrices
       : {view,projection,viewProjection:viewProjectionStatic};
     const viewProjection = camera.viewProjection;
@@ -994,8 +1000,10 @@
           const frameDelta=Math.min(0.05,frameIntervalMs/1000);
           priorDrawTime=now;
           // The camera remains grounded: no head-bob enters the camera target.
+          // Visual-only 3/4-isometric camera: smoothly favor living threats
+          // within 14m while keeping the defender near the center of play.
           movingCamera.follow([hero.x,0,hero.z],frameDelta,
-            [hero.vx*0.17,hero.vz*0.17]);
+            combatCameraLead(hero,raiderWorld?.snapshot.enemies??[]));
           const intensity=Math.min(1,hero.speedMetersPerSecond/4.2);
           const gait=Math.sin(hero.distanceMeters*11.0);
           mat4.fromTranslation(wardenModel,[hero.x,
