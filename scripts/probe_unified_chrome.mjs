@@ -204,7 +204,7 @@ try {
         environmentKeepModules:d.environmentKeepModules,
         environmentPadModules:d.environmentPadModules,
         environmentInstances:d.environmentInstances,
-        environmentVisuals:d.environmentVisuals,
+        environmentVisuals:d.environmentVisuals,padArt:d.padArt,
         environmentError:d.environmentError,
         graphicsTier:d.graphicsTier,graphicsDpr:d.graphicsDpr,
         graphicsBuffer:d.graphicsBuffer,graphicsCss:d.graphicsCss,
@@ -331,6 +331,10 @@ try {
         Math.abs(Number(lastState.cameraElevation)-35.264)<0.01 &&
         Math.abs(Number(lastState.rigFacingCorrection)-Math.PI)<1e-6;
     }
+    if(ready&&lastState.environmentArt==="pass"){
+      ready=lastState.padArt===(scene.searchParams.get("pads")==="legacy"
+        ?"source-kit":"sculpted-stone");
+    }
     if(ready && scene.searchParams.get("probeCharacters")==="rigged") {
       ready=lastState.riggedArt==="ready" &&
         Number(lastState.riggedSources)===3 &&
@@ -438,6 +442,7 @@ try {
     (scene.searchParams.get("scenery")==="legacy" ? "-scenery-legacy" : "")+
     (scene.searchParams.get("ground")==="legacy" ? "-ground-legacy" : "")+
     (scene.searchParams.get("understory")==="legacy" ? "-understory-legacy" : "")+
+    (scene.searchParams.get("pads")==="legacy" ? "-pads-legacy" : "")+
     (scene.searchParams.get("probeTowerBuild")==="P01" ? "-tower-purchase" : "")+
     (scene.searchParams.get("probeWaveDefense")==="gate" ? "-core-gate" : "");
   const dest=`/tmp/bastionfall-unified-${suffix}.png`;
