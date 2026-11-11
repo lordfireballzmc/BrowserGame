@@ -21,6 +21,7 @@ import {
 } from "../../art/assets/SceneryArtManifest";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 import { GroundcoverArtLayer, type GroundcoverArtStats } from "./GroundcoverArtLayer";
+import {buildPainterlyForest} from "../../art/models/HandpaintedForest";
 
 export interface SceneryArtStats {
   readonly sourceModels:number;
@@ -29,6 +30,8 @@ export interface SceneryArtStats {
   readonly rockInstances:number;
   readonly artInstances:number;
   readonly instancedMeshes:number;
+  readonly paintedTrees:boolean;
+  readonly painterlyDrawBatches:number;
 }
 
 /** Stable variety schedule independent of browser frame, seed consumption or
@@ -86,7 +89,7 @@ export class SceneryArtLayer {
 
   async load(placements:readonly SceneryPlacement[],
     seed:string|number="fenwall-crossing-v1",
-    includeGroundcover=true):Promise<SceneryArtStats> {
+    includeGroundcover=true,paintedTrees=false):Promise<SceneryArtStats> {
     if(this.loading||this.ready||this.destroyed)
       throw new Error("Scenery art loads only once");
     const counts={pine:0,broadleaf:0,rock:0,grass:0,flower:0};
@@ -200,6 +203,9 @@ export class SceneryArtLayer {
           const material=Array.isArray(child.material)?toned:toned[0]!;
           const mesh=new InstancedMesh(child.geometry,material,selected.length);
           mesh.name="Fenwall-instanced-"+model.spec.id;
+          // Render imported KayKit forest only as explicit comparison/fallback.
+          // The same 40 sites now show bespoke angular gnarled wood and paint.
+          mesh.visible=!paintedTrees || model.spec.kind==="rock";
           mesh.castShadow=model.spec.kind!=="rock"; // static rocks receive sun/contact
           mesh.receiveShadow=true;
           mesh.frustumCulled=false; // source bounds do not contain all instances
@@ -235,11 +241,16 @@ export class SceneryArtLayer {
       // Optional VQ.02d model family is complete before the renderer stops
       // submitting its original 152 grass/24 flower visual fallbacks.
       if(includeGroundcover)await this.groundcover.load(gltf.scene,placements,seed);
+      // Build fully BEFORE atomic activation. A texture/geometry failure keeps
+      // the previous source-kit fallback functional rather than half-swapping.
+      const originalPaintedTrees=paintedTrees?buildPainterlyForest(placements):null;
       this.root.add(work);
+      if(originalPaintedTrees)this.root.add(originalPaintedTrees);
       this.loaded=Object.freeze({
         sourceModels:models.length,importedAtlasModels:atlases,
         treeInstances,rockInstances,artInstances:treeInstances+rockInstances,
         instancedMeshes:batches,
+        paintedTrees,painterlyDrawBatches:paintedTrees?3:0,
       });
       return this.loaded;
     } finally {
