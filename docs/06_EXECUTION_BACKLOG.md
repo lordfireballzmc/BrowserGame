@@ -4,6 +4,8 @@
 
 Every task has ID; [ ] pending, [~] partial, [x] scoped technically verified. F3.04a [x] source-tested earned crowns/20-crown real 3D Bolt Spires; **F3.04b [x] true finite two-wave playable defense**, 220 tests/29 files, 300→296 actual core strike Chrome, source exact [PR #36](https://github.com/lordfireballzmc/BrowserGame/pull/36). **F3.04 overall [~] STILL OPEN**: NEXT F3.04c full TEN-wave campaign, elite enemy roles and alternate tower families/upgrades, touch-screen building, full play/balance QA. Binding visual work VQ.02e/VQ.03/04/05 still open; commercial-original art/device FPS not established.
 
+**IN REVIEW — VQ.04a / not accepted:** `feat/vq04a-skeletal-hit-and-attack-motion-20261111` changes real-release-based Warden attack animation and actual-hit-driven 3D actor recoil, with new pure-math/timestamp tests. This is not proof of appealing motion or a completed VQ.04; require exact-head CI, real WebGL2 16:9/9:16 and frame-sequence comparison. `main` still reflects last proven F3.04b gameplay until this PR is merged.
+
 ## VQ — mandatory high-fidelity / fluidity production track (latest user mandate)
 
 **Binding authority:** [VQ production directive](29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md) and [original illustrated 3D art north star](20_VISUAL_NORTH_STAR.md). Track VQ (visual-quality implementation) stays active **alongside the real playable-game track F3.04**. Art style: original chunky painterly fantasy-defense personality and expressive motion, **not** glossy Rise-of-Kingdoms realism or bare primitive/low-res demonstrations. A documentation commit is not a visual improvement. Each checked task needs both technical tests and actual inspected in-engine evidence.
