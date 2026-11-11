@@ -437,6 +437,14 @@
     const demoHeadstartTicks = movement&&!waveDirector ? 30 * 60 : 0;
     for (let i=0;i<demoHeadstartTicks;i++) raiderWorld.step(FIXED_STEP_SECONDS);
     const terrain = generateTerrain(seed);
+    // ART.LOCK.01 genuine hand-painted 3D art. This is NOT a painted screenshot:
+    // physically painted road/river/cliffs and bespoke 3D tree silhouettes are
+    // baked into the SAME active WebGL scene. ?art=legacy compares exact same
+    // seed, camera, actors and real simulated ticks with old source meshes.
+    const handpaintWorld=unifiedThree&&parameters.get("art")!=="legacy";
+    if(handpaintWorld)renderer.enableHandPaintedWorld();
+    body.dataset.handpaintedWorld=handpaintWorld?"gouache-uv":"legacy";
+    body.dataset.artLockCompliance="partial"; // does not claim final approved art
     // VQ.02c honest same-game-frame ground review: ?ground=legacy returns
     // flat green terrain with the identical meshes, world height and seed.
     // Painterly color changes occur in the *one* active Three geometry only.
@@ -711,8 +719,9 @@
       const understoryEnabled=sceneryEnabled&&parameters.get("understory")!=="legacy";
       body.dataset.groundcoverArt=understoryEnabled?"loading":"disabled";
       body.dataset.sceneryArt=sceneryEnabled?"loading":"disabled";
+      body.dataset.forestArt=sceneryEnabled?"loading":"disabled";
       const sceneryArtLoad=sceneryEnabled ? renderer.loadSceneryArt(
-        scenery.placements,seed,understoryEnabled,
+        scenery.placements,seed,understoryEnabled,handpaintWorld,
       ).then(result=>{
         if(result.sourceModels!==7||result.importedAtlasModels!==7||
            result.treeInstances!==40||result.rockInstances!==42||
@@ -720,7 +729,11 @@
            result.instancedMeshes>40){
           throw new Error("VQ.02b CC0 artist mesh and GPU batch proof failed");
         }
+        if(result.paintedTrees!==handpaintWorld||
+           result.painterlyDrawBatches!==(handpaintWorld?3:0))
+          throw new Error("ART.LOCK.01 painted forest active state mismatch");
         body.dataset.sceneryArt="pass";
+        body.dataset.forestArt=result.paintedTrees?"crooked-brush-canopies":"source-kit";
         body.dataset.sceneryArtSources=String(result.sourceModels);
         body.dataset.sceneryArtAtlases=String(result.importedAtlasModels);
         body.dataset.sceneryArtTrees=String(result.treeInstances);
