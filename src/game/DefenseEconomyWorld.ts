@@ -205,7 +205,8 @@ export class DefenseEconomyWorld {
            [before.x,before.y+1.1,before.z],
            [target.x,target.y+1.1,target.z],
          )){
-        const actual=road.applyBoltDamage(target.id,TOWER.damagePerProjectile);
+        const actual=road.applyBoltDamage(target.id,TOWER.damagePerProjectile,
+          {x:b.x,z:b.z});
         if(actual>0){
           hits++;towerHits.set(b.padId,(towerHits.get(b.padId)??0)+1);
           impacts.push(Object.freeze({
