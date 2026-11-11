@@ -156,6 +156,12 @@ try {
   while(Date.now()<deadline) {
     lastState=await evaluate(`(() => {
       const d=document.body?.dataset??{};
+      // CDP polls while HTML is still parsing. CSS checks must tolerate
+      // elements that genuinely do not yet exist rather than throwing.
+      const displayOf=id=>{
+        const el=document.querySelector(id);
+        return el?getComputedStyle(el).display:null;
+      };
       return {
         result:d.result, assetPilot:d.assetPilot, assetSource:d.assetSource,
         assetTextured:d.assetTextured, unifiedRenderer:d.unifiedRenderer,
@@ -196,9 +202,8 @@ try {
         wavePhase:d.wavePhase,waveNumber:d.waveNumber,uiMode:d.uiMode,
         dockCollapsed:document.querySelector("#tower-build-panel")
           ?.classList.contains("expanded")===false &&
-          getComputedStyle(document.querySelector("#crowns-readout")).display==="none",
-        diagnosticHidden:getComputedStyle(document.querySelector("#resolution-readout"))
-          .display==="none",
+          displayOf("#crowns-readout")==="none",
+        diagnosticHidden:displayOf("#resolution-readout")==="none",
 
         coreHp:d.coreHp,heroHp:d.heroHp,coreStrikes:d.coreStrikes,
         heroStrikes:d.heroStrikes,wavesCleared:d.wavesCleared,
