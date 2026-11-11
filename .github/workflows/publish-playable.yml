@@ -51,6 +51,13 @@ jobs:
           done
           if [ "$ready" != 1 ]; then cat /tmp/bastionfall-static-preview.log; exit 1; fi
           browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          # VQ.03a isolation/visual A-B: same authenticated scene with HDR
+          # compositor disabled; this still compiles real authored windy grass.
+          baseline='tests/terrain-preview.html?view=movement&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged&post=off'
+          echo 'CHECK VQ.03a same-game direct-render baseline (post=off, foliage still animated)'
+          node scripts/probe_unified_chrome.mjs "$browser" "http://127.0.0.1:4174/BrowserGame/$baseline" '960,600' landscape movement 1 \
+            | tee /tmp/bastionfall-published-post-off.log
+          cp /tmp/bastionfall-unified-landscape-dpr1.png /tmp/bastionfall-landscape-post-off.png
           for orientation in landscape portrait; do
             if [ "$orientation" = portrait ]; then
               path='tests/terrain-preview.html?view=movement&aspect=portrait&quality=sharp&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
@@ -75,6 +82,8 @@ jobs:
             /tmp/bastionfall-unified-portrait-dpr1.png
             /tmp/bastionfall-unified-landscape-dpr1.json
             /tmp/bastionfall-unified-portrait-dpr1.json
+            /tmp/bastionfall-landscape-post-off.png
+            /tmp/bastionfall-published-post-off.log
             /tmp/bastionfall-published-landscape.log
             /tmp/bastionfall-published-portrait.log
           if-no-files-found: warn
