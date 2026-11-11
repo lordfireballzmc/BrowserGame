@@ -841,21 +841,53 @@
       const buildPanel=document.querySelector("#tower-build-panel");
       const crownReadout=document.querySelector("#crowns-readout");
       const towerFeedback=document.querySelector("#tower-build-feedback");
-      const buildButtons=[
-        {id:"P01",button:document.querySelector("#build-p01")},
-        {id:"P02",button:document.querySelector("#build-p02")},
-      ];
+      const buildButtons=["P01","P02","P03","P04"].map(id=>({
+        id,button:document.querySelector("#build-"+id.toLowerCase()),
+      }));
+      const waveReadout=document.querySelector("#wave-readout");
+      const replayLink=document.querySelector("#restart-early-waves");
       buildPanel.hidden=false;
       const refreshTowerHud=()=>{
         const current=economyWorld.snapshot;
         crownReadout.textContent=current.crowns+" COPPER CROWNS · "
           +current.defeats+" DEFEATED";
+        const wave=waveDirector?.snapshot;
+        if(wave){
+          const seconds=Math.ceil(wave.phaseRemainingTicks/60);
+          waveReadout.textContent=wave.phase==="won"?
+            "FENWALL DEFENDED · TWO WAVES CLEARED":
+            wave.phase==="lost"?"FENWALL HAS FALLEN":
+            "WAVE "+wave.wave+"/"+EARLY_WAVE_RULES.authoredWaves+
+            " · "+wave.phase.toUpperCase()+
+            (wave.phase==="active"?" · "+wave.enemiesRemaining+" RAIDERS":
+              " · "+seconds+"S")+
+            " · CORE "+wave.coreHp+"/"+300+
+            " · HERO "+wave.heroHp+"/"+100;
+          body.dataset.wavePhase=wave.phase;
+          body.dataset.waveNumber=String(wave.wave);
+          body.dataset.coreHp=String(wave.coreHp);
+          body.dataset.heroHp=String(wave.heroHp);
+          body.dataset.coreStrikes=String(wave.coreStrikes);
+          body.dataset.heroStrikes=String(wave.heroStrikes);
+          body.dataset.wavesCleared=String(wave.wavesCleared);
+          body.dataset.waveRewards=String(wave.totalWaveRewards);
+          body.dataset.waveRecovery=String(wave.recoveredCrowns);
+          body.dataset.waveRemaining=String(wave.enemiesRemaining);
+          body.dataset.runResult=wave.phase==="won"?"victory":
+            wave.phase==="lost"?"defeat":"active";
+          replayLink.hidden=!waveDirector.isTerminal;
+        }else {
+          body.dataset.wavePhase="legacy-combat-probe";
+        }
         for(const {id,button} of buildButtons){
           const active=current.towers.some(t=>t.padId===id);
           const affordable=current.crowns>=20;
-          button.disabled=active||!affordable;
+          const unlocked=PAD_SITES.find(s=>s.id===id).unlockWave<=
+            (wave?.wave??1);
+          button.disabled=active||!affordable||!unlocked||
+            Boolean(waveDirector?.isTerminal);
           button.textContent=active?id+" ACTIVE":
-            "BUILD "+id+" · 20 CROWNS";
+            !unlocked?id+" · WAVE 2":"BUILD "+id+" · 20 CROWNS";
         }
         body.dataset.economyState="pass";
         body.dataset.crowns=String(current.crowns);
@@ -869,7 +901,8 @@
         body.dataset.crownRecoveryPot=String(current.recoveryPotCrowns);
       };
       const buyTower=id=>{
-        const result=economyWorld.tryBuildBoltSpire(id,1);
+        const result=economyWorld.tryBuildBoltSpire(id,
+          waveDirector?.snapshot.wave??1);
         towerFeedback.textContent=result.ok
           ?id+" CONSTRUCTED · ACTIVE BOLT SPIRE":
            result.reason==="occupied"?id+" ALREADY DEFENDED":
@@ -894,9 +927,9 @@
       const onKeyDown = event => {
         const key=keyName(event.key);
         if (mapped.has(key)) { event.preventDefault(); pressed.add(key); }
-        if((key==="1"||key==="2")&&!event.repeat){
+        if(["1","2","3","4"].includes(key)&&!event.repeat){
           event.preventDefault();
-          buyTower(key==="1"?"P01":"P02");
+          buyTower("P0"+key);
         }
         if (key==="escape" && gameLoop) {
           event.preventDefault();
@@ -988,8 +1021,13 @@
             body.dataset.activeWalkCycles=String(renderer.riggedStatus?.activeWalkCycles??0);
           }
           const enemyText=document.querySelector("#raider-readout");
-          enemyText.textContent="RED COLUMN · "+enemyFrame.spawned+" DEPLOYED · "
-            +enemyFrame.arrived+" AT GATE · "+combatWorld.snapshot.hits+" BOLT HITS";
+          enemyText.textContent=waveDirector
+            ?waveDirector.snapshot.phase.toUpperCase()+" · "+
+              waveDirector.snapshot.enemiesRemaining+" ACTIVE/PENDING · "+
+              waveDirector.snapshot.coreStrikes+" GATE STRIKES · "+
+              combatWorld.snapshot.hits+" WARDEN HITS"
+            :"RED COLUMN · "+enemyFrame.spawned+" DEPLOYED · "
+              +enemyFrame.arrived+" AT GATE · "+combatWorld.snapshot.hits+" BOLT HITS";
           body.dataset.shotsFired=String(combatWorld.snapshot.shotsFired);
           body.dataset.boltHits=String(combatWorld.snapshot.hits);
           body.dataset.damageDealt=String(combatWorld.snapshot.damageDealt);
@@ -1020,10 +1058,21 @@
       };
       gameLoop=createBrowserLoop({
         fixedUpdate(dt){
-          playerWorld.step(movementInput(),dt);
-          raiderWorld.step(dt);
-          combatWorld.step(playerWorld.snapshot,raiderWorld,dt);
-          economyWorld.step(playerWorld.snapshot,raiderWorld,dt);
+          if(waveDirector?.isTerminal)return;
+          const inRecovery=waveDirector?.snapshot.heroHp===0;
+          const hero=playerWorld.step(inRecovery?{right:0,forward:0}:
+            movementInput(),dt);
+          if(waveDirector){
+            waveDirector.step(hero,playerWorld,combatWorld,economyWorld,dt);
+            if(waveDirector.road!==raiderWorld){
+              clearPreviousRaiders();
+              raiderWorld=waveDirector.road;
+            }
+          }else{
+            raiderWorld.step(dt);
+            combatWorld.step(hero,raiderWorld,dt);
+            economyWorld.step(hero,raiderWorld,dt);
+          }
         },
         render(alpha){ renderMovement(alpha); },
       });
