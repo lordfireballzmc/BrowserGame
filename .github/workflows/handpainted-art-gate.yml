@@ -10,7 +10,9 @@ on:
       - "src/engine/render/**"
       - "public/assets/**"
       - "src/ui/**"
-      - "src/game/**"
+      # Pure simulation-only changes use the normal gameplay tests; they do
+      # not introduce visual asset debt. Their rendering integrations still
+      # traverse the visual scene paths above.
       - "tests/terrain-preview.html"
   workflow_dispatch:
 
