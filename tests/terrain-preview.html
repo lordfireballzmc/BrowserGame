@@ -811,6 +811,51 @@
     // staged transform with deterministic 60Hz locomotion and a damped camera.
     if (movement) {
       const pressed = new Set();
+      const buildPanel=document.querySelector("#tower-build-panel");
+      const crownReadout=document.querySelector("#crowns-readout");
+      const towerFeedback=document.querySelector("#tower-build-feedback");
+      const buildButtons=[
+        {id:"P01",button:document.querySelector("#build-p01")},
+        {id:"P02",button:document.querySelector("#build-p02")},
+      ];
+      buildPanel.hidden=false;
+      const refreshTowerHud=()=>{
+        const current=economyWorld.snapshot;
+        crownReadout.textContent=current.crowns+" COPPER CROWNS · "
+          +current.defeats+" DEFEATED";
+        for(const {id,button} of buildButtons){
+          const active=current.towers.some(t=>t.padId===id);
+          const affordable=current.crowns>=20;
+          button.disabled=active||!affordable;
+          button.textContent=active?id+" ACTIVE":
+            "BUILD "+id+" · 20 CROWNS";
+        }
+        body.dataset.economyState="pass";
+        body.dataset.crowns=String(current.crowns);
+        body.dataset.towersBuilt=String(current.towers.length);
+        body.dataset.towerShots=String(current.towerShots);
+        body.dataset.towerHits=String(current.towerHits);
+        body.dataset.enemyDefeats=String(current.defeats);
+        body.dataset.crownDrops=String(current.totalDrops);
+        body.dataset.crownsCollected=String(current.collectedCrowns);
+        body.dataset.pendingCoins=String(current.pendingPickups.length);
+        body.dataset.crownRecoveryPot=String(current.recoveryPotCrowns);
+      };
+      const buyTower=id=>{
+        const result=economyWorld.tryBuildBoltSpire(id,1);
+        towerFeedback.textContent=result.ok
+          ?id+" CONSTRUCTED · ACTIVE BOLT SPIRE":
+           result.reason==="occupied"?id+" ALREADY DEFENDED":
+           result.reason==="insufficient"?"NOT ENOUGH CROWNS":
+           result.reason==="locked"?"PAD LOCKED UNTIL LATER WAVE":
+           "INVALID PAD";
+        body.dataset.lastBuildResult=result.reason;
+        refreshTowerHud();
+        return result;
+      };
+      for(const {id,button} of buildButtons)
+        button.addEventListener("click",()=>buyTower(id));
+      refreshTowerHud();
       const keyName = key => key.toLowerCase();
       const mapped = new Set(["w","a","s","d","arrowup","arrowdown",
         "arrowleft","arrowright"]);
@@ -822,6 +867,10 @@
       const onKeyDown = event => {
         const key=keyName(event.key);
         if (mapped.has(key)) { event.preventDefault(); pressed.add(key); }
+        if((key==="1"||key==="2")&&!event.repeat){
+          event.preventDefault();
+          buyTower(key==="1"?"P01":"P02");
+        }
         if (key==="escape" && gameLoop) {
           event.preventDefault();
           if (event.repeat) return;
@@ -919,6 +968,13 @@
           body.dataset.damageDealt=String(combatWorld.snapshot.damageDealt);
           body.dataset.boltsInFlight=String(combatWorld.snapshot.bolts.length);
           body.dataset.enemyCount=String(enemyFrame.spawned);
+          if(economyWorld.snapshot.pendingPickups.length>0&&
+              economyWorld.snapshot.defeats>0){
+            towerFeedback.textContent=
+              economyWorld.snapshot.pendingPickups.length+
+              " COPPER DROPS · WALK TO COLLECT";
+          }
+          refreshTowerHud();
           body.dataset.enemiesAtGate=String(enemyFrame.arrived);
           body.dataset.enemyTick=String(enemyFrame.tick);
           const status=document.querySelector("#move-readout");
@@ -944,6 +1000,19 @@
         },
         render(alpha){ renderMovement(alpha); },
       });
+      // Explicit real-game purchase smoke: use the same clickable HUD button
+      // handler a person uses, not a free console wallet mutation. This does
+      // not imply a full tower-defense wave controller already exists.
+      if(parameters.get("probeTowerBuild")==="P01"){
+        document.querySelector("#build-p01").click();
+        if(economyWorld.snapshot.crowns!==5||
+           economyWorld.snapshot.towers.length!==1||
+           economyWorld.snapshot.towers[0].padId!=="P01"||
+           body.dataset.lastBuildResult!=="built") {
+          throw new Error("F3.04a actual DOM purchase failed");
+        }
+        body.dataset.towerPurchaseProbe="pass";
+      }
       // Real browser-integrated DOM-keyboard probe: send an actual keydown,
       // run exactly 90 authored fixed steps, then sample the visible scene.
       // This is not a substitute for manual feel tests or GPU FPS profiling.
