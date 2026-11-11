@@ -11,6 +11,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
   ENVIRONMENT_MODELS, environmentModelUrl, type EnvironmentModelId,
 } from "../../art/assets/EnvironmentManifest";
+import {createSculptedTowerPads} from "../../art/models/SculptedTowerPads";
 
 export interface EnvironmentPlacement {
   readonly x: number;
@@ -27,6 +28,7 @@ export interface EnvironmentArtStatus {
   readonly padModules: number;
   readonly pads: number;
   readonly instances: number;
+  readonly padStyle: "sculpted-stone" | "source-kit";
 }
 
 /** Ready is committed atomically: broken/missing artist files leave the old
@@ -48,7 +50,8 @@ export class EnvironmentArtLayer {
   get status(): EnvironmentArtStatus | null { return this.statusValue; }
 
   async load(keep: EnvironmentPlacement,
-    pads: readonly EnvironmentPadPlacement[]): Promise<EnvironmentArtStatus> {
+    pads: readonly EnvironmentPadPlacement[],
+    originalPads=false): Promise<EnvironmentArtStatus> {
     if (this.loading || this.ready || this.destroyed) {
       throw new Error("Environment art can only initialize once");
     }
@@ -151,23 +154,25 @@ export class EnvironmentArtLayer {
       }
       assembly.add(keepRoot);
 
-      // One repeating artist-made foundation kit at the ten *unchanged*
-      // authored gameplay pad sites. Inset azure cap and four curved copper
-      // glyph fragments communicate where the bolt spires will be constructed.
-      // Later-wave pads are intentionally subdued, not purchaseable early.
-      for(const [i,site] of pads.entries()){
-        const pad=new Group();
-        pad.name="Fenwall-P"+String(i+1).padStart(2,"0");
-        pad.position.set(site.x,site.y,site.z);
-        const muted=site.unlockWave>1;
-        put("pad-border",pad,0,-0.11,0,3.42,0.90,3.42,muted);
-        // The artist-authored azure enamel is a raised inset, not a flat
-        // surface accidentally buried inside the tan stone border. Keep it
-        // within the 4×4 gameplay footprint and the gold corner brackets.
-        put("pad-inlay",pad,0,0.015,0,2.94,0.38,2.94,muted);
-        put("pad-glyph",pad,0,0.415,0,3.65,1,3.65,muted);
-        padModules+=3;
-        assembly.add(pad);
+      if(originalPads){
+        // Strict source-kit A/B: preserve old PBR blue squares and exactly
+        // the same map/camera/pad targeting for independent review.
+        for(const [i,site] of pads.entries()){
+          const pad=new Group();
+          pad.name="Fenwall-P"+String(i+1).padStart(2,"0");
+          pad.position.set(site.x,site.y,site.z);
+          const muted=site.unlockWave>1;
+          put("pad-border",pad,0,-0.11,0,3.42,0.90,3.42,muted);
+          put("pad-inlay",pad,0,0.015,0,2.94,0.38,2.94,muted);
+          put("pad-glyph",pad,0,0.415,0,3.65,1,3.65,muted);
+          padModules+=3;
+          assembly.add(pad);
+        }
+      }else{
+        // Original physically beveled octagonal sockets; 190 separate
+        // sculptural pieces remain only five shared GPU instanced batches.
+        assembly.add(createSculptedTowerPads(pads));
+        padModules=pads.length*3;
       }
       // One atomic swap: existing fallback meshes are suppressed by the
       // UnifiedThreeRenderer only AFTER this fully imported scene is ready.
@@ -176,6 +181,7 @@ export class EnvironmentArtLayer {
         sourceModels:this.templates.size,texturedModels,
         keepModules,padModules,pads:pads.length,
         instances:keepModules+padModules,
+        padStyle:originalPads?"source-kit" as const:"sculpted-stone" as const,
       });
       this.statusValue=status;
       return status;
