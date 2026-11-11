@@ -39,6 +39,8 @@ export interface HeroCombatSnapshot {
   readonly targetId: number | null;
   readonly aimYaw: number | null;
   readonly shotsFired: number;
+  /** Last actual 60Hz weapon release, retained after the bolt hits or expires. */
+  readonly lastShotTick: number | null;
   readonly hits: number;
   readonly damageDealt: number;
   readonly lastHitId: number | null;
@@ -114,7 +116,7 @@ export function boltSegmentHitsMovingEnemy(
 export class HeroBoltCombat {
   private current: HeroCombatSnapshot = freezeSnapshot({
     tick:0,targetId:null,aimYaw:null,shotsFired:0,hits:0,damageDealt:0,
-    lastHitId:null,bolts:[],impacts:[],
+    lastHitId:null,lastShotTick:null,bolts:[],impacts:[],
   });
   private nextFireTick = 1;
   private nextBoltId = 1;
@@ -170,6 +172,7 @@ export class HeroBoltCombat {
     const target=selectHeroTarget(hero,world.snapshot.enemies);
     let aimYaw: number | null=null;
     let shotsFired=this.current.shotsFired;
+    let lastShotTick=this.current.lastShotTick;
     if (target) {
       aimYaw=Math.atan2(-(target.x-hero.x),-(target.z-hero.z));
       if (tick>=this.nextFireTick && nextBolts.length<MAX_SIMULTANEOUS_BOLTS) {
@@ -194,13 +197,14 @@ export class HeroBoltCombat {
             vx:dx*speed,vy:dy*speed,vz:dz*speed,bornTick:tick,
           }));
           shotsFired++;
+          lastShotTick=tick;
           this.nextFireTick=tick+FIRE_TICKS;
         }
       }
     }
     this.current=freezeSnapshot({
       tick,targetId:target?.id??null,aimYaw,
-      shotsFired,hits,damageDealt,lastHitId,bolts:nextBolts,impacts,
+      shotsFired,lastShotTick,hits,damageDealt,lastHitId,bolts:nextBolts,impacts,
     });
     return this.current;
   }
@@ -209,7 +213,7 @@ export class HeroBoltCombat {
    * Preserve Warden clock and cumulative hit/shot accounting. */
   prepareNextWave():void {
     this.current=freezeSnapshot({...this.current,bolts:[],impacts:[],
-      targetId:null,aimYaw:null});
+      targetId:null,aimYaw:null,lastShotTick:null});
     this.nextFireTick=this.current.tick+1;
   }
 
