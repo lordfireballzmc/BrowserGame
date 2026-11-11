@@ -460,7 +460,10 @@ try {
           tier:document.body.dataset.graphicsTier,result:document.body.dataset.result,
           buffer:document.body.dataset.graphicsBuffer,
           hero:document.body.dataset.heroVisible,
-          combat:document.body.dataset.combatProbe};
+          combat:document.body.dataset.combatProbe,
+          wave:document.body.dataset.wavePhase,
+          coreHp:document.body.dataset.coreHp,
+          ui:document.body.dataset.uiMode};
       })()`);
       if(final.result==="pass" && final.tier==="sharp" &&
          final.width*final.height===restored.pixels)break;
@@ -468,7 +471,10 @@ try {
     }
     if(final.result!=="pass" || final.tier!=="sharp" ||
        final.width*final.height!==restored.pixels || final.hero!=="true" ||
-       final.combat!=="pass") {
+       (scene.searchParams.get("probeHUD")==="play"
+         ? final.ui!=="play" || !["preparation","active","recovery"].includes(final.wave) ||
+           !(Number(final.coreHp)>0)
+         : final.combat!=="pass")) {
       throw new Error("VQ.01 restore/playability gate failed after readiness polling: "+
         JSON.stringify({restored,final}));
     }
