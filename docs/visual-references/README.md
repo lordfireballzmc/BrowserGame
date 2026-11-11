@@ -4,7 +4,10 @@
 
 **Mandatory render-quality and animation companion:** [VQ visual fidelity & fluidity directive](../29_VISUAL_FIDELITY_AND_FLUIDITY_DIRECTIVE.md). The version-controlled SVG below is aspirational only; it does not justify accepting an upscaled 720p game or low-quality primitive rendering. Latest intent: maximal original illustrated 3D clarity, sculpted detail, professional fluid movement and real engine capture verification.
 
-**User preference:** lively, hand-illustrated tower-defense personality comparable in *general qualities* to Kingdom Rush, **translated into original actual 3D meshes and animation**; explicitly **not** the glossy, monumental, small-figure look associated with Rise of Kingdoms. Neither game's proprietary pictures, characters, UI or branding are to be included in Bastionfall output.
+**User preference:**
+**Latest ACTUAL gameplay source, not a concept render:** [VQ.02d original grass/bush/wildflower before-after in real landscape and portrait](../35_VQ02D_ILLUSTRATED_GROUNDCOVER_REVIEW.md) with [exact Chrome screenshot ZIP](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42926944486/artifacts/13814936415) (Actions artifact 21-day retention). The full visual judgment and source SHA/CC0 facts are permanently retained in the review; no claim that the 3D kit is final original-exclusive art.
+
+ lively, hand-illustrated tower-defense personality comparable in *general qualities* to Kingdom Rush, **translated into original actual 3D meshes and animation**; explicitly **not** the glossy, monumental, small-figure look associated with Rise of Kingdoms. Neither game's proprietary pictures, characters, UI or branding are to be included in Bastionfall output.
 
 ## Version-controlled visual anchor
 

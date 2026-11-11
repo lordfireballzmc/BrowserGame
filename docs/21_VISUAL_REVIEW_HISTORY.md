@@ -1,4 +1,9 @@
 # Bastionfall visual-review history — cross-chat art memory
+## 2026-11-11 — VQ.02d sculpted botanicals browser before/after (scoped verified, still not studio polish)
+
+[PR #34](https://github.com/lordfireballzmc/BrowserGame/pull/34) merged; [207-test CI + actual landscape/portrait screenshot artifact #13814936415](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42926944486/artifacts/13814936415), [compiled production #42926944439](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42926944439), [detailed true-source/visual critique](35_VQ02D_ILLUSTRATED_GROUNDCOVER_REVIEW.md). Real Warden/19-raider world gained 736 original-author 3D painted grass, 48 modeled shrubs, 120 CC0 Kenney wildflowers using just 7 GPU batches; 258 source scenery positions and pads unaffected. **Before:** bare green hillside with microscopic triangular tufts. **After:** clearly more planted grass, leafy bushes, golden/lilac flowers and road-side vegetative patches, not an image mockup. Screenshot-driven first iteration reduced oversized spherical bushes: 8 small round + 40 articulated. **Remaining unacceptable:** generic smooth architecture/pads, too-simple ground/road, poor portrait keep crop and debug HUD, weak gait and attack fluidity, no actual coins/tower purchases/waves. Not professional final art or user approved. Next F3.04 real game, VQ.02e unique sculpt, VQ.03 paint/light, VQ.04 animation.
+
+
 
 This document records the user's **actual taste judgments and acceptance criteria**. A new session must not infer quality merely from the latest code, a passing CI check, or a pleasing but misleading generated concept.
 

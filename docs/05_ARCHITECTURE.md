@@ -1,6 +1,9 @@
 # Bastionfall architecture — Three.js rendering + deterministic game systems
 
 ## Current implementation (2026-11-10)
+**2026-11-11 verified update, superseding older F2.05 notes:** [VQ.02d PR #34](https://github.com/lordfireballzmc/BrowserGame/pull/34), [CI #42926944486](https://github.com/lordfireballzmc/BrowserGame/actions/runs/42926944486) + [art review](35_VQ02D_ILLUSTRATED_GROUNDCOVER_REVIEW.md) add `GroundcoverPlan` (904 deterministic, cleared decorative-only sites), `GroundcoverArtLayer` (one reused KayKit painted grass/bush source atlas + two small Kenney CC0 solid-PBR wildflower GLBs, 7 GPU InstancedMesh groups/421,728 source triangles). `SceneryArtLayer` loads models before hiding older `scenery-grass`/`scenery-flower` visual fallbacks; `?understory=legacy` is same-Three-scene artist source A/B; original 258 seed placements, road/river/pad/keep collisions, 19 real raiders and 10 pad inputs unchanged. Do NOT claim a new renderer, duplicate texture pack, proprietary sculpted art or final commercial graphics.
+
+
 
 **Canonical state:** TypeScript strict, Vite, **Three.js r184 WebGLRenderer/WebGL2**, GLTFLoader, licensed source-pinned textured rigged GLB actors, a unified scene using BufferGeometry/InstancedMesh, stable game camera matrices, real animated models and deterministic TypeScript simulation. The old `InstancedRenderer`/TWGL path remains for diagnostic/gallery and explicit legacy regression only. The initial two-canvas overlay was **already deleted** in ART.02; ART.02b unified the island map/pad interactions/cinematic scenes as well as the Warden gameplay. Do not call Three.js prohibited or redo a completed migration.
 
