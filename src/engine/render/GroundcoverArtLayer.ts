@@ -22,6 +22,7 @@ import {
   GROUNDCOVER_BUDGET,generateGroundcover,type GroundcoverPlacement,
 } from "../../art/scenery/GroundcoverPlan";
 import type {SceneryPlacement} from "../../art/scenery/Scenery";
+import {installFoliageWind,advanceFoliageWind,type WindClock} from "./IllustratedWind";
 
 export interface GroundcoverArtStats {
   readonly sourceModels:number;
@@ -40,6 +41,7 @@ export class GroundcoverArtLayer {
   private readonly root=new Group();
   private readonly resources:Group[]=[];
   private readonly materials:Material[]=[];
+  private readonly windClocks:WindClock[]=[];
   private statistics:GroundcoverArtStats|null=null;
   private destroyed=false;
   private loading=false;
@@ -48,6 +50,9 @@ export class GroundcoverArtLayer {
     scene.add(this.root);
   }
   get ready():boolean{return this.statistics!==null;}
+  setWindTime(seconds:number):void {
+    advanceFoliageWind(this.windClocks,seconds);
+  }
   get stats():GroundcoverArtStats|null{return this.statistics;}
 
   async load(forest:Group,original:readonly SceneryPlacement[],
@@ -113,6 +118,12 @@ export class GroundcoverArtLayer {
           sourceMeshes++;
           const originals=Array.isArray(child.material)
             ?child.material:[child.material];
+          // Animate non-shadow-casting grass and flowers, but not shrubs.
+          // The 3D stem remains rooted and GPU instancing is preserved.
+          child.geometry.computeBoundingBox();
+          const localBounds=child.geometry.boundingBox;
+          const breezy=(spec.id==="grass"||isFlower)&&
+            localBounds!==null && localBounds.max.y-localBounds.min.y>1e-4;
           const adapted=originals.map(m=>{
             const copy=m.clone();
             if(copy instanceof MeshStandardMaterial){
@@ -127,6 +138,10 @@ export class GroundcoverArtLayer {
                 copy.color.multiply(new Color(spec.id==="grass"?
                   "#99b599":"#8aa78d"));
               }
+            }
+            if(breezy&&copy instanceof MeshStandardMaterial) {
+              this.windClocks.push(installFoliageWind(
+                copy,localBounds!.min.y,localBounds!.max.y));
             }
             this.materials.push(copy);
             return copy;
@@ -208,6 +223,7 @@ export class GroundcoverArtLayer {
     this.root.clear();
     this.resources.length=0;
     this.materials.length=0;
+    this.windClocks.length=0;
     this.statistics=null;
   }
 }

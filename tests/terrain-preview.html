@@ -270,6 +270,11 @@
         }
       }
       currentResolution=resolution;
+      if(renderer && unifiedThree) {
+        const post=renderer.configureIllustratedPostFX(qualityControl.value,
+          parameters.get("post")!=="off");
+        body.dataset.postFX=post;
+      }
       body.dataset.graphicsTier=qualityControl.value;
       body.dataset.graphicsDpr=String(window.devicePixelRatio);
       body.dataset.graphicsCss=resolution.cssWidth.toFixed(2)+"x"+
@@ -306,6 +311,9 @@
     if (unifiedThree) {
       const { UnifiedThreeRenderer } = await import("/src/engine/render/UnifiedThreeRenderer.ts");
       renderer = new UnifiedThreeRenderer(canvas, gl);
+      body.dataset.postFX=renderer.configureIllustratedPostFX(qualityControl.value,
+        parameters.get("post")!=="off");
+      body.dataset.windMode=parameters.get("wind")==="off"?"still":"gpu-sway";
     } else renderer = new InstancedRenderer(gl);
     renderer.enableSunShadows();
     renderer.enableFrustumCulling();
@@ -995,6 +1003,8 @@
         if (stopped) return;
         try {
           const hero=playerWorld.sample(alpha);
+          if(unifiedThree)renderer.setRiggedAnimationTime(
+            (hero.tick+alpha)/60,parameters.get("wind")!=="off");
           const now=performance.now();
           const frameIntervalMs=Math.max(0,now-priorDrawTime);
           const frameDelta=Math.min(0.05,frameIntervalMs/1000);
@@ -1020,7 +1030,6 @@
             const latestBirth=Math.max(-Infinity,
               ...combatWorld.snapshot.bolts.map(b=>b.bornTick));
             const recentBolt=combatWorld.snapshot.tick-latestBirth<9;
-            renderer.setRiggedAnimationTime((hero.tick+alpha)/60);
             renderer.setActorMotion(wardenModel,
               recentBolt?"Attack":hero.speedMetersPerSecond>0.15?"Run":"Idle",
               recentBolt?(combatWorld.snapshot.tick-latestBirth)/60:

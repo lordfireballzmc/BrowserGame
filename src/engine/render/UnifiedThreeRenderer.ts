@@ -29,6 +29,8 @@ import type { GroundcoverArtStats } from "./GroundcoverArtLayer";
 import { groundPigmentAt } from "../../art/terrain/GroundPigment";
 import type { SceneryPlacement } from "../../art/scenery/Scenery";
 import type { CameraMatrices, RenderInstance, RenderStats } from "./InstancedRenderer";
+import type { ResolutionPreset } from "./CanvasRuntime";
+import {IllustratedPostFX, setCombatEmissive, type PostFXMode} from "./IllustratedPostFX";
 /** Nonvisual provenance and validation returned by the locally loaded GLB. */
 export interface ImportedAssetStatus {
   readonly meshCount: number;
@@ -96,6 +98,7 @@ export class UnifiedThreeRenderer {
   private readonly animatedCharacters = new RiggedCharacterLayer(this.scene);
   private readonly environment = new EnvironmentArtLayer(this.scene);
   private readonly sceneryArt = new SceneryArtLayer(this.scene);
+  private readonly illustratedFX: IllustratedPostFX;
   private destroyed = false;
   private useShadows = false;
   private useCulling = false;
@@ -115,6 +118,9 @@ export class UnifiedThreeRenderer {
     this.gpu.outputColorSpace = SRGBColorSpace;
     this.gpu.toneMapping = NeutralToneMapping;
     this.gpu.toneMappingExposure = 1.23;
+    // Include every composer pass and shadow draw in the reported GPU draw count.
+    this.gpu.info.autoReset=false;
+    this.illustratedFX=new IllustratedPostFX(this.gpu,this.scene,this.camera);
 
     this.scene.background = new Color(0xd4ded4);
     this.scene.add(new HemisphereLight(0xcbe5f5, 0x648054, 2.30));
@@ -165,6 +171,11 @@ export class UnifiedThreeRenderer {
   get sceneryArtStatus(): SceneryArtStats | null { return this.sceneryArt.stats; }
   get sceneryArtReady(): boolean { return this.sceneryArt.ready; }
   get groundcoverReady():boolean{return this.sceneryArt.groundcoverReady;}
+  get postProcessingMode():PostFXMode{return this.illustratedFX.mode;}
+  configureIllustratedPostFX(tier:ResolutionPreset,enabled=true):PostFXMode {
+    this.assertActive();
+    return this.illustratedFX.configure(tier,enabled);
+  }
   get groundcoverStatus():GroundcoverArtStats|null{
     return this.sceneryArt.groundcoverStats;
   }
@@ -186,8 +197,9 @@ export class UnifiedThreeRenderer {
     this.assertActive();
     return this.animatedCharacters.load();
   }
-  setRiggedAnimationTime(seconds:number): void {
+  setRiggedAnimationTime(seconds:number,animateFoliage=true): void {
     this.animatedCharacters.setTime(seconds);
+    this.sceneryArt.setWindTime(animateFoliage?seconds:0);
   }
   setActorMotion(model:ArrayLike<number>, motion:ActorMotion["motion"],timeSeconds:number):void {
     this.animatedCharacters.setMotion(model,motion,timeSeconds);
@@ -215,6 +227,7 @@ export class UnifiedThreeRenderer {
     }
     if(this.canvas.width===width&&this.canvas.height===height)return false;
     this.gpu.setSize(width,height,false);
+    this.illustratedFX.resize();
     const actual=this.backbufferSize;
     if(actual.width!==width||actual.height!==height||
        this.unifiedContext.drawingBufferWidth!==width||
@@ -391,6 +404,9 @@ export class UnifiedThreeRenderer {
           transparent:batch.opacity<1,opacity:batch.opacity,
           depthWrite:batch.opacity===1,
         });
+        // Only meaningful real physical projectiles/impacts exceed the HDR
+        // bloom threshold; meadow, roads and towers stay crisp and unbloomed.
+        setCombatEmissive(material,batch.meshId);
         const capacity = Math.max(batch.models.length, pool?.capacity??0, 1);
         const mesh=new InstancedMesh(geom,material,capacity);
         mesh.instanceMatrix.setUsage(DynamicDrawUsage);
@@ -413,7 +429,8 @@ export class UnifiedThreeRenderer {
     }
     // Single draw through ONE WebGLRenderer: imported PBR + existing 3D meshes
     // now share depth, directional shadow atlas, camera and color pipeline.
-    this.gpu.render(this.scene,this.camera);
+    this.gpu.info.reset();
+    this.illustratedFX.render();
     const gpuDraws=this.gpu.info.render.calls;
     return {
       submitted, instances:visible, culled, drawCalls:gpuDraws,
@@ -451,6 +468,7 @@ export class UnifiedThreeRenderer {
     this.animatedCharacters.dispose();
     this.environment.dispose();
     this.sceneryArt.dispose();
+    this.illustratedFX.dispose();
     this.gpu.dispose();
     this.pools.clear();
     this.variants.clear();
