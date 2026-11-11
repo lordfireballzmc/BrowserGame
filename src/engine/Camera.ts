@@ -45,6 +45,46 @@ export const COMBAT_CAMERA_SPEC = {
   followTimeConstantSeconds: 0.22,
 } as const;
 
+/** The shot/camera framing is visual-only: read game coordinates, never write them. */
+export interface CombatCameraSubject {
+  readonly x:number; readonly z:number;
+  readonly vx:number; readonly vz:number;
+}
+export interface CombatCameraThreat {
+  readonly x:number; readonly z:number; readonly hp:number;
+}
+/**
+ * Favor the closest live threat while keeping the Warden within a safe central
+ * composition. Limit look-ahead to 3.25m (rather than suddenly centering mobs),
+ * and use smooth follow to prevent a death/respawn from snapping the camera.
+ */
+export function combatCameraLead(
+  hero:CombatCameraSubject, enemies:readonly CombatCameraThreat[],
+):HorizontalLead {
+  if(![hero.x,hero.z,hero.vx,hero.vz].every(Number.isFinite))
+    throw new RangeError("Invalid camera subject");
+  let nearest:CombatCameraThreat|null=null;
+  let closest=14*14;
+  for(const enemy of enemies){
+    if(![enemy.x,enemy.z,enemy.hp].every(Number.isFinite))
+      throw new RangeError("Invalid camera threat");
+    if(enemy.hp<=0)continue;
+    const dx=enemy.x-hero.x, dz=enemy.z-hero.z;
+    const sq=dx*dx+dz*dz;
+    if(sq<closest){closest=sq;nearest=enemy;}
+  }
+  let x=hero.vx*0.16, z=hero.vz*0.16;
+  if(nearest){
+    const distance=Math.sqrt(closest);
+    const weight=Math.min(0.32,3.0/Math.max(distance,1e-5));
+    x+=(nearest.x-hero.x)*weight;
+    z+=(nearest.z-hero.z)*weight;
+  }
+  const magnitude=Math.hypot(x,z);
+  const scale=magnitude>3.25?3.25/magnitude:1;
+  return [x*scale,z*scale];
+}
+
 const RAD = Math.PI / 180;
 const UP = vec3.fromValues(0, 1, 0);
 type CameraConfiguration = typeof CAMERA_SPEC | typeof COMBAT_CAMERA_SPEC;
