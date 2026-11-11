@@ -122,7 +122,8 @@ export class GroundcoverArtLayer {
           // The 3D stem remains rooted and GPU instancing is preserved.
           child.geometry.computeBoundingBox();
           const localBounds=child.geometry.boundingBox;
-          const breezy=(spec.id==="grass"||isFlower)&&localBounds!==null;
+          const breezy=(spec.id==="grass"||isFlower)&&
+            localBounds!==null && localBounds.max.y-localBounds.min.y>1e-4;
           const adapted=originals.map(m=>{
             const copy=m.clone();
             if(copy instanceof MeshStandardMaterial){
