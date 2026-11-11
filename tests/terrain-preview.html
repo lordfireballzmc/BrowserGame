@@ -82,30 +82,38 @@
     /* Physical crown economy / active spire build HUD. Interactivity is
        explicit despite the non-interactive camera-overlay wrapper. */
     .build-panel { pointer-events:auto; position:absolute;
-      right:clamp(10px,2.5vw,30px); bottom:48px;
-      display:flex; flex-direction:column; gap:6px; align-items:flex-end;
-      max-width:min(260px,64vw); padding:9px;
+      right:clamp(10px,2.5vw,30px); bottom:56px;
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:6px; align-items:stretch;
+      width:min(284px,65vw); max-width:100%; padding:9px;
       background:#183a35ee; border:1px solid #d7ba7855; border-radius:12px;
       box-shadow:0 7px 18px #081d1780; font:700 11px system-ui; }
     .build-panel[hidden] {display:none}
-    .build-panel output {font-variant-numeric:tabular-nums; color:#ffe4a0}
-    .build-panel #restart-early-waves {font:800 12px system-ui;
+    .build-panel output {grid-column:1 / -1;text-align:center;
+      font-variant-numeric:tabular-nums; color:#ffe4a0}
+    .build-panel #restart-early-waves {grid-column:1 / -1;font:800 12px system-ui;
       padding:6px 10px; background:#d9ba77; color:#223a31;
       border-radius:6px; text-decoration:none; text-align:center}
     .build-panel #restart-early-waves[hidden]{display:none}
-    .build-panel button {font-size:11px;min-height:29px}
     .build-panel button {
-      pointer-events:auto; width:100%; min-height:33px;
+      pointer-events:auto; width:100%; min-height:32px;
       background:#e8c98a; border:1px solid #ffe9ab; border-radius:7px;
-      color:#233930; font:750 12px system-ui; padding:6px 11px;
+      color:#233930; font:750 10px system-ui; padding:5px 5px;
+      white-space:nowrap;
       cursor:pointer;
     }
     .build-panel button[disabled] {background:#516e61; color:#e2e1ca;
       border-color:#759080; opacity:.72; cursor:default}
     .build-panel button:focus-visible {outline:3px solid #fff1b9;outline-offset:2px}
     body[data-view="movement"][data-aspect="portrait"] .build-panel {
-      bottom:94px;max-width:min(245px,75vw);
+      bottom:86px;width:min(268px,79vw);
     }
+    /* In real play, keep the quality control usable but collapse
+       developer-only FPS/CPU lines. All probe/diagnostic modes retain them. */
+    body[data-view="movement"]:not([data-wave-phase="legacy-combat-probe"])
+      #graphics-perf,
+    body[data-view="movement"]:not([data-wave-phase="legacy-combat-probe"])
+      #move-readout {display:none}
     .movement-exit { pointer-events:auto; position:absolute; top:clamp(10px,2.5vw,30px);
       right:clamp(10px,2.5vw,30px); z-index:3;
       background:#1b3934e8; color:#ffe9b4; text-decoration:none;
@@ -850,6 +858,7 @@
       }));
       const waveReadout=document.querySelector("#wave-readout");
       const replayLink=document.querySelector("#restart-early-waves");
+      if(portrait)replayLink.href="?view=movement&aspect=portrait";
       buildPanel.hidden=false;
       const refreshTowerHud=()=>{
         const current=economyWorld.snapshot;
@@ -861,12 +870,16 @@
           waveReadout.textContent=wave.phase==="won"?
             "FENWALL DEFENDED · TWO WAVES CLEARED":
             wave.phase==="lost"?"FENWALL HAS FALLEN":
-            "WAVE "+wave.wave+"/"+EARLY_WAVE_RULES.authoredWaves+
-            " · "+wave.phase.toUpperCase()+
-            (wave.phase==="active"?" · "+wave.enemiesRemaining+" RAIDERS":
-              " · "+seconds+"S")+
-            " · CORE "+wave.coreHp+"/"+300+
-            " · HERO "+wave.heroHp+"/"+100;
+            portrait ?
+              "W"+wave.wave+"/2 · "+wave.phase.toUpperCase()+
+              (wave.phase==="active"?" · "+wave.enemiesRemaining+" FOES":
+                " · "+seconds+"S")+
+              " · CORE "+wave.coreHp+" · HP "+wave.heroHp:
+              "WAVE "+wave.wave+"/"+EARLY_WAVE_RULES.authoredWaves+
+              " · "+wave.phase.toUpperCase()+
+              (wave.phase==="active"?" · "+wave.enemiesRemaining+" RAIDERS":
+                " · "+seconds+"S")+
+              " · CORE "+wave.coreHp+"/300 · HERO "+wave.heroHp+"/100";
           body.dataset.wavePhase=wave.phase;
           body.dataset.waveNumber=String(wave.wave);
           body.dataset.coreHp=String(wave.coreHp);
@@ -1030,9 +1043,9 @@
           const enemyText=document.querySelector("#raider-readout");
           enemyText.textContent=waveDirector
             ?waveDirector.snapshot.phase.toUpperCase()+" · "+
-              waveDirector.snapshot.enemiesRemaining+" ACTIVE/PENDING · "+
-              waveDirector.snapshot.coreStrikes+" GATE STRIKES · "+
-              combatWorld.snapshot.hits+" WARDEN HITS"
+              waveDirector.snapshot.enemiesRemaining+" RAIDERS · "+
+              waveDirector.snapshot.coreStrikes+" GATE HITS · "+
+              combatWorld.snapshot.hits+" BOLT HITS"
             :"RED COLUMN · "+enemyFrame.spawned+" DEPLOYED · "
               +enemyFrame.arrived+" AT GATE · "+combatWorld.snapshot.hits+" BOLT HITS";
           body.dataset.shotsFired=String(combatWorld.snapshot.shotsFired);
