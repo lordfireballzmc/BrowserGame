@@ -1,0 +1,31 @@
+name: ART.LOCK — original hand-painted asset integrity
+
+# A visual code PR cannot be merged until the exact original approved PNG
+# reference set has been committed and its dimensions/SHA-256 match the uploads.
+# Docs-only cleanup may ship with explicit "pending originals" status.
+on:
+  pull_request:
+    paths:
+      - "src/art/**"
+      - "src/engine/render/**"
+      - "public/assets/**"
+      - "src/ui/**"
+      # Pure simulation-only changes use the normal gameplay tests; they do
+      # not introduce visual asset debt. Their rendering integrations still
+      # traverse the visual scene paths above.
+      - "tests/terrain-preview.html"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-art-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify every exact original user PNG exists and matches SHA-256
+        run: node scripts/verify-art-anchor.mjs --strict

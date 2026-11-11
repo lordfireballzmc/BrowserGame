@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "verify:art-refs": "node scripts/verify-art-anchor.mjs",
+    "verify:art-refs:strict": "node scripts/verify-art-anchor.mjs --strict"
   },
   "dependencies": {
     "gl-matrix": "^3.4.4",
