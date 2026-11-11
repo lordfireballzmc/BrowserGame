@@ -5,6 +5,7 @@ import { MeshStandardMaterial, Scene } from "three";
 import { RiggedCharacterLayer, stylizeActorMaterial, factionFragment,
   classifyActorPart, isSelectedEquipment, ACTOR_PALETTES,
   animationBlend, ANIMATION_BLEND_SECONDS,
+  attackFollowThrough, impactRecoil, ATTACK_FOLLOW_THROUGH_SECONDS, HIT_RECOIL_SECONDS,
 } from "../src/engine/render/RiggedCharacterLayer";
 
 const base="public/assets/characters/";
@@ -157,6 +158,29 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
     expect(()=>animationBlend(NaN)).toThrow(RangeError);
   });
 
+  it("reconstructs real-event attack and hit pulses without frame accumulation",()=>{
+    expect(ATTACK_FOLLOW_THROUGH_SECONDS).toBeCloseTo(0.34,8);
+    expect(HIT_RECOIL_SECONDS).toBeCloseTo(0.28,8);
+    expect(attackFollowThrough(0)).toBe(0);
+    expect(attackFollowThrough(0.08)).toBeGreaterThan(0);
+    expect(attackFollowThrough(0.22)).toBeGreaterThan(0);
+    expect(attackFollowThrough(0.34)).toBe(0);
+    expect(attackFollowThrough(8)).toBe(0);
+    expect(impactRecoil(0)).toBe(0);
+    expect(impactRecoil(0.06)).toBeGreaterThan(0);
+    expect(impactRecoil(0.20)).toBeLessThan(0);
+    expect(impactRecoil(0.28)).toBe(0);
+    expect(impactRecoil(1)).toBe(0);
+    for(const f of [attackFollowThrough,impactRecoil]){
+      expect(()=>f(-0.01)).toThrow(RangeError);
+      expect(()=>f(Infinity)).toThrow(RangeError);
+      expect(()=>f(NaN)).toThrow(RangeError);
+    }
+    const sample=Array.from({length:25},(_,i)=>attackFollowThrough(i/60));
+    expect(sample.every(v=>v>=0&&v<=1)).toBe(true);
+    expect(sample.some(v=>v>0.4)).toBe(true);
+  });
+
   it("validates deterministic visual-only animation clocks without requiring WebGL",()=>{
     const rig=new RiggedCharacterLayer(new Scene());
     const matrix=new Float32Array(16);
@@ -164,8 +188,10 @@ describe("ART.03a reproducible artist-authored mobile animation GLBs",()=>{
     expect(()=>rig.setTime(NaN)).toThrow(RangeError);
     expect(()=>rig.setMotion(matrix,"Run",Infinity)).toThrow(RangeError);
     expect(()=>rig.setMotion(matrix,"Fly" as "Idle",0)).toThrow(RangeError);
+    expect(()=>rig.setMotion(matrix,"Walk",0,-1)).toThrow(RangeError);
+    expect(()=>rig.setMotion(matrix,"Attack",0,NaN)).toThrow(RangeError);
     rig.setTime(45/60);
-    rig.setMotion(matrix,"Walk",3.2);
+    rig.setMotion(matrix,"Walk",3.2,0.08);
     expect(rig.ready).toBe(false); // never claim a source asset loaded based on manifest only
     expect(rig.sync([]).size).toBe(0);
     rig.dispose();
