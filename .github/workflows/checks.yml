@@ -372,6 +372,24 @@ jobs:
             grep -q '"groundcoverInstances": "904"' "/tmp/bastionfall-unified-$orientation.json"
             echo "PASS: VQ.02d artist-modeled undergrowth A/B ($orientation)"
           done
+          # F3.04a: actual gameplay HUD build-button purchase and physical
+          # tower geometry, same Warden + 19 raiders + live bolts. No invented
+          # wallet shortcut: probe clicks the same real DOM button as a player.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeTowerBuild=P01&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dims='900,1200'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeTowerBuild=P01&probeMovement=forward&probeEnemies=advance&probeCombat=physical&probeCharacters=rigged'
+              dims='1500,950'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dims" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-f304a-purchase-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-tower-purchase.png"
+            grep -q '"towerPurchaseProbe": "pass"' "/tmp/bastionfall-unified-$orientation-tower-purchase.json"
+            grep -q '"towersBuilt": "1"' "/tmp/bastionfall-unified-$orientation-tower-purchase.json"
+            echo "PASS: F3.04a real DOM tower purchase in $orientation game"
+          done
           # VQ.01: real DPR=2 Three gameplay (not just unit math). Run
           # economy/sharp selection, live CSS viewport resize + restore, and
           # verify the same Warden/19-raider/copper-bolt gameplay stays active.
@@ -563,5 +581,20 @@ jobs:
             /tmp/bastionfall-unified-portrait-understory-legacy.json
             /tmp/bastionfall-vq02d-understory-landscape.log
             /tmp/bastionfall-vq02d-understory-portrait.log
+          if-no-files-found: warn
+          retention-days: 21
+
+      - name: Upload F3.04a real-game tower purchase and crown screenshot proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f304a-crowns-and-buyable-bolt-spire-real-game
+          path: |
+            /tmp/bastionfall-unified-landscape-tower-purchase.png
+            /tmp/bastionfall-unified-portrait-tower-purchase.png
+            /tmp/bastionfall-unified-landscape-tower-purchase.json
+            /tmp/bastionfall-unified-portrait-tower-purchase.json
+            /tmp/bastionfall-f304a-purchase-landscape.log
+            /tmp/bastionfall-f304a-purchase-portrait.log
           if-no-files-found: warn
           retention-days: 21
