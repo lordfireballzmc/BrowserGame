@@ -390,6 +390,24 @@ jobs:
             grep -q '"towersBuilt": "1"' "/tmp/bastionfall-unified-$orientation-tower-purchase.json"
             echo "PASS: F3.04a real DOM tower purchase in $orientation game"
           done
+          # F3.04b: actual 60Hz preparation->spawn->gate siege damage
+          # in the SAME real Warden/Three/WebGL2 game. Not an injected
+          # core HP value, debug victory switch or rendered mockup.
+          for orientation in landscape portrait; do
+            if [ "$orientation" = portrait ]; then
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&aspect=portrait&probeWaveDefense=gate'
+              dims='900,1200'
+            else
+              url='http://127.0.0.1:4173/tests/terrain-preview.html?view=movement&probeWaveDefense=gate'
+              dims='1500,950'
+            fi
+            node scripts/probe_unified_chrome.mjs "$browser" "$url" "$dims" "$orientation" \
+              2>&1 | tee "/tmp/bastionfall-f304b-core-$orientation.log"
+            test -s "/tmp/bastionfall-unified-$orientation-core-gate.png"
+            grep -q '"waveProbe": "pass"' "/tmp/bastionfall-unified-$orientation-core-gate.json"
+            grep -q '"coreStrikes": "' "/tmp/bastionfall-unified-$orientation-core-gate.json"
+            echo "PASS: F3.04b real authored $orientation core gate damage"
+          done
           # VQ.01: real DPR=2 Three gameplay (not just unit math). Run
           # economy/sharp selection, live CSS viewport resize + restore, and
           # verify the same Warden/19-raider/copper-bolt gameplay stays active.
@@ -596,5 +614,20 @@ jobs:
             /tmp/bastionfall-unified-portrait-tower-purchase.json
             /tmp/bastionfall-f304a-purchase-landscape.log
             /tmp/bastionfall-f304a-purchase-portrait.log
+          if-no-files-found: warn
+          retention-days: 21
+
+      - name: Upload F3.04b actual Chrome gate damage and new wave HUD
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f304b-real-wave-one-gate-strikes-landscape-portrait
+          path: |
+            /tmp/bastionfall-unified-landscape-core-gate.png
+            /tmp/bastionfall-unified-portrait-core-gate.png
+            /tmp/bastionfall-unified-landscape-core-gate.json
+            /tmp/bastionfall-unified-portrait-core-gate.json
+            /tmp/bastionfall-f304b-core-landscape.log
+            /tmp/bastionfall-f304b-core-portrait.log
           if-no-files-found: warn
           retention-days: 21
