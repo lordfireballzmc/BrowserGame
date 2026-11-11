@@ -171,14 +171,16 @@ export class DefenseEconomyWorld {
 
   /** Call ONCE after the same authoritative player, raider and hero-combat
    * 60Hz tick. The raider clock may have a fixed *demo headstart*, but it must
-   * advance exactly once on each subsequent economy step. */
+   * advance monotonically on each subsequent economy step. The browser's
+   * F3.02 enemy-only motion test may advance its independent enemy clock
+   * without advancing the hero, but live gameplay always advances both once. */
   step(hero:Pick<HeroSnapshot,"tick"|"x"|"z">,road:EnemyRoadWorld,
     dtSeconds:number):DefenseEconomySnapshot {
     const tick=this.state.tick+1;
     if(!Number.isFinite(dtSeconds)||
        Math.abs(dtSeconds-FIXED_STEP_SECONDS)>1e-10||
        hero.tick!==tick||
-       (this.lastRoadTick!==null&&road.snapshot.tick!==this.lastRoadTick+1))
+       (this.lastRoadTick!==null&&road.snapshot.tick<=this.lastRoadTick))
       throw new RangeError("Defense economy must advance once per authoritative 60Hz tick");
     this.lastRoadTick=road.snapshot.tick;
     const prior=new Map(road.sample(0).enemies.map(e=>[e.id,e]));
